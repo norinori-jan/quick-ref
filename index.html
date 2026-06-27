@@ -10,6 +10,62 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>クイック参照</title>
 <style>
+  /* --- 音声入力用 FAB（既存FABと衝突しない命名） --- */
+#voiceFab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 64px;
+  height: 64px;
+  background: #007aff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 999;
+}
+
+/* --- モーダル背景（quick-refの既存modalと衝突しない） --- */
+#voiceModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* --- モーダル本体 --- */
+#voiceModalContent {
+  background: #fff;
+  width: 90%;
+  max-width: 480px;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+/* --- 録音中の波形アニメ --- */
+.recording-indicator {
+  width: 12px;
+  height: 12px;
+  background: red;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+  margin-right: 8px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
   :root {
     --bg: #F7F7F8;
     --card-bg: #FFFFFF;
