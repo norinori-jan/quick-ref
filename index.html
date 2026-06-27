@@ -3547,10 +3547,11 @@ function fuzzyMatchItem(item, query) {
 function sendToAI() {
   const text = document.getElementById("input").value;
   callStructureAPI(text).then(result => {
-    document.getElementById("output").textContent = result;
-  }).catch(err => {
-    document.getElementById("output").textContent = "Error: " + err.message;
-  });
+  document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+}).catch(err => {
+  document.getElementById("output").textContent = "Error: " + err.message;
+});
+
 }
 </script>
 <input id="input" placeholder="メッセージを入力" />
