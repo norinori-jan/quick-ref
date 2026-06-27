@@ -26,4 +26,10 @@ function generateIcon(size) {
 }
 
 window.generateIcon = generateIcon;
+window.addEventListener("unhandledrejection", (event) => {
+  console.warn("IndexedDB error detected:", event.reason);
+  indexedDB.deleteDatabase("quick-ref-db");
+  console.log("quick-ref-db deleted for recovery.");
+});
+
 
