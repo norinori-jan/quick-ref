@@ -1,0 +1,3547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F7F8">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>クイック参照</title>
+<style>
+  :root {
+    --bg: #F7F7F8;
+    --card-bg: #FFFFFF;
+    --accent: #007AFF;
+    --accent-press: #0060DF;
+    --text: #1C1C1E;
+    --text-secondary: #8A8A8E;
+    --danger: #FF3B30;
+    --border: #E5E5EA;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    height: 100%;
+  }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(247,247,248,0.92);
+    backdrop-filter: blur(10px);
+    padding: calc(env(safe-area-inset-top) + 12px) 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 20px; font-weight: 700; margin: 0; }
+  header .count { font-size: 13px; color: var(--text-secondary); }
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+  .lock-btn, .menu-btn {
+    background: none; border: none;
+    font-size: 19px; line-height: 1;
+    padding: 4px 2px;
+  }
+
+  .backup-banner {
+    display: flex; align-items: center; gap: 10px;
+    background: #FFF3CD; border: 1px solid #FECF6A;
+    border-radius: 10px; padding: 10px 14px;
+    margin-bottom: 10px; font-size: 13px; color: #7A5400;
+  }
+  .backup-banner-icon { font-size: 18px; flex-shrink: 0; }
+  .backup-banner-text { flex: 1; line-height: 1.4; }
+  .backup-banner-btn {
+    background: none; border: 1px solid #FECF6A;
+    border-radius: 8px; padding: 5px 10px;
+    font-size: 12px; font-weight: 600; color: #7A5400;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  .action-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--bg); border-radius: 20px 20px 0 0;
+    z-index: 31; padding: 8px 16px calc(env(safe-area-inset-bottom) + 20px);
+    transform: translateY(100%); transition: transform 0.25s ease-out;
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+  }
+  .action-sheet.open { transform: translateY(0); }
+  .action-sheet-handle {
+    width: 36px; height: 4px; background: var(--border);
+    border-radius: 2px; margin: 8px auto 16px;
+  }
+  .action-sheet h3 { font-size: 13px; color: var(--text-secondary); margin: 0 0 10px; text-align: center; }
+  .action-btn {
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; background: var(--card-bg);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 8px;
+    font-size: 16px; color: var(--text); text-align: left;
+  }
+  .action-btn:active { background: #F0F0F2; }
+  .action-btn .action-icon { font-size: 20px; width: 28px; text-align: center; }
+  .action-btn-inner { display: flex; flex-direction: column; }
+  .action-btn .action-label { font-size: 16px; }
+  .action-btn .action-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .action-btn.danger { color: var(--danger); }
+
+  /* ---- Theme mode ---- */
+  .theme-banner {
+    display: flex; align-items: center; gap: 10px;
+    border-radius: 12px; padding: 11px 14px;
+    margin-bottom: 10px; font-size: 14px;
+    background: var(--card-bg); border: 1px solid var(--border);
+  }
+  .theme-banner-icon { font-size: 24px; flex-shrink: 0; }
+  .theme-banner-text { flex: 1; line-height: 1.4; font-weight: 600; }
+  .theme-banner-sub { font-size: 12px; color: var(--text-secondary); font-weight: 400; margin-top: 1px; }
+  .theme-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .theme-banner-btn {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: 6px 11px;
+    font-size: 12px; font-weight: 600;
+  }
+  .theme-banner-btn.outline {
+    background: none; color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .add-guide {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .add-guide.open { opacity: 1; pointer-events: auto; }
+  .add-guide-sheet {
+    width: 100%; background: var(--card-bg);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(env(safe-area-inset-bottom) + 28px);
+    transform: translateY(100%); transition: transform 0.25s ease-out;
+  }
+  .add-guide.open .add-guide-sheet { transform: translateY(0); }
+  .add-guide h3 { margin: 0 0 14px; font-size: 17px; }
+  .add-guide-step {
+    display: flex; align-items: flex-start; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .add-guide-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .add-guide-step p { margin: 0; font-size: 14px; line-height: 1.5; }
+  .add-guide-url {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px;
+    font-size: 13px; font-family: monospace; word-break: break-all;
+    margin: 10px 0;
+  }
+  .add-guide-close {
+    width: 100%; margin-top: 6px;
+    background: none; border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px;
+    font-size: 15px; color: var(--text-secondary);
+  }
+
+  /* ---- Icon Generator ---- */
+  .icon-modal {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 22px 20px;
+    width: calc(100% - 48px);
+    max-width: 360px;
+    z-index: 41;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    max-height: 88vh; overflow-y: auto;
+  }
+  .icon-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .icon-modal h3 { margin: 0 0 16px; font-size: 17px; }
+
+  .icon-preview-row {
+    display: flex; justify-content: center; gap: 16px;
+    margin-bottom: 16px;
+  }
+  .icon-preview-wrap { text-align: center; }
+  .icon-preview-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+  .icon-preview-wrap canvas {
+    border-radius: 22%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    display: block;
+  }
+
+  .icon-controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .icon-control-row { display: flex; align-items: center; gap: 10px; }
+  .icon-control-row label { font-size: 13px; color: var(--text-secondary); width: 68px; flex-shrink: 0; }
+  .icon-control-row input[type="text"] { flex: 1; font-size: 20px; text-align: center; padding: 7px 10px; }
+  .icon-control-row input[type="color"] {
+    width: 44px; height: 36px; padding: 2px;
+    border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+  }
+  .icon-control-row input[type="range"] { flex: 1; }
+
+  .icon-dl-row { display: flex; gap: 8px; }
+  .icon-dl-btn {
+    flex: 1; background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 12px; font-size: 14px; font-weight: 600;
+  }
+  .icon-dl-btn:active { background: var(--accent-press); }
+  .icon-modal-close {
+    width: 100%; background: none; border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px;
+    font-size: 15px; color: var(--text-secondary); margin-top: 8px;
+  }
+
+  /* ---- TASK6: Image attachments ---- */
+  .img-section { margin-top: 4px; }
+  .img-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .img-add-btn {
+    flex: 1; min-width: 120px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--card-bg); border: 1px dashed var(--border);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; color: var(--accent); font-weight: 600;
+  }
+  .img-add-btn:active { background: #F0F0F2; }
+  .img-add-btn.bridge { color: #AF52DE; border-color: #AF52DE; }
+
+  .img-thumbs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .img-thumb-wrap {
+    position: relative; width: 80px; height: 80px; flex-shrink: 0;
+  }
+  .img-thumb {
+    width: 80px; height: 80px; object-fit: cover;
+    border-radius: 8px; border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .img-thumb-del {
+    position: absolute; top: -6px; right: -6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--danger); color: #fff;
+    border: none; font-size: 13px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .card-img-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .img-preview-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 50; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .img-preview-overlay.open { opacity: 1; pointer-events: auto; }
+  .img-preview-overlay img {
+    max-width: 96vw; max-height: 88vh;
+    object-fit: contain; border-radius: 8px;
+  }
+  .img-preview-close {
+    position: absolute; top: calc(env(safe-area-inset-top) + 14px); right: 18px;
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    font-size: 22px; width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---- TASK7: Audio attachments ---- */
+  .audio-section { margin-top: 4px; }
+  .audio-add-row { display: flex; gap: 8px; }
+  .audio-add-btn {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--card-bg); border: 1px dashed var(--border);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; color: var(--accent); font-weight: 600;
+  }
+  .audio-add-btn:active { background: #F0F0F2; }
+  .audio-add-btn.music { color: #FF9500; border-color: #FF9500; }
+
+  .rec-status {
+    display: none; align-items: center; gap: 10px;
+    background: #FFF0F0; border: 1px solid #FFCDD2;
+    border-radius: 10px; padding: 10px 14px; margin-top: 8px;
+  }
+  .rec-status.active { display: flex; }
+  .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); flex-shrink: 0; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .rec-timer { font-size: 15px; font-weight: 600; color: var(--danger); flex: 1; font-variant-numeric: tabular-nums; }
+  .rec-stop-btn {
+    background: var(--danger); color: #fff; border: none;
+    border-radius: 8px; padding: 6px 14px; font-size: 14px; font-weight: 600;
+  }
+
+  .audio-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-top: 8px;
+  }
+  .audio-item audio { flex: 1; min-width: 0; height: 36px; }
+  .audio-item-del {
+    background: none; border: none;
+    color: var(--danger); font-size: 20px; padding: 4px 6px; flex-shrink: 0;
+  }
+  .audio-item-label {
+    font-size: 12px; color: var(--text-secondary); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; max-width: 80px;
+  }
+
+  .music-ref-item {
+    background: #FFF9F0; border: 1px solid #FFD8A0;
+    border-radius: 10px; padding: 10px 14px; margin-top: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .music-ref-icon { font-size: 22px; flex-shrink: 0; }
+  .music-ref-info { flex: 1; min-width: 0; }
+  .music-ref-title { font-size: 14px; font-weight: 600; color: #7A4500; }
+  .music-ref-meta { font-size: 12px; color: #A06020; margin-top: 2px; }
+  .music-ref-del {
+    background: none; border: none;
+    color: var(--danger); font-size: 20px; padding: 4px 6px;
+  }
+
+  /* ---- Voice → AI modal ---- */
+  .voice-fab {
+    position: fixed;
+    right: 84px;
+    bottom: calc(env(safe-area-inset-bottom) + 20px);
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #FF2D55; color: #fff;
+    border: none; font-size: 20px;
+    box-shadow: 0 3px 10px rgba(255,45,85,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 20;
+  }
+  .voice-fab.recording {
+    animation: voicePulse 1s infinite;
+    background: #C41230;
+  }
+  @keyframes voicePulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,45,85,0.4); }
+    50%      { box-shadow: 0 0 0 10px rgba(255,45,85,0); }
+  }
+
+  .voice-modal {
+    position: fixed; inset: 0; z-index: 41;
+    display: flex; flex-direction: column;
+    background: rgba(0,0,0,0.55);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .voice-modal.open { opacity: 1; pointer-events: auto; }
+  .voice-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--bg); border-radius: 20px 20px 0 0;
+    padding: 14px 16px calc(env(safe-area-inset-bottom) + 20px);
+    transform: translateY(100%); transition: transform 0.25s ease-out;
+    max-height: 88vh; overflow-y: auto;
+  }
+  .voice-modal.open .voice-sheet { transform: translateY(0); }
+  .voice-sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 14px; }
+  .voice-status {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 600; margin-bottom: 12px;
+  }
+  .voice-dot { width: 10px; height: 10px; border-radius: 50%; background: #FF2D55; animation: blink2 1s infinite; }
+  @keyframes blink2 { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .voice-transcript {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 15px; line-height: 1.65; color: var(--text);
+    min-height: 60px; margin-bottom: 12px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .voice-interim { color: var(--text-secondary); font-style: italic; }
+  .voice-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+  .voice-stop-btn {
+    flex: 1; background: #FF2D55; color: #fff;
+    border: none; border-radius: 10px; padding: 12px;
+    font-size: 15px; font-weight: 700;
+  }
+  .voice-analyze-btn {
+    flex: 2; background: var(--accent); color: #fff;
+    border: none; border-radius: 10px; padding: 12px;
+    font-size: 15px; font-weight: 700;
+  }
+  .voice-analyze-btn:disabled { background: var(--text-secondary); }
+
+  .ai-preview {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 12px;
+  }
+  .ai-preview-header {
+    background: rgba(0,122,255,0.06); padding: 8px 14px;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    border-bottom: 1px solid var(--border);
+  }
+  .ai-preview-body { padding: 12px 14px; }
+  .ai-field { margin-bottom: 10px; }
+  .ai-field:last-child { margin-bottom: 0; }
+  .ai-field-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 3px; }
+  .ai-field-value { font-size: 15px; }
+  .ai-field-value input, .ai-field-value textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; font-size: 15px; font-family: inherit;
+    background: var(--bg); color: var(--text);
+  }
+  .ai-field-value textarea { min-height: 60px; resize: vertical; }
+  .ai-tags-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .voice-save-btn {
+    width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 12px; padding: 14px;
+    font-size: 16px; font-weight: 700;
+  }
+  .voice-cancel-btn {
+    width: 100%; background: none; border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px;
+    font-size: 15px; color: var(--text-secondary); margin-top: 8px;
+  }
+
+  /* ---- Related items ---- */
+  .related-empty {
+    font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+    padding: 4px 0;
+  }
+  .related-card {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+    margin-bottom: 7px;
+  }
+  .related-card.confirmed { border-color: var(--accent); background: rgba(0,122,255,0.04); }
+  .related-main { flex: 1; min-width: 0; }
+  .related-header { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+  .related-icon { font-size: 13px; flex-shrink: 0; }
+  .related-title { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .related-score {
+    font-size: 10px; color: var(--accent);
+    background: rgba(0,122,255,0.1); border-radius: 100px;
+    padding: 1px 7px; flex-shrink: 0;
+  }
+  .related-snippet { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+  .related-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .related-tag { font-size: 11px; color: var(--accent); background: rgba(0,122,255,0.08); padding: 2px 7px; border-radius: 100px; }
+  .related-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+  .related-open-btn {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 10px;
+    font-size: 15px; color: var(--accent);
+  }
+  .related-link-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px 8px;
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .related-link-btn.linked { color: var(--accent); border-color: var(--accent); }
+  .related-unlink-btn {
+    background: none; border: none;
+    font-size: 12px; color: var(--danger); padding: 4px;
+  }
+  .ai-related-btn {
+    width: 100%; background: none;
+    border: 1px dashed var(--border); border-radius: 10px;
+    padding: 9px; font-size: 13px; color: var(--text-secondary);
+    margin-top: 6px;
+  }
+  .ai-related-btn:active { background: rgba(0,0,0,0.03); }
+  .card-link-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; color: var(--text-secondary); margin-top: 4px; margin-left: 4px;
+  }
+
+  /* ---- Daily Review ---- */
+  .review-btn {
+    background: none; border: none;
+    font-size: 19px; padding: 4px 2px;
+    position: relative;
+  }
+  .review-badge {
+    position: absolute; top: -2px; right: -4px;
+    background: var(--danger); color: #fff;
+    font-size: 9px; font-weight: 700;
+    width: 14px; height: 14px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .review-overlay {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(0,0,0,0.6);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .review-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .review-sheet {
+    background: var(--bg); border-radius: 20px 20px 0 0;
+    padding: 0 0 calc(env(safe-area-inset-bottom) + 16px);
+    max-height: 92vh; overflow-y: auto;
+    transform: translateY(100%); transition: transform 0.28s ease-out;
+  }
+  .review-overlay.open .review-sheet { transform: translateY(0); }
+
+  .review-header {
+    position: sticky; top: 0;
+    background: var(--bg); z-index: 2;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .review-header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .review-title { font-size: 17px; font-weight: 700; }
+  .review-close-btn {
+    background: rgba(0,0,0,0.06); border: none;
+    border-radius: 50%; width: 30px; height: 30px;
+    font-size: 15px; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary);
+  }
+  .review-progress-track {
+    height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+  }
+  .review-progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), #FF9500);
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+  .review-counter {
+    font-size: 12px; color: var(--text-secondary); margin-top: 5px;
+    display: flex; justify-content: space-between;
+  }
+
+  .review-body { padding: 16px 16px 0; }
+
+  .review-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    margin-bottom: 12px;
+  }
+  .review-card-meta {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .review-days-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px;
+  }
+  .review-days-badge.fresh   { background: rgba(52,199,89,0.12); color: #1A8C3A; }
+  .review-days-badge.normal  { background: rgba(255,149,0,0.12); color: #7A4500; }
+  .review-days-badge.overdue { background: rgba(255,59,48,0.12); color: var(--danger); }
+  .review-source-badge {
+    font-size: 11px; color: var(--text-secondary);
+    background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 100px;
+  }
+  .review-card-title { font-size: 18px; font-weight: 700; margin: 0 0 10px; }
+  .review-card-body {
+    font-size: 14px; line-height: 1.7; color: var(--text-secondary);
+    margin: 0 0 10px; white-space: pre-wrap; word-break: break-word;
+    max-height: 120px; overflow: hidden; position: relative;
+  }
+  .review-card-body.expanded { max-height: none; }
+  .review-expand-btn {
+    background: none; border: none; color: var(--accent);
+    font-size: 13px; padding: 0; margin-bottom: 8px;
+  }
+  .review-card-fields { margin-bottom: 10px; }
+  .review-field-row { font-size: 13px; color: var(--text-secondary); padding: 3px 0; }
+  .review-field-key { font-weight: 600; color: var(--text); }
+  .review-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .review-related-hint {
+    font-size: 12px; color: var(--accent);
+    background: rgba(0,122,255,0.08); border-radius: 8px;
+    padding: 6px 10px; margin-bottom: 10px;
+  }
+
+  .review-actions {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .review-action-btn {
+    padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);
+    font-size: 14px; font-weight: 600; background: var(--card-bg);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .review-action-btn.done   { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .review-action-btn.edit   { color: var(--text); }
+  .review-action-btn.link   { color: #FF9500; border-color: rgba(255,149,0,0.3); }
+  .review-action-btn.skip   { color: var(--text-secondary); }
+  .review-action-btn:active { opacity: 0.8; transform: scale(0.97); }
+
+  /* ---- Streak & Complete ---- */
+  .review-complete {
+    text-align: center; padding: 40px 20px;
+  }
+  .review-complete-icon { font-size: 56px; margin-bottom: 12px; }
+  .review-complete-title { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+  .review-complete-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+  .streak-count {
+    display: inline-block; font-size: 36px; font-weight: 800;
+    color: var(--accent); margin: 16px 0 4px;
+  }
+  .streak-label { font-size: 12px; color: var(--text-secondary); }
+  .review-done-btn {
+    margin-top: 24px; width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 12px; padding: 14px;
+    font-size: 16px; font-weight: 700;
+  }
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; color: var(--text-secondary); margin-top: 4px; margin-left: 6px;
+  }
+
+  /* ---- Link items ---- */
+  .card-url-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  }
+  .card-url-text {
+    font-size: 11px; color: var(--text-secondary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .card-open-btn {
+    flex-shrink: 0; font-size: 12px; font-weight: 600;
+    color: var(--accent); background: rgba(0,122,255,0.08);
+    border: none; border-radius: 8px; padding: 4px 10px;
+  }
+  .url-field-row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  .url-field-row input { flex: 1; }
+  .url-field-row .open-link-btn {
+    background: none; border: 1px solid var(--border); border-radius: 10px;
+    padding: 0 12px; font-size: 14px; color: var(--accent); height: 44px; flex-shrink: 0;
+  }
+
+  .search-row { margin-top: 10px; }
+  .search-row input {
+    width: 100%;
+    font-size: 16px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    font-family: inherit;
+    color: var(--text);
+    -webkit-appearance: none;
+  }
+  .search-row input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+
+  .tag-filter-row {
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    margin-top: 10px;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tag-filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  main { padding: 12px 16px 100px; max-width: 640px; margin: 0 auto; }
+
+  .empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 60px 20px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .card:active { background: #F0F0F2; }
+  .card-title { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+  .card-snippet {
+    font-size: 14px; color: var(--text-secondary);
+    margin: 0 0 8px;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    white-space: pre-wrap;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 12px; color: var(--accent);
+    background: rgba(0,122,255,0.1);
+    padding: 3px 10px; border-radius: 100px;
+  }
+  .lock-badge { margin-right: 4px; }
+  .card-snippet.locked-text { font-style: italic; }
+
+  .fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(env(safe-area-inset-bottom) + 20px);
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 28px;
+    border: none;
+    box-shadow: 0 4px 14px rgba(0,122,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 20;
+  }
+  .fab:active { background: var(--accent-press); transform: scale(0.96); }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 30;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    z-index: 31;
+    max-height: 88vh;
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.25s ease-out;
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+  }
+  .sheet.open { transform: translateY(0); }
+
+  .sheet-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sheet-header button {
+    background: none; border: none;
+    font-size: 16px; color: var(--accent);
+    padding: 6px 4px;
+  }
+  .sheet-header button.save { font-weight: 600; }
+  .sheet-header h2 { font-size: 16px; margin: 0; }
+
+  .sheet-body {
+    overflow-y: auto;
+    padding: 16px 16px calc(env(safe-area-inset-bottom) + 24px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 12px; color: var(--text-secondary);
+    margin: 18px 0 6px;
+    font-weight: 600;
+  }
+  label.field-label:first-child { margin-top: 0; }
+
+  input[type="text"], textarea {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    font-family: inherit;
+    color: var(--text);
+  }
+  textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+  input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+
+  .tag-input-row { display: flex; gap: 8px; }
+  .tag-input-row input { flex: 1; }
+  .tag-input-row button {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 15px;
+    color: var(--accent);
+  }
+  .tag-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .suggestion-chip {
+    font-size: 13px; color: var(--text-secondary);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 100px;
+  }
+  .suggestion-chip:active { background: #F0F0F2; }
+  .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag-chip {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 13px; color: var(--accent);
+    background: rgba(0,122,255,0.1);
+    padding: 4px 6px 4px 12px; border-radius: 100px;
+  }
+  .tag-chip button {
+    background: none; border: none; color: var(--accent);
+    font-size: 14px; line-height: 1; padding: 4px;
+  }
+
+  .field-row {
+    display: flex; gap: 8px; margin-bottom: 8px;
+    align-items: center;
+  }
+  .field-row input { flex: 1; }
+  .field-row input.fkey { flex: 0 0 38%; }
+  .field-row .remove-field {
+    background: none; border: none;
+    color: var(--danger); font-size: 20px;
+    padding: 4px 6px; flex-shrink: 0;
+  }
+  .add-field-btn {
+    background: none; border: none;
+    color: var(--accent); font-size: 14px;
+    padding: 6px 0; font-weight: 600;
+  }
+
+  .danger-zone { margin-top: 28px; }
+  .delete-btn {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--danger);
+    font-size: 16px; font-weight: 600;
+    padding: 12px; border-radius: 10px;
+  }
+  .delete-btn:active { background: #FBEAEA; }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 4px 0 2px;
+  }
+  .toggle-row-text { display: flex; flex-direction: column; gap: 3px; }
+  .toggle-row-title { font-size: 15px; font-weight: 600; }
+  .toggle-row-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+  .switch { position: relative; display: inline-block; width: 48px; height: 28px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-track {
+    position: absolute; inset: 0; cursor: pointer;
+    background: #D1D1D6; border-radius: 100px; transition: 0.2s;
+  }
+  .switch-track::before {
+    content: ''; position: absolute; height: 24px; width: 24px; left: 2px; top: 2px;
+    background: white; border-radius: 50%; transition: 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .switch input:checked + .switch-track { background: var(--accent); }
+  .switch input:checked + .switch-track::before { transform: translateX(20px); }
+
+  .pin-modal {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 22px 20px;
+    width: calc(100% - 56px);
+    max-width: 340px;
+    z-index: 41;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .pin-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .pin-modal h3 { margin: 0 0 8px; font-size: 17px; }
+  .pin-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.5; }
+  .pin-modal input[type="password"] { margin-bottom: 10px; }
+  .pin-error { color: var(--danger); font-size: 13px; margin: 0 0 10px; }
+  .pin-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .pin-actions button {
+    flex: 1; padding: 11px; border-radius: 10px; font-size: 15px;
+    border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
+  }
+  .pin-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .pin-forgot {
+    display: block; width: 100%; margin-top: 14px; background: none; border: none;
+    color: var(--text-secondary); font-size: 12px; text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>クイック参照</h1>
+    <div class="header-actions">
+      <span class="count" id="countLabel">0件</span>
+      <button class="review-btn" id="reviewBtn" aria-label="デイリーレビュー" title="デイリーレビュー">
+        🗓
+        <span class="review-badge" id="reviewBadge" style="display:none;"></span>
+      </button>
+      <button class="lock-btn" id="lockToggleBtn" type="button" aria-label="ロック切替">🔑</button>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="メニュー">⋯</button>
+    </div>
+  </div>
+  <div class="search-row">
+    <input type="search" id="searchInput" placeholder="検索(タイトル・メモ・タグ・項目)">
+  </div>
+  <div class="tag-filter-row" id="tagFilterRow">
+    <button type="button" class="filter-chip" id="linkFilterBtn" style="flex-shrink:0;">🔗 リンク集</button>
+  </div>
+</header>
+
+<main>
+  <div id="themeBanner" style="display:none;" class="theme-banner">
+    <span class="theme-banner-icon" id="themeBannerIcon">📋</span>
+    <div class="theme-banner-text">
+      <span id="themeBannerLabel">テーマ</span>
+      <div class="theme-banner-sub" id="themeBannerSub">絞り込み中</div>
+    </div>
+    <div class="theme-banner-actions">
+      <button class="theme-banner-btn outline" id="themeBannerIconBtn">🎨 アイコン</button>
+      <button class="theme-banner-btn outline" id="themeBannerKanseiBtn">📝 kansei</button>
+      <button class="theme-banner-btn" id="themeBannerAddBtn">+ 追加方法</button>
+    </div>
+  </div>
+  <div id="backupBanner" style="display:none;" class="backup-banner">
+    <span class="backup-banner-icon">⚠️</span>
+    <span class="backup-banner-text" id="backupBannerText">バックアップを取ってください</span>
+    <button class="backup-banner-btn" id="backupBannerBtn">今すぐ</button>
+  </div>
+  <div id="emptyState" class="empty" style="display:none;">
+    まだ何もありません。<br>右下の + から追加してください。
+  </div>
+  <div id="itemList"></div>
+</main>
+
+<button class="fab" id="fabAdd" aria-label="新規追加">+</button>
+<button class="voice-fab" id="voiceFab" aria-label="音声入力">🎤</button>
+
+<div class="voice-modal" id="voiceModal">
+  <div class="voice-sheet">
+    <div class="voice-sheet-handle"></div>
+    <div class="voice-status" id="voiceStatus">
+      <span class="voice-dot" id="voiceDot" style="display:none;"></span>
+      <span id="voiceStatusText">マイクをタップして話してください</span>
+    </div>
+    <div class="voice-transcript" id="voiceTranscript">
+      <span id="voiceFinal"></span><span class="voice-interim" id="voiceInter"></span>
+    </div>
+    <div class="voice-actions">
+      <button class="voice-stop-btn" id="voiceStopBtn">⏹ 停止</button>
+      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>✨ AI で整理する</button>
+    </div>
+    <div id="aiPreviewArea" style="display:none;">
+      <div class="ai-preview">
+        <div class="ai-preview-header">🤖 AI が整理した内容 — 編集してから保存できます</div>
+        <div class="ai-preview-body">
+          <div class="ai-field">
+            <div class="ai-field-label">タイトル</div>
+            <div class="ai-field-value"><input type="text" id="aiTitle"></div>
+          </div>
+          <div class="ai-field">
+            <div class="ai-field-label">タグ</div>
+            <div class="ai-field-value ai-tags-row" id="aiTagsRow"></div>
+          </div>
+          <div class="ai-field">
+            <div class="ai-field-label">メモ</div>
+            <div class="ai-field-value"><textarea id="aiBody"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <button class="voice-save-btn" id="aiSaveBtn">💾 この内容で保存</button>
+    </div>
+    <button class="voice-cancel-btn" id="voiceCancelBtn">キャンセル</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-header">
+    <button id="cancelBtn">キャンセル</button>
+    <h2 id="sheetTitle">新規追加</h2>
+    <button id="saveBtn" class="save">保存</button>
+  </div>
+  <div class="sheet-body">
+    <label class="field-label">タイトル</label>
+    <input type="text" id="inputTitle" placeholder="例: SSH接続コマンド">
+
+    <label class="field-label">タグ</label>
+    <div class="tag-input-row">
+      <input type="text" id="inputTagText" placeholder="タグを入力してEnter">
+      <button id="addTagBtn" type="button">追加</button>
+    </div>
+    <div class="tag-suggestions" id="tagSuggestions"></div>
+    <div class="tag-chips" id="tagChips"></div>
+
+    <div class="toggle-row">
+      <div class="toggle-row-text">
+        <span class="toggle-row-title">個人情報として保護</span>
+        <span class="toggle-row-desc">メモ・構造化項目の内容を暗号化します(タイトル・タグは保護されません)</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="sensitiveToggle">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+
+    <label class="field-label">URL(リンク集用・任意)</label>
+    <div class="url-field-row">
+      <input type="text" id="inputUrl" placeholder="https://...">
+      <button type="button" class="open-link-btn" id="previewUrlBtn">↗</button>
+    </div>
+
+    <label class="field-label">メモ(自由記述)</label>
+    <textarea id="inputBody" placeholder="コマンド、説明など自由に"></textarea>
+
+    <label class="field-label">構造化項目(任意)</label>
+    <div id="fieldRows"></div>
+    <button class="add-field-btn" id="addFieldBtn" type="button">+ 項目を追加</button>
+
+    <label class="field-label">画像</label>
+    <div class="img-section">
+      <div class="img-add-row">
+        <button type="button" class="img-add-btn" id="imgCameraBtn">📷 カメラ</button>
+        <button type="button" class="img-add-btn" id="imgPickBtn">🖼 写真を選択</button>
+        <button type="button" class="img-add-btn bridge" id="imgIllustBtn">🎨 illust-studio</button>
+      </div>
+      <div class="img-thumbs" id="imgThumbs"></div>
+    </div>
+
+    <label class="field-label">音源</label>
+    <div class="audio-section">
+      <div class="audio-add-row">
+        <button type="button" class="audio-add-btn" id="recStartBtn">🎙 録音</button>
+        <button type="button" class="audio-add-btn music" id="musicSuiteBtn">🎵 music-suite</button>
+      </div>
+      <div class="rec-status" id="recStatus">
+        <span class="rec-dot"></span>
+        <span class="rec-timer" id="recTimer">00:00</span>
+        <button type="button" class="rec-stop-btn" id="recStopBtn">■ 停止</button>
+      </div>
+      <div id="audioList"></div>
+    </div>
+
+    <label class="field-label">🔗 関連項目</label>
+    <div id="relatedSection"></div>
+    <button type="button" class="ai-related-btn" id="aiRelatedBtn">✨ AIでさらに探す</button>
+
+    <div class="danger-zone" id="deleteZone" style="display:none;">
+      <button class="delete-btn" id="deleteBtn">この項目を削除</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pinOverlay" style="z-index:40;"></div>
+<div class="pin-modal" id="pinModal">
+  <h3 id="pinModalTitle">パスコードを設定</h3>
+  <p class="pin-desc" id="pinModalDesc">個人情報として保護する項目を見るためのパスコードです。</p>
+  <input type="password" id="pinInput1" placeholder="パスコード" autocomplete="off">
+  <input type="password" id="pinInput2" placeholder="確認のため再入力" autocomplete="off" style="display:none;">
+  <p class="pin-error" id="pinError" style="display:none;"></p>
+  <div class="pin-actions">
+    <button type="button" id="pinCancelBtn">キャンセル</button>
+    <button type="button" id="pinConfirmBtn" class="primary">設定する</button>
+  </div>
+  <button type="button" id="pinForgotBtn" class="pin-forgot" style="display:none;">パスコードを忘れた場合</button>
+</div>
+
+<div class="overlay" id="menuOverlay"></div>
+
+<div class="review-overlay" id="reviewOverlay">
+  <div class="review-sheet" id="reviewSheet">
+    <div class="review-header">
+      <div class="review-header-top">
+        <span class="review-title" id="reviewTitle">🗓 デイリーレビュー</span>
+        <button class="review-close-btn" id="reviewCloseBtn">✕</button>
+      </div>
+      <div class="review-progress-track">
+        <div class="review-progress-fill" id="reviewProgressFill" style="width:0%"></div>
+      </div>
+      <div class="review-counter">
+        <span id="reviewCounterText">0 / 0</span>
+        <span id="reviewStreakLabel"></span>
+      </div>
+    </div>
+    <div class="review-body" id="reviewBody"></div>
+  </div>
+</div>
+<div class="action-sheet" id="menuSheet">
+  <div class="action-sheet-handle"></div>
+  <h3>データ管理</h3>
+  <button type="button" class="action-btn" id="exportBtn">
+    <span class="action-icon">📤</span>
+    <span class="action-btn-inner">
+      <span class="action-label">JSONエクスポート</span>
+      <span class="action-desc">全データをファイルに書き出し・iCloud保存</span>
+    </span>
+  </button>
+  <button type="button" class="action-btn" id="importBtn">
+    <span class="action-icon">📥</span>
+    <span class="action-btn-inner">
+      <span class="action-label">JSONインポート</span>
+      <span class="action-desc">バックアップから復元・マージ</span>
+    </span>
+  </button>
+  <button type="button" class="action-btn" id="tagBridgeBtn">
+    <span class="action-icon">🔗</span>
+    <span class="action-btn-inner">
+      <span class="action-label">タグを他アプリと共有</span>
+      <span class="action-desc">illust-studio / music-suite などに同期</span>
+    </span>
+  </button>
+  <button type="button" class="action-btn" id="kanseiExportBtn">
+    <span class="action-icon">📝</span>
+    <span class="action-btn-inner">
+      <span class="action-label">素材を kansei に送る</span>
+      <span class="action-desc">表示中の項目を旅行記原稿生成ツールへ</span>
+    </span>
+  </button>
+  <button type="button" class="action-btn" id="iconGenBtn">
+    <span class="action-icon">🎨</span>
+    <span class="action-btn-inner">
+      <span class="action-label">アイコンを生成・ダウンロード</span>
+      <span class="action-desc">ホーム画面用 icon-192.png / icon-512.png</span>
+    </span>
+  </button>
+</div>
+
+<input type="file" id="importFileInput" accept=".json,application/json" style="display:none;">
+
+<div class="add-guide" id="addGuide">
+  <div class="add-guide-sheet">
+    <h3 id="addGuideTitle">📱 ホーム画面に追加する方法</h3>
+    <div class="add-guide-url" id="addGuideUrl"></div>
+    <div class="add-guide-step">
+      <div class="add-guide-num">1</div>
+      <p>上のURLをコピーして Safari で開く<br><small style="color:var(--text-secondary)">※このアプリを Safari で開いている場合はそのままでOK</small></p>
+    </div>
+    <div class="add-guide-step">
+      <div class="add-guide-num">2</div>
+      <p>Safari 下部の <strong>共有ボタン(□↑)</strong> をタップ</p>
+    </div>
+    <div class="add-guide-step">
+      <div class="add-guide-num">3</div>
+      <p><strong>「ホーム画面に追加」</strong> を選択<br><small style="color:var(--text-secondary)">アイコン画像は事前に生成してSafariに設定するか、デフォルトを使用</small></p>
+    </div>
+    <div class="add-guide-step">
+      <div class="add-guide-num">4</div>
+      <p>名前を確認して <strong>「追加」</strong> をタップ</p>
+    </div>
+    <button type="button" class="add-guide-close" id="addGuideClose">閉じる</button>
+  </div>
+</div>
+
+<div class="overlay" id="iconOverlay" style="z-index:40;"></div>
+<div class="icon-modal" id="iconModal">
+  <h3>🎨 アイコンを生成</h3>
+  <div class="icon-preview-row">
+    <div class="icon-preview-wrap">
+      <canvas id="iconCanvas192" width="192" height="192" style="width:96px;height:96px;"></canvas>
+      <div class="icon-preview-label">192×192</div>
+    </div>
+    <div class="icon-preview-wrap">
+      <canvas id="iconCanvas512" width="512" height="512" style="width:96px;height:96px;"></canvas>
+      <div class="icon-preview-label">512×512</div>
+    </div>
+  </div>
+  <div class="icon-controls">
+    <div class="icon-control-row">
+      <label>絵文字/文字</label>
+      <input type="text" id="iconEmoji" value="参" maxlength="4" placeholder="参">
+    </div>
+    <div class="icon-control-row">
+      <label>背景色</label>
+      <input type="color" id="iconBgColor" value="#007AFF">
+      <input type="color" id="iconBgColor2" value="#005ECB" title="グラデーション終端色">
+      <span style="font-size:12px;color:var(--text-secondary);">グラデ</span>
+    </div>
+    <div class="icon-control-row">
+      <label>文字色</label>
+      <input type="color" id="iconFgColor" value="#FFFFFF">
+    </div>
+    <div class="icon-control-row">
+      <label>文字サイズ</label>
+      <input type="range" id="iconFontSize" min="20" max="90" value="55">
+    </div>
+  </div>
+  <div class="icon-dl-row">
+    <button type="button" class="icon-dl-btn" id="iconDl192">↓ 192px</button>
+    <button type="button" class="icon-dl-btn" id="iconDl512">↓ 512px</button>
+  </div>
+  <button type="button" class="icon-modal-close" id="iconModalClose">閉じる</button>
+</div>
+<input type="file" id="imgFileInput" accept="image/*" style="display:none;">
+<input type="file" id="imgCameraInput" accept="image/*" capture="environment" style="display:none;">
+
+<div class="img-preview-overlay" id="imgPreviewOverlay">
+  <button type="button" class="img-preview-close" id="imgPreviewClose">✕</button>
+  <img id="imgPreviewImg" src="" alt="プレビュー">
+</div>
+
+<script>
+// ---------- IndexedDB layer ----------
+const DB_NAME = 'quickRefDB';
+const DB_VERSION = 2;
+const STORE = 'items';
+const ATT_STORE = 'attachments';
+let dbPromise = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        const store = db.createObjectStore(STORE, { keyPath: 'id' });
+        store.createIndex('tags', 'tags', { multiEntry: true });
+        store.createIndex('updatedAt', 'updatedAt');
+      }
+      if (!db.objectStoreNames.contains(ATT_STORE)) {
+        const att = db.createObjectStore(ATT_STORE, { keyPath: 'id' });
+        att.createIndex('itemId', 'itemId');
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+  return dbPromise;
+}
+
+async function dbGetAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPut(item) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(item);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDelete(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// --- Attachment CRUD ---
+async function dbGetAttachments(itemId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ATT_STORE, 'readonly');
+    const req = tx.objectStore(ATT_STORE).index('itemId').getAll(itemId);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPutAttachment(att) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ATT_STORE, 'readwrite');
+    tx.objectStore(ATT_STORE).put(att);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDeleteAttachment(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ATT_STORE, 'readwrite');
+    tx.objectStore(ATT_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDeleteAttachmentsByItemId(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  for (const a of atts) await dbDeleteAttachment(a.id);
+}
+
+async function dbGetAllAttachmentMeta() {
+  // Returns all attachments without blob (for card badges)
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ATT_STORE, 'readonly');
+    const req = tx.objectStore(ATT_STORE).getAll();
+    req.onsuccess = () => resolve(req.result.map(a => ({ id: a.id, itemId: a.itemId, type: a.type })));
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ---------- Crypto (PIN protection) ----------
+const PIN_META_KEY = 'qr_pin_meta';
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function base64ToBytes(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function getPinMeta() {
+  const raw = localStorage.getItem(PIN_META_KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+function setPinMeta(meta) {
+  localStorage.setItem(PIN_META_KEY, JSON.stringify(meta));
+}
+function hasPinSetup() {
+  return !!getPinMeta();
+}
+
+async function deriveKeyFromPin(pin, saltB64) {
+  const salt = base64ToBytes(saltB64);
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), { name: 'PBKDF2' }, false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function setupPin(pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltB64 = bytesToBase64(salt);
+  const key = await deriveKeyFromPin(pin, saltB64);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode('QUICKREF_OK'));
+  setPinMeta({
+    salt: saltB64,
+    checkIv: bytesToBase64(iv),
+    checkData: bytesToBase64(new Uint8Array(cipherBuf))
+  });
+  sessionKey = key;
+}
+
+async function tryUnlockWithPin(pin) {
+  const meta = getPinMeta();
+  if (!meta) return false;
+  try {
+    const key = await deriveKeyFromPin(pin, meta.salt);
+    const iv = base64ToBytes(meta.checkIv);
+    const data = base64ToBytes(meta.checkData);
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+    if (new TextDecoder().decode(plainBuf) === 'QUICKREF_OK') {
+      sessionKey = key;
+      return true;
+    }
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
+
+function lockSession() {
+  sessionKey = null;
+  decryptedCache.clear();
+  updateLockButton();
+  renderList();
+}
+
+async function encryptToItemFields(plainBody, plainFields) {
+  const enc = new TextEncoder();
+  const ivBody = crypto.getRandomValues(new Uint8Array(12));
+  const bodyBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: ivBody }, sessionKey, enc.encode(plainBody || ''));
+  const ivFields = crypto.getRandomValues(new Uint8Array(12));
+  const fieldsBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: ivFields }, sessionKey, enc.encode(JSON.stringify(plainFields || [])));
+  return {
+    encBody: { iv: ivBody, data: new Uint8Array(bodyBuf) },
+    encFields: { iv: ivFields, data: new Uint8Array(fieldsBuf) }
+  };
+}
+
+async function decryptItemContent(item) {
+  if (!sessionKey || !item.encBody) return null;
+  try {
+    const dec = new TextDecoder();
+    const bodyBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: item.encBody.iv }, sessionKey, item.encBody.data);
+    const fieldsBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: item.encFields.iv }, sessionKey, item.encFields.data);
+    return {
+      body: dec.decode(bodyBuf),
+      fields: JSON.parse(dec.decode(fieldsBuf))
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+async function refreshDecryptedCache() {
+  decryptedCache.clear();
+  if (!sessionKey) return;
+  for (const item of items) {
+    if (item.sensitive) {
+      const plain = await decryptItemContent(item);
+      if (plain) decryptedCache.set(item.id, plain);
+    }
+  }
+}
+
+function ensureUnlocked() {
+  if (sessionKey) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    unlockResolver = resolve;
+    openPinModal();
+  });
+}
+
+function updateLockButton() {
+  if (!hasPinSetup()) {
+    lockToggleBtn.textContent = '🔑';
+    lockToggleBtn.title = 'パスコード未設定';
+  } else if (sessionKey) {
+    lockToggleBtn.textContent = '🔓';
+    lockToggleBtn.title = 'タップでロック';
+  } else {
+    lockToggleBtn.textContent = '🔒';
+    lockToggleBtn.title = 'タップでロック解除';
+  }
+}
+
+function openPinModal() {
+  pinMode = hasPinSetup() ? 'unlock' : 'setup';
+  pinErrorEl.style.display = 'none';
+  pinInput1.value = '';
+  pinInput2.value = '';
+  if (pinMode === 'setup') {
+    pinModalTitle.textContent = 'パスコードを設定';
+    pinModalDesc.textContent = '個人情報として保護する項目用のパスコードです。忘れると保護した内容は復元できません。';
+    pinInput2.style.display = 'block';
+    pinConfirmBtn.textContent = '設定する';
+    pinForgotBtn.style.display = 'none';
+  } else {
+    pinModalTitle.textContent = 'パスコードを入力';
+    pinModalDesc.textContent = '保護された項目を見るにはパスコードが必要です。';
+    pinInput2.style.display = 'none';
+    pinConfirmBtn.textContent = '開く';
+    pinForgotBtn.style.display = 'block';
+  }
+  pinOverlayEl.classList.add('open');
+  pinModalEl.classList.add('open');
+  setTimeout(() => pinInput1.focus(), 50);
+}
+
+function closePinModal(success) {
+  pinOverlayEl.classList.remove('open');
+  pinModalEl.classList.remove('open');
+  if (unlockResolver) {
+    const resolve = unlockResolver;
+    unlockResolver = null;
+    resolve(success);
+  }
+}
+
+function showPinError(msg) {
+  pinErrorEl.textContent = msg;
+  pinErrorEl.style.display = 'block';
+}
+
+// ---------- State ----------
+let items = [];
+let editingId = null;
+let draftTags = [];
+let draftFields = []; // [{key, value}]
+let searchQuery = '';
+let activeFilterTags = new Set();
+let linkFilterActive = false;
+let draftSensitive = false;
+let sessionKey = null;          // CryptoKey, null = ロック中
+let decryptedCache = new Map(); // id -> { body, fields }
+let unlockResolver = null;
+let pinMode = 'setup';          // 'setup' | 'unlock'
+
+// Image draft state
+let draftImages = [];    // { tempId, blob, url, name, isExisting, attId }
+let draftAudios = [];    // { tempId, blob, url, name, type, meta, isExisting, attId }
+let attachmentMeta = []; // { id, itemId, type } — badge用、blob不含
+let objURLs = [];        // 解放管理用
+
+// Recording state
+let mediaRecorder = null;
+let recChunks = [];
+let recTimerInterval = null;
+let recSeconds = 0;
+
+// ---------- DOM refs ----------
+const itemListEl = document.getElementById('itemList');
+const emptyStateEl = document.getElementById('emptyState');
+const countLabelEl = document.getElementById('countLabel');
+const overlayEl = document.getElementById('overlay');
+const sheetEl = document.getElementById('sheet');
+const sheetTitleEl = document.getElementById('sheetTitle');
+const inputTitle = document.getElementById('inputTitle');
+const inputTagText = document.getElementById('inputTagText');
+const tagChipsEl = document.getElementById('tagChips');
+const tagSuggestionsEl = document.getElementById('tagSuggestions');
+const inputBody = document.getElementById('inputBody');
+const fieldRowsEl = document.getElementById('fieldRows');
+const deleteZoneEl = document.getElementById('deleteZone');
+const searchInput = document.getElementById('searchInput');
+const tagFilterRowEl = document.getElementById('tagFilterRow');
+const sensitiveToggle = document.getElementById('sensitiveToggle');
+const lockToggleBtn = document.getElementById('lockToggleBtn');
+const imgThumbsEl = document.getElementById('imgThumbs');
+const imgFileInput = document.getElementById('imgFileInput');
+const imgCameraInput = document.getElementById('imgCameraInput');
+const imgPreviewOverlay = document.getElementById('imgPreviewOverlay');
+const imgPreviewImg = document.getElementById('imgPreviewImg');
+const audioListEl = document.getElementById('audioList');
+const recStatusEl = document.getElementById('recStatus');
+const recTimerEl = document.getElementById('recTimer');
+const pinOverlayEl = document.getElementById('pinOverlay');
+const pinModalEl = document.getElementById('pinModal');
+const pinModalTitle = document.getElementById('pinModalTitle');
+const pinModalDesc = document.getElementById('pinModalDesc');
+const pinInput1 = document.getElementById('pinInput1');
+const pinInput2 = document.getElementById('pinInput2');
+const pinErrorEl = document.getElementById('pinError');
+const pinCancelBtn = document.getElementById('pinCancelBtn');
+const pinConfirmBtn = document.getElementById('pinConfirmBtn');
+const pinForgotBtn = document.getElementById('pinForgotBtn');
+
+// ---------- Rendering ----------
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function matchesFilter(item) {
+  if (linkFilterActive && !item.url) return false;
+  if (activeFilterTags.size > 0) {
+    const tags = item.tags || [];
+    if (!tags.some(t => activeFilterTags.has(t))) return false;
+  }
+  const q = searchQuery.trim();
+  if (!q) return true;
+  return fuzzyMatchItem(item, q);
+}
+
+function getAllTagsSorted() {
+  const freq = {};
+  items.forEach(it => (it.tags || []).forEach(t => { freq[t] = (freq[t] || 0) + 1; }));
+  return Object.keys(freq).sort((a, b) => freq[b] - freq[a] || a.localeCompare(b, 'ja'));
+}
+
+function renderTagFilterRow() {
+  const tags = getAllTagsSorted();
+  if (tags.length === 0) {
+    tagFilterRowEl.innerHTML = '';
+    tagFilterRowEl.style.display = 'none';
+    return;
+  }
+  tagFilterRowEl.style.display = 'flex';
+  const allChip = `<button type="button" class="filter-chip ${activeFilterTags.size === 0 ? 'active' : ''}" data-tag="">すべて</button>`;
+  const tagChips = tags.map(t => `<button type="button" class="filter-chip ${activeFilterTags.has(t) ? 'active' : ''}" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`).join('');
+  tagFilterRowEl.innerHTML = allChip + tagChips;
+
+  tagFilterRowEl.querySelectorAll('.filter-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag;
+      if (tag === '') {
+        activeFilterTags.clear();
+      } else if (activeFilterTags.has(tag)) {
+        activeFilterTags.delete(tag);
+      } else {
+        activeFilterTags.add(tag);
+      }
+      renderList();
+    });
+  });
+}
+
+function renderList() {
+  const filtered = items.filter(matchesFilter);
+  const sorted = [...filtered].sort((a, b) => b.updatedAt - a.updatedAt);
+
+  countLabelEl.textContent = (filtered.length === items.length)
+    ? `${items.length}件`
+    : `${filtered.length} / ${items.length}件`;
+
+  if (items.length === 0) {
+    emptyStateEl.style.display = 'block';
+    emptyStateEl.innerHTML = 'まだ何もありません。<br>右下の + から追加してください。';
+  } else if (sorted.length === 0) {
+    emptyStateEl.style.display = 'block';
+    emptyStateEl.innerHTML = '該当する項目が見つかりません。';
+  } else {
+    emptyStateEl.style.display = 'none';
+  }
+
+  itemListEl.innerHTML = sorted.map(item => {
+    let snippetSource, locked = false;
+    if (item.sensitive) {
+      const cached = decryptedCache.get(item.id);
+      if (cached) {
+        snippetSource = (cached.body && cached.body.trim())
+          ? cached.body
+          : (cached.fields || []).map(f => `${f.key}: ${f.value}`).join(' / ');
+      } else {
+        snippetSource = '🔒 ロック中(タップしてパスコード入力)';
+        locked = true;
+      }
+    } else {
+      snippetSource = item.body && item.body.trim()
+        ? item.body
+        : (item.fields || []).map(f => `${f.key}: ${f.value}`).join(' / ');
+    }
+    const lockBadge = item.sensitive ? '<span class="lock-badge">🔒</span>' : '';
+    const tagsHtml = (item.tags || []).map(t => `<span class="chip">#${escapeHtml(t)}</span>`).join('');
+    const imgCount  = attachmentMeta.filter(a => a.itemId === item.id && a.type === 'image').length;
+    const audCount  = attachmentMeta.filter(a => a.itemId === item.id && (a.type === 'audio' || a.type === 'music-ref')).length;
+    const linkCount = (getLinks()[item.id] || []).length;
+    const imgBadge  = imgCount  > 0 ? `<span class="card-img-badge">📷 ${imgCount}</span>`  : '';
+    const audBadge  = audCount  > 0 ? `<span class="card-audio-badge">🎵 ${audCount}</span>` : '';
+    const lnkBadge  = linkCount > 0 ? `<span class="card-link-badge">🔗 ${linkCount}</span>` : '';
+    const urlRow = item.url ? `
+      <div class="card-url-row">
+        <span class="card-url-text">🔗 ${escapeHtml(item.url)}</span>
+        <button class="card-open-btn" data-url="${escapeHtml(item.url)}">開く ↗</button>
+      </div>` : '';
+    return `
+      <div class="card" data-id="${item.id}">
+        <p class="card-title">${lockBadge}${escapeHtml(item.title || '(無題)')}</p>
+        ${snippetSource ? `<p class="card-snippet${locked ? ' locked-text' : ''}">${escapeHtml(snippetSource)}</p>` : ''}
+        ${(imgBadge || audBadge || lnkBadge) ? `<div>${imgBadge}${audBadge}${lnkBadge}</div>` : ''}
+        ${urlRow}
+        ${tagsHtml ? `<div class="chips">${tagsHtml}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  itemListEl.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.classList.contains('card-open-btn')) {
+        e.stopPropagation();
+        window.open(e.target.dataset.url, '_blank');
+        return;
+      }
+      openEdit(card.dataset.id);
+    });
+  });
+
+  renderTagFilterRow();
+}
+
+function renderTagChips() {
+  tagChipsEl.innerHTML = draftTags.map((t, i) => `
+    <span class="tag-chip">#${escapeHtml(t)}<button type="button" data-i="${i}">×</button></span>
+  `).join('');
+  tagChipsEl.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      draftTags.splice(Number(btn.dataset.i), 1);
+      renderTagChips();
+    });
+  });
+  renderTagSuggestions();
+}
+
+function renderTagSuggestions() {
+  const q = inputTagText.value.trim().toLowerCase();
+  const candidates = getAllTagsSorted()
+    .filter(t => !draftTags.includes(t) && (q === '' || t.toLowerCase().includes(q)))
+    .slice(0, 8);
+
+  if (candidates.length === 0) {
+    tagSuggestionsEl.innerHTML = '';
+    tagSuggestionsEl.style.display = 'none';
+    return;
+  }
+  tagSuggestionsEl.style.display = 'flex';
+  tagSuggestionsEl.innerHTML = candidates.map(t =>
+    `<button type="button" class="suggestion-chip" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`
+  ).join('');
+
+  tagSuggestionsEl.querySelectorAll('.suggestion-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag;
+      if (!draftTags.includes(tag)) draftTags.push(tag);
+      inputTagText.value = '';
+      renderTagChips();
+    });
+  });
+}
+
+function renderFieldRows() {
+  fieldRowsEl.innerHTML = draftFields.map((f, i) => `
+    <div class="field-row" data-i="${i}">
+      <input type="text" class="fkey" placeholder="項目名" value="${escapeHtml(f.key)}">
+      <input type="text" class="fval" placeholder="値" value="${escapeHtml(f.value)}">
+      <button type="button" class="remove-field" data-i="${i}">×</button>
+    </div>
+  `).join('');
+
+  fieldRowsEl.querySelectorAll('.field-row').forEach(row => {
+    const i = Number(row.dataset.i);
+    row.querySelector('.fkey').addEventListener('input', e => draftFields[i].key = e.target.value);
+    row.querySelector('.fval').addEventListener('input', e => draftFields[i].value = e.target.value);
+  });
+  fieldRowsEl.querySelectorAll('.remove-field').forEach(btn => {
+    btn.addEventListener('click', () => {
+      draftFields.splice(Number(btn.dataset.i), 1);
+      renderFieldRows();
+    });
+  });
+}
+
+// ---------- Sheet open/close ----------
+function openSheet() {
+  overlayEl.classList.add('open');
+  sheetEl.classList.add('open');
+}
+function closeSheet() {
+  overlayEl.classList.remove('open');
+  sheetEl.classList.remove('open');
+}
+
+function resetForm() {
+  editingId = null;
+  draftTags = [];
+  draftFields = [];
+  draftSensitive = false;
+  revokeAllObjURLs();
+  draftImages = [];
+  draftAudios = [];
+  stopRecordingIfActive();
+  inputTitle.value = '';
+  inputBody.value = '';
+  inputTagText.value = '';
+  document.getElementById('inputUrl').value = '';
+  sensitiveToggle.checked = false;
+  imgThumbsEl.innerHTML = '';
+  audioListEl.innerHTML = '';
+  renderTagChips();
+  renderFieldRows();
+  sheetTitleEl.textContent = '新規追加';
+  deleteZoneEl.style.display = 'none';
+}
+
+function openAdd() {
+  resetForm();
+  openSheet();
+}
+
+async function openEdit(id) {
+  const item = items.find(it => it.id === id);
+  if (!item) return;
+
+  let plainBody = item.body || '';
+  let plainFields = (item.fields || []).map(f => ({ ...f }));
+
+  if (item.sensitive) {
+    const ok = await ensureUnlocked();
+    if (!ok) return;
+    let plain = decryptedCache.get(id);
+    if (!plain) {
+      plain = await decryptItemContent(item);
+      if (!plain) {
+        alert('復号に失敗しました。パスコードが正しいか確認してください。');
+        return;
+      }
+      decryptedCache.set(id, plain);
+    }
+    plainBody = plain.body;
+    plainFields = plain.fields.map(f => ({ ...f }));
+  }
+
+  editingId = id;
+  draftTags = [...(item.tags || [])];
+  draftFields = plainFields;
+  draftSensitive = !!item.sensitive;
+  revokeAllObjURLs();
+  draftImages = [];
+  draftAudios = [];
+  stopRecordingIfActive();
+  inputTitle.value = item.title || '';
+  inputBody.value = plainBody;
+  inputTagText.value = '';
+  document.getElementById('inputUrl').value = item.url || '';
+  sensitiveToggle.checked = draftSensitive;
+  renderTagChips();
+  renderFieldRows();
+  imgThumbsEl.innerHTML = '';
+  audioListEl.innerHTML = '';
+  await loadExistingImages(id);
+  await loadExistingAudios(id);
+  sheetTitleEl.textContent = '編集';
+  deleteZoneEl.style.display = 'block';
+  openSheet();
+  // 関連項目を描画(シートが開いた後)
+  setTimeout(() => renderRelatedItems(item), 80);
+}
+
+// ---------- Event wiring ----------
+document.getElementById('fabAdd').addEventListener('click', openAdd);
+document.getElementById('cancelBtn').addEventListener('click', closeSheet);
+overlayEl.addEventListener('click', closeSheet);
+
+searchInput.addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  renderList();
+});
+
+document.getElementById('linkFilterBtn').addEventListener('click', () => {
+  linkFilterActive = !linkFilterActive;
+  document.getElementById('linkFilterBtn').classList.toggle('active', linkFilterActive);
+  renderList();
+});
+
+document.getElementById('previewUrlBtn').addEventListener('click', () => {
+  const url = document.getElementById('inputUrl').value.trim();
+  if (url) window.open(url, '_blank');
+});
+
+lockToggleBtn.addEventListener('click', async () => {
+  if (sessionKey) {
+    lockSession();
+  } else {
+    await ensureUnlocked();
+  }
+});
+
+pinCancelBtn.addEventListener('click', () => closePinModal(false));
+pinOverlayEl.addEventListener('click', () => closePinModal(false));
+
+pinConfirmBtn.addEventListener('click', async () => {
+  const v1 = pinInput1.value;
+  const v2 = pinInput2.value;
+  if (!v1) { showPinError('パスコードを入力してください'); return; }
+
+  if (pinMode === 'setup') {
+    if (v1.length < 4) { showPinError('4文字以上で入力してください'); return; }
+    if (v1 !== v2) { showPinError('確認用と一致しません'); return; }
+    await setupPin(v1);
+  } else {
+    const ok = await tryUnlockWithPin(v1);
+    if (!ok) { showPinError('パスコードが違います'); return; }
+  }
+  await refreshDecryptedCache();
+  updateLockButton();
+  closePinModal(true);
+  renderList();
+});
+
+pinForgotBtn.addEventListener('click', async () => {
+  const warned = confirm('パスコードをリセットすると、保護されていた項目はすべて削除され復元できません。続行しますか?');
+  if (!warned) return;
+  const sensitiveItems = items.filter(it => it.sensitive);
+  for (const it of sensitiveItems) {
+    await dbDelete(it.id);
+  }
+  localStorage.removeItem(PIN_META_KEY);
+  sessionKey = null;
+  decryptedCache.clear();
+  await reload();
+  updateLockButton();
+  closePinModal(false);
+  alert('パスコードと保護された項目をリセットしました。');
+});
+
+document.getElementById('addTagBtn').addEventListener('click', commitTagInput);
+inputTagText.addEventListener('input', renderTagSuggestions);
+inputTagText.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    commitTagInput();
+  }
+});
+function commitTagInput() {
+  const raw = inputTagText.value.trim().replace(/^#/, '');
+  if (raw && !draftTags.includes(raw)) {
+    draftTags.push(raw);
+  }
+  inputTagText.value = '';
+  renderTagChips();
+}
+
+document.getElementById('addFieldBtn').addEventListener('click', () => {
+  draftFields.push({ key: '', value: '' });
+  renderFieldRows();
+});
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const title = inputTitle.value.trim();
+  if (!title) {
+    inputTitle.focus();
+    return;
+  }
+  if (inputTagText.value.trim()) commitTagInput();
+
+  const wantsSensitive = sensitiveToggle.checked;
+  if (wantsSensitive) {
+    const ok = await ensureUnlocked();
+    if (!ok) return;
+  }
+
+  const now = Date.now();
+  const cleanedFields = draftFields
+    .map(f => ({ key: f.key.trim(), value: f.value.trim() }))
+    .filter(f => f.key || f.value);
+
+  const item = {
+    id: editingId || crypto.randomUUID(),
+    title,
+    tags: draftTags,
+    url: document.getElementById('inputUrl').value.trim() || '',
+    sensitive: wantsSensitive,
+    createdAt: editingId
+      ? (items.find(it => it.id === editingId)?.createdAt || now)
+      : now,
+    updatedAt: now
+  };
+
+  if (wantsSensitive) {
+    const enc = await encryptToItemFields(inputBody.value, cleanedFields);
+    item.encBody = enc.encBody;
+    item.encFields = enc.encFields;
+    item.body = '';
+    item.fields = [];
+  } else {
+    item.body = inputBody.value;
+    item.fields = cleanedFields;
+  }
+
+  await dbPut(item);
+  await saveImageAttachments(item.id);
+  await saveAudioAttachments(item.id);
+  await reload();
+  syncEcosystemTags();
+  closeSheet();
+});
+
+document.getElementById('deleteBtn').addEventListener('click', async () => {
+  if (!editingId) return;
+  if (!confirm('この項目を削除しますか?')) return;
+  await dbDeleteAttachmentsByItemId(editingId);
+  await dbDelete(editingId);
+  await reload();
+  syncEcosystemTags();
+  closeSheet();
+});
+
+// ---------- Init ----------
+async function reload() {
+  items = await dbGetAll();
+  attachmentMeta = await dbGetAllAttachmentMeta();
+  if (sessionKey) await refreshDecryptedCache();
+  renderList();
+  updateBackupBanner();
+  syncEcosystemTags();
+  updateReviewBadge();
+}
+updateLockButton();
+reload();
+
+// ---------- TASK6: Image attachments ----------
+function revokeAllObjURLs() {
+  objURLs.forEach(u => URL.revokeObjectURL(u));
+  objURLs = [];
+}
+
+function makeTempId() { return 'tmp_' + Date.now() + '_' + Math.random().toString(36).slice(2); }
+
+function renderImageThumbs() {
+  imgThumbsEl.innerHTML = '';
+  draftImages.forEach((img, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'img-thumb-wrap';
+
+    const thumb = document.createElement('img');
+    thumb.className = 'img-thumb';
+    thumb.src = img.url;
+    thumb.addEventListener('click', () => openImgPreview(img.url));
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'img-thumb-del';
+    del.textContent = '×';
+    del.addEventListener('click', async () => {
+      if (img.isExisting && img.attId) await dbDeleteAttachment(img.attId);
+      URL.revokeObjectURL(img.url);
+      draftImages.splice(i, 1);
+      renderImageThumbs();
+    });
+
+    wrap.appendChild(thumb);
+    wrap.appendChild(del);
+    imgThumbsEl.appendChild(wrap);
+  });
+}
+
+function addBlobToDraft(blob, name) {
+  const MAX = 5 * 1024 * 1024;
+  if (blob.size > MAX) { alert('画像サイズが大きすぎます(上限5MB)。'); return; }
+  const url = URL.createObjectURL(blob);
+  objURLs.push(url);
+  draftImages.push({ tempId: makeTempId(), blob, url, name: name || 'image.jpg', isExisting: false });
+  renderImageThumbs();
+}
+
+async function loadExistingImages(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  const images = atts.filter(a => a.type === 'image');
+  images.forEach(a => {
+    const url = URL.createObjectURL(a.blob);
+    objURLs.push(url);
+    draftImages.push({ tempId: makeTempId(), blob: a.blob, url, name: a.name, isExisting: true, attId: a.id });
+  });
+  renderImageThumbs();
+}
+
+async function saveImageAttachments(itemId) {
+  for (const img of draftImages) {
+    if (!img.isExisting) {
+      await dbPutAttachment({
+        id: crypto.randomUUID(),
+        itemId,
+        type: 'image',
+        blob: img.blob,
+        mimeType: img.blob.type || 'image/jpeg',
+        name: img.name,
+        createdAt: Date.now()
+      });
+    }
+  }
+}
+
+// illust-studio bridge
+function tryImportFromIllustStudio() {
+  try {
+    const raw = localStorage.getItem('is_transfer');
+    if (!raw) { alert('illust-studioからの転送データが見つかりません。\nillust-studioのギャラリーから「クイック参照に送る」を行ってください。'); return; }
+    const data = JSON.parse(raw);
+    // Format: { image: 'data:image/png;base64,...', title:'', ... }
+    const src = data.image || data.dataUrl || data.src || null;
+    if (!src) { alert('画像データが取得できませんでした。'); return; }
+    fetch(src).then(r => r.blob()).then(blob => {
+      addBlobToDraft(blob, data.title ? `${data.title}.png` : 'illust-studio.png');
+      localStorage.removeItem('is_transfer');
+    });
+  } catch (err) {
+    alert('is_transferの読み込みに失敗しました: ' + err.message);
+  }
+}
+
+// File input handlers
+imgFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) addBlobToDraft(file, file.name);
+  imgFileInput.value = '';
+});
+imgCameraInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) addBlobToDraft(file, file.name);
+  imgCameraInput.value = '';
+});
+document.getElementById('imgPickBtn').addEventListener('click', () => imgFileInput.click());
+document.getElementById('imgCameraBtn').addEventListener('click', () => imgCameraInput.click());
+document.getElementById('imgIllustBtn').addEventListener('click', tryImportFromIllustStudio);
+
+// Preview modal
+function openImgPreview(url) {
+  imgPreviewImg.src = url;
+  imgPreviewOverlay.classList.add('open');
+}
+document.getElementById('imgPreviewClose').addEventListener('click', () => {
+  imgPreviewOverlay.classList.remove('open');
+  imgPreviewImg.src = '';
+});
+imgPreviewOverlay.addEventListener('click', (e) => {
+  if (e.target === imgPreviewOverlay) {
+    imgPreviewOverlay.classList.remove('open');
+    imgPreviewImg.src = '';
+  }
+});
+
+// ---------- TASK7: Audio attachments ----------
+function formatTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function stopRecordingIfActive() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  if (recTimerInterval) { clearInterval(recTimerInterval); recTimerInterval = null; }
+  recStatusEl.classList.remove('active');
+  mediaRecorder = null; recChunks = []; recSeconds = 0;
+}
+
+function addAudioToDraft(blob, name, type = 'audio', meta = {}) {
+  const url = URL.createObjectURL(blob);
+  objURLs.push(url);
+  draftAudios.push({ tempId: makeTempId(), blob, url, name, type, meta, isExisting: false });
+  renderAudioList();
+}
+
+async function loadExistingAudios(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  const audios = atts.filter(a => a.type === 'audio' || a.type === 'music-ref');
+  audios.forEach(a => {
+    const url = a.type === 'music-ref' ? null : URL.createObjectURL(a.blob);
+    if (url) objURLs.push(url);
+    draftAudios.push({ tempId: makeTempId(), blob: a.blob, url, name: a.name, type: a.type, meta: a.meta || {}, isExisting: true, attId: a.id });
+  });
+  renderAudioList();
+}
+
+async function saveAudioAttachments(itemId) {
+  for (const aud of draftAudios) {
+    if (!aud.isExisting) {
+      await dbPutAttachment({
+        id: crypto.randomUUID(), itemId, type: aud.type,
+        blob: aud.blob, mimeType: aud.blob ? aud.blob.type : 'application/json',
+        name: aud.name, meta: aud.meta, createdAt: Date.now()
+      });
+    }
+  }
+}
+
+function renderAudioList() {
+  audioListEl.innerHTML = '';
+  draftAudios.forEach((aud, i) => {
+    const div = document.createElement('div');
+    if (aud.type === 'music-ref') {
+      const bpm = aud.meta.bpm ? `BPM ${aud.meta.bpm}` : '';
+      const key = aud.meta.key ? `Key: ${aud.meta.key}` : '';
+      div.className = 'music-ref-item';
+      div.innerHTML = `
+        <span class="music-ref-icon">🎵</span>
+        <div class="music-ref-info">
+          <div class="music-ref-title">${escapeHtml(aud.name)}</div>
+          <div class="music-ref-meta">${[bpm, key].filter(Boolean).join(' / ')}</div>
+        </div>
+        <button type="button" class="music-ref-del" data-i="${i}">×</button>
+      `;
+    } else {
+      div.className = 'audio-item';
+      div.innerHTML = `
+        <span class="audio-item-label">${escapeHtml(aud.name)}</span>
+        <audio src="${aud.url}" controls preload="metadata"></audio>
+        <button type="button" class="audio-item-del" data-i="${i}">×</button>
+      `;
+    }
+    const delBtn = div.querySelector('[data-i]');
+    delBtn.addEventListener('click', async () => {
+      if (aud.isExisting && aud.attId) await dbDeleteAttachment(aud.attId);
+      if (aud.url) URL.revokeObjectURL(aud.url);
+      draftAudios.splice(i, 1);
+      renderAudioList();
+    });
+    audioListEl.appendChild(div);
+  });
+}
+
+// Recording
+document.getElementById('recStartBtn').addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recChunks = []; recSeconds = 0;
+
+    const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
+      : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      clearInterval(recTimerInterval); recTimerInterval = null;
+      recStatusEl.classList.remove('active');
+      const blob = new Blob(recChunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
+      const ext = (mediaRecorder.mimeType || 'audio/mp4').includes('webm') ? 'webm' : 'm4a';
+      const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      addAudioToDraft(blob, `録音-${dateStr}.${ext}`);
+      mediaRecorder = null; recChunks = [];
+    };
+
+    mediaRecorder.start(500);
+    recStatusEl.classList.add('active');
+    recTimerEl.textContent = '00:00';
+    recTimerInterval = setInterval(() => {
+      recSeconds++;
+      recTimerEl.textContent = formatTime(recSeconds);
+    }, 1000);
+  } catch (err) {
+    alert('マイクへのアクセスが許可されていません。\nSettings → Safari → マイク を確認してください。');
+  }
+});
+
+document.getElementById('recStopBtn').addEventListener('click', () => {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+});
+
+// music-suite bridge
+document.getElementById('musicSuiteBtn').addEventListener('click', () => {
+  // Check URL hash first (#import=base64JSON)
+  let data = null;
+  if (location.hash.startsWith('#import=')) {
+    try {
+      data = JSON.parse(atob(location.hash.slice(8)));
+      history.replaceState(null, '', location.pathname);
+    } catch (_) {}
+  }
+  // Fallback: localStorage known keys
+  if (!data) {
+    for (const key of ['ms_transfer', 'music_transfer', 'ms_export', 'music_suite_export']) {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try { data = JSON.parse(raw); localStorage.removeItem(key); break; } catch (_) {}
+      }
+    }
+  }
+  if (!data) {
+    alert('music-suiteからの転送データが見つかりません。\nmusic-suiteのエクスポート機能で「クイック参照に送る」を実行してください。\n(URL hash #import= または localStorage ms_transfer キー)');
+    return;
+  }
+  const name = `${data.source || 'music-suite'} ${data.key || ''}${data.bpm ? ' ' + data.bpm + 'BPM' : ''}`.trim();
+  const jsonBlob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  draftAudios.push({
+    tempId: makeTempId(), blob: jsonBlob, url: null,
+    name, type: 'music-ref',
+    meta: { bpm: data.bpm, key: data.key, source: data.source },
+    isExisting: false
+  });
+  renderAudioList();
+});
+
+// ---------- TASK5: Backup / Export / Import / Tag Bridge ----------
+const BACKUP_KEY = 'qr_last_backup';
+const ECOSYSTEM_TAGS_KEY = 'ecosystem_tags';
+const menuOverlayEl = document.getElementById('menuOverlay');
+const menuSheetEl = document.getElementById('menuSheet');
+const backupBannerEl = document.getElementById('backupBanner');
+const backupBannerTextEl = document.getElementById('backupBannerText');
+const importFileInput = document.getElementById('importFileInput');
+
+function getLastBackupDays() {
+  const ts = localStorage.getItem(BACKUP_KEY);
+  if (!ts) return null;
+  return Math.floor((Date.now() - Number(ts)) / 86400000);
+}
+
+function recordBackupNow() {
+  localStorage.setItem(BACKUP_KEY, String(Date.now()));
+  updateBackupBanner();
+}
+
+function updateBackupBanner() {
+  const days = getLastBackupDays();
+  if (days === null) {
+    backupBannerEl.style.display = 'flex';
+    backupBannerTextEl.textContent = 'まだバックアップがありません。エクスポートで保存してください。';
+  } else if (days >= 7) {
+    backupBannerEl.style.display = 'flex';
+    backupBannerTextEl.textContent = `最終バックアップから ${days} 日経過しています。`;
+  } else {
+    backupBannerEl.style.display = 'none';
+  }
+}
+
+function syncEcosystemTags() {
+  const tags = getAllTagsSorted();
+  try {
+    localStorage.setItem(ECOSYSTEM_TAGS_KEY, JSON.stringify({
+      source: 'quick-ref',
+      tags,
+      updatedAt: Date.now()
+    }));
+  } catch (_) {}
+}
+
+// --- Serialization helpers for encrypted fields ---
+function encFieldToJSON(ef) {
+  if (!ef) return null;
+  return { iv: bytesToBase64(ef.iv), data: bytesToBase64(ef.data) };
+}
+function encFieldFromJSON(obj) {
+  if (!obj) return null;
+  return { iv: base64ToBytes(obj.iv), data: base64ToBytes(obj.data) };
+}
+
+async function doExport() {
+  const allItems = await dbGetAll();
+  const exportItems = allItems.map(item => {
+    const out = {
+      id: item.id, title: item.title, tags: item.tags,
+      sensitive: item.sensitive, createdAt: item.createdAt, updatedAt: item.updatedAt
+    };
+    if (item.sensitive) {
+      out.encBody   = encFieldToJSON(item.encBody);
+      out.encFields = encFieldToJSON(item.encFields);
+    } else {
+      out.body = item.body; out.fields = item.fields;
+    }
+    return out;
+  });
+
+  const payload = {
+    version: '1.0', source: 'quick-ref',
+    exportedAt: Date.now(),
+    pinMeta: getPinMeta(),
+    tags: getAllTagsSorted(),
+    items: exportItems
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const a = document.createElement('a');
+  a.href = url; a.download = `quick-ref-backup-${dateStr}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  recordBackupNow();
+}
+
+async function doImport(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const payload = JSON.parse(e.target.result);
+        if (!payload.items || !Array.isArray(payload.items)) {
+          resolve({ ok: false, msg: 'JSONの形式が正しくありません。' }); return;
+        }
+
+        const choice = confirm(
+          `${payload.items.length}件のデータが見つかりました。\n\n` +
+          `OK = マージ(同じIDは上書き、それ以外は保持)\n` +
+          `キャンセル = 全て上書き(既存データは削除)`
+        );
+
+        if (!choice) {
+          const db = await openDB();
+          await new Promise((res, rej) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).clear();
+            tx.oncomplete = res; tx.onerror = rej;
+          });
+        }
+
+        let count = 0;
+        for (const raw of payload.items) {
+          const item = {
+            id: raw.id, title: raw.title || '', tags: raw.tags || [],
+            sensitive: raw.sensitive || false,
+            createdAt: raw.createdAt || Date.now(),
+            updatedAt: raw.updatedAt || Date.now()
+          };
+          if (raw.sensitive) {
+            item.encBody   = encFieldFromJSON(raw.encBody);
+            item.encFields = encFieldFromJSON(raw.encFields);
+            item.body = ''; item.fields = [];
+          } else {
+            item.body = raw.body || ''; item.fields = raw.fields || [];
+          }
+          await dbPut(item);
+          count++;
+        }
+
+        if (payload.pinMeta && !getPinMeta()) {
+          const adopt = confirm('インポートファイルにパスコード設定があります。適用しますか?');
+          if (adopt) setPinMeta(payload.pinMeta);
+        }
+
+        await reload();
+        resolve({ ok: true, msg: `${count}件をインポートしました。` });
+      } catch (err) {
+        resolve({ ok: false, msg: `エラー: ${err.message}` });
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// --- Menu open/close ---
+function openMenu() {
+  menuOverlayEl.classList.add('open');
+  menuSheetEl.classList.add('open');
+}
+function closeMenu() {
+  menuOverlayEl.classList.remove('open');
+  menuSheetEl.classList.remove('open');
+}
+
+document.getElementById('menuBtn').addEventListener('click', openMenu);
+menuOverlayEl.addEventListener('click', closeMenu);
+
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  closeMenu();
+  await doExport();
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  closeMenu();
+  importFileInput.click();
+});
+
+importFileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const result = await doImport(file);
+  alert(result.msg);
+  importFileInput.value = '';
+});
+
+document.getElementById('tagBridgeBtn').addEventListener('click', () => {
+  closeMenu();
+  syncEcosystemTags();
+  const tags = getAllTagsSorted();
+  const msg = tags.length > 0
+    ? `${tags.length}件のタグをlocalStorage(ecosystem_tags)に書き込みました。\n\nillust-studio / music-suite 側でこのキーを読み込むとタグが共有されます。\n\nタグ一覧:\n${tags.map(t => '・' + t).join('\n')}`
+    : 'タグがまだありません。項目を作成してからお試しください。';
+  alert(msg);
+});
+
+document.getElementById('backupBannerBtn').addEventListener('click', async () => {
+  await doExport();
+});
+
+// ---------- Icon Generator ----------
+const iconOverlayEl = document.getElementById('iconOverlay');
+const iconModalEl = document.getElementById('iconModal');
+const iconEmojiInput = document.getElementById('iconEmoji');
+const iconBgColor = document.getElementById('iconBgColor');
+const iconBgColor2 = document.getElementById('iconBgColor2');
+const iconFgColor = document.getElementById('iconFgColor');
+const iconFontSize = document.getElementById('iconFontSize');
+
+function drawIcon(canvas) {
+  const size = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const radius = size * 0.22;
+  const text = iconEmojiInput.value || '参';
+  const fgColor = iconFgColor.value;
+  const fontSize = Math.round(size * Number(iconFontSize.value) / 100);
+
+  // Rounded rect clip
+  ctx.clearRect(0, 0, size, size);
+  ctx.beginPath();
+  ctx.moveTo(radius, 0);
+  ctx.lineTo(size - radius, 0);
+  ctx.arcTo(size, 0, size, radius, radius);
+  ctx.lineTo(size, size - radius);
+  ctx.arcTo(size, size, size - radius, size, radius);
+  ctx.lineTo(radius, size);
+  ctx.arcTo(0, size, 0, size - radius, radius);
+  ctx.lineTo(0, radius);
+  ctx.arcTo(0, 0, radius, 0, radius);
+  ctx.closePath();
+  ctx.clip();
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, iconBgColor.value);
+  grad.addColorStop(1, iconBgColor2.value);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  // Subtle inner highlight
+  const highlight = ctx.createRadialGradient(size * 0.35, size * 0.25, 0, size * 0.35, size * 0.25, size * 0.7);
+  highlight.addColorStop(0, 'rgba(255,255,255,0.18)');
+  highlight.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = highlight;
+  ctx.fillRect(0, 0, size, size);
+
+  // Text / emoji
+  ctx.fillStyle = fgColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Detect if emoji (multi-code) or plain text
+  const isEmoji = [...text].length === 1 && text.codePointAt(0) > 0x2000;
+  ctx.font = isEmoji
+    ? `${fontSize}px serif`
+    : `700 ${fontSize}px -apple-system, "Hiragino Sans", sans-serif`;
+
+  // Drop shadow for depth
+  ctx.shadowColor = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = size * 0.04;
+  ctx.shadowOffsetY = size * 0.02;
+
+  ctx.fillText(text, size / 2, size / 2 + size * 0.02);
+}
+
+function refreshIconPreviews() {
+  drawIcon(document.getElementById('iconCanvas192'));
+  drawIcon(document.getElementById('iconCanvas512'));
+}
+
+function downloadIcon(canvasId, filename) {
+  const canvas = document.getElementById(canvasId);
+  drawIcon(canvas);
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }, 'image/png');
+}
+
+function openIconModal() {
+  iconOverlayEl.classList.add('open');
+  iconModalEl.classList.add('open');
+  setTimeout(refreshIconPreviews, 50);
+}
+function closeIconModal() {
+  iconOverlayEl.classList.remove('open');
+  iconModalEl.classList.remove('open');
+}
+
+// リアルタイムプレビュー更新
+[iconEmojiInput, iconBgColor, iconBgColor2, iconFgColor, iconFontSize].forEach(el => {
+  el.addEventListener('input', refreshIconPreviews);
+});
+
+document.getElementById('iconGenBtn').addEventListener('click', () => {
+  closeMenu(); openIconModal();
+});
+iconOverlayEl.addEventListener('click', closeIconModal);
+document.getElementById('iconModalClose').addEventListener('click', closeIconModal);
+document.getElementById('iconDl192').addEventListener('click', () => downloadIcon('iconCanvas192', 'icon-192.png'));
+document.getElementById('iconDl512').addEventListener('click', () => downloadIcon('iconCanvas512', 'icon-512.png'));
+
+// ---------- TASK4: Service Worker 登録 ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/quick-ref/sw.js')
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// ---------- Theme mode (URL ?tag=xxx) ----------
+
+// タグ→絵文字の簡易マッピング(ユーザーが追加可能)
+const TAG_EMOJI_MAP = {
+  '音楽': '🎵', 'music': '🎵', 'ミュージック': '🎵',
+  'セキュリティ': '🔐', 'security': '🔐',
+  '占い': '☯', '易': '☯', '四柱': '☯',
+  'コマンド': '💻', 'command': '💻', 'cmd': '💻',
+  'イラスト': '🎨', 'illust': '🎨', 'art': '🎨',
+  '仕事': '📋', 'work': '📋',
+  '個人': '🔑', 'personal': '🔑',
+  'レシピ': '🍳', 'recipe': '🍳',
+  '旅行': '✈️', 'travel': '✈️',
+  'メモ': '📝', 'note': '📝',
+};
+
+// タグ→テーマカラー
+const TAG_COLOR_MAP = {
+  '音楽': ['#FF2D55', '#C41230'], 'music': ['#FF2D55', '#C41230'],
+  'セキュリティ': ['#34C759', '#1A6E2E'], 'security': ['#34C759', '#1A6E2E'],
+  '占い': ['#5856D6', '#2E2D8E'], '易': ['#5856D6', '#2E2D8E'],
+  'コマンド': ['#1C1C1E', '#3A3A3C'], 'command': ['#1C1C1E', '#3A3A3C'],
+  'イラスト': ['#FF9500', '#C45E00'], 'illust': ['#FF9500', '#C45E00'],
+  '仕事': ['#007AFF', '#004ECC'], 'work': ['#007AFF', '#004ECC'],
+};
+
+function getTagEmoji(tag) {
+  return TAG_EMOJI_MAP[tag] || TAG_EMOJI_MAP[tag.toLowerCase()] || '📌';
+}
+function getTagColors(tag) {
+  return TAG_COLOR_MAP[tag] || TAG_COLOR_MAP[tag.toLowerCase()] || ['#007AFF', '#005ECB'];
+}
+
+// URL ?tag= を読み取ってフィルタ・バナー初期化
+const urlTag = new URLSearchParams(location.search).get('tag');
+let themeTag = urlTag || null;
+
+const themeBannerEl = document.getElementById('themeBanner');
+const addGuideEl = document.getElementById('addGuide');
+
+function initThemeMode() {
+  if (!themeTag) { themeBannerEl.style.display = 'none'; return; }
+
+  // 絞り込みを適用
+  activeFilterTags = new Set([themeTag]);
+
+  // バナー表示
+  const emoji = getTagEmoji(themeTag);
+  document.getElementById('themeBannerIcon').textContent = emoji;
+  document.getElementById('themeBannerLabel').textContent = `#${themeTag}`;
+  document.getElementById('themeBannerSub').textContent = 'テーマモードで起動中';
+  themeBannerEl.style.display = 'flex';
+
+  // タイトルバーも変える
+  document.title = `${emoji} ${themeTag} — クイック参照`;
+
+  // 検索バーのプレースホルダー
+  searchInput.placeholder = `#${themeTag} 内を検索`;
+}
+
+// アイコン生成をテーマ色で開く
+document.getElementById('themeBannerIconBtn').addEventListener('click', () => {
+  if (!themeTag) return;
+  const emoji = getTagEmoji(themeTag);
+  const [c1, c2] = getTagColors(themeTag);
+  iconEmojiInput.value = emoji;
+  iconBgColor.value = c1;
+  iconBgColor2.value = c2;
+  iconFgColor.value = '#FFFFFF';
+  openIconModal();
+});
+
+// ダウンロード時のファイル名をテーマ名に
+document.getElementById('iconDl192').addEventListener('click', () => {
+  const name = themeTag ? `icon-${themeTag}-192.png` : 'icon-192.png';
+  downloadIcon('iconCanvas192', name);
+}, true);
+document.getElementById('iconDl512').addEventListener('click', () => {
+  const name = themeTag ? `icon-${themeTag}-512.png` : 'icon-512.png';
+  downloadIcon('iconCanvas512', name);
+}, true);
+
+// 「追加方法」ボタン
+document.getElementById('themeBannerAddBtn').addEventListener('click', () => {
+  const tag = themeTag || '';
+  const base = location.origin + location.pathname;
+  const url = `${base}?tag=${encodeURIComponent(tag)}`;
+  document.getElementById('addGuideUrl').textContent = url;
+  document.getElementById('addGuideTitle').textContent = `📱 「#${tag}」をホーム画面に追加`;
+  addGuideEl.classList.add('open');
+});
+document.getElementById('addGuideClose').addEventListener('click', () => {
+  addGuideEl.classList.remove('open');
+});
+addGuideEl.addEventListener('click', (e) => {
+  if (e.target === addGuideEl) addGuideEl.classList.remove('open');
+});
+
+// ⋯メニューからテーマURL一覧を表示
+function showThemeUrlList() {
+  const tags = getAllTagsSorted();
+  if (tags.length === 0) { alert('タグがまだありません。'); return; }
+  const base = location.origin + location.pathname;
+  const lines = tags.map(t => `${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`).join('\n\n');
+  alert(`テーマ別URL一覧\n\n${lines}\n\n各URLをSafariで開いて「ホーム画面に追加」してください。`);
+}
+
+// メニューにテーマURL生成ボタンを追加
+document.getElementById('tagBridgeBtn').insertAdjacentHTML('afterend', `
+  <button type="button" class="action-btn" id="themeUrlBtn">
+    <span class="action-icon">📱</span>
+    <span class="action-btn-inner">
+      <span class="action-label">テーマ別URL一覧を表示</span>
+      <span class="action-desc">タグごとのホーム画面追加用URL</span>
+    </span>
+  </button>
+`);
+document.getElementById('themeUrlBtn').addEventListener('click', () => {
+  closeMenu(); showThemeUrlList();
+});
+
+// kansei への素材送信
+function sendToKansei(targetTag) {
+  const filtered = items.filter(item => {
+    if (targetTag) return (item.tags || []).includes(targetTag);
+    return matchesFilter(item);
+  });
+  const materials = filtered
+    .filter(item => !item.sensitive)
+    .map(item => ({
+      title: item.title,
+      tags: item.tags,
+      body: item.body || '',
+      fields: item.fields || [],
+      updatedAt: item.updatedAt
+    }));
+
+  if (materials.length === 0) {
+    alert('送れる素材がありません。\n(保護項目は送信対象外です)');
+    return;
+  }
+
+  localStorage.setItem('kansei_materials', JSON.stringify({
+    source: 'quick-ref',
+    tag: targetTag || null,
+    materials,
+    exportedAt: Date.now()
+  }));
+
+  const kanseiUrl = location.origin + '/kansei/draft.html';
+  const go = confirm(`${materials.length}件の素材をkanseiに送りました。\n\nkanseiの原稿生成ツールを開きますか?`);
+  if (go) location.href = kanseiUrl;
+}
+
+document.getElementById('themeBannerKanseiBtn').addEventListener('click', () => {
+  sendToKansei(themeTag);
+});
+
+document.getElementById('kanseiExportBtn').addEventListener('click', () => {
+  closeMenu();
+  sendToKansei(themeTag);
+});
+
+// 初期化
+initThemeMode();
+
+// ============================================================
+// デイリーレビュー
+// ============================================================
+const REVIEW_LOG_KEY    = 'qr_review_log';     // {itemId: {reviewedAt, count}}
+const REVIEW_STREAK_KEY = 'qr_review_streak';  // {lastDate, count}
+const REVIEW_SESSION_KEY= 'qr_review_session'; // {date, reviewedIds[]}
+
+let reviewQueue   = [];
+let reviewIndex   = 0;
+let reviewSession = null;
+
+// --- ログ管理 ---
+function getReviewLog() {
+  try { return JSON.parse(localStorage.getItem(REVIEW_LOG_KEY) || '{}'); }
+  catch(_) { return {}; }
+}
+function markReviewed(itemId) {
+  const log = getReviewLog();
+  log[itemId] = { reviewedAt: Date.now(), count: (log[itemId]?.count || 0) + 1 };
+  localStorage.setItem(REVIEW_LOG_KEY, JSON.stringify(log));
+}
+function daysSinceReview(itemId) {
+  const log = getReviewLog();
+  if (!log[itemId]) return 9999; // 一度も見ていない
+  return Math.floor((Date.now() - log[itemId].reviewedAt) / 86400000);
+}
+
+// --- ストリーク管理 ---
+function getStreak() {
+  try { return JSON.parse(localStorage.getItem(REVIEW_STREAK_KEY) || '{"lastDate":"","count":0}'); }
+  catch(_) { return { lastDate: '', count: 0 }; }
+}
+function updateStreak() {
+  const today  = new Date().toISOString().slice(0, 10);
+  const streak = getStreak();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (streak.lastDate === today) return streak;
+  streak.count = streak.lastDate === yesterday ? streak.count + 1 : 1;
+  streak.lastDate = today;
+  localStorage.setItem(REVIEW_STREAK_KEY, JSON.stringify(streak));
+  return streak;
+}
+
+// --- セッション管理(今日はすでに見た項目を除外) ---
+function getTodaySession() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const s = JSON.parse(localStorage.getItem(REVIEW_SESSION_KEY) || '{}');
+    if (s.date === today) return s;
+  } catch(_) {}
+  return { date: today, reviewedIds: [] };
+}
+function addToSession(itemId) {
+  const s = getTodaySession();
+  if (!s.reviewedIds.includes(itemId)) s.reviewedIds.push(itemId);
+  localStorage.setItem(REVIEW_SESSION_KEY, JSON.stringify(s));
+}
+
+// --- 選出アルゴリズム ---
+function selectReviewItems(limit = 7) {
+  const today   = new Date().toISOString().slice(0, 10);
+  const session = getTodaySession();
+  const log     = getReviewLog();
+  const links   = getLinks();
+
+  const candidates = items.filter(it =>
+    !it.sensitive &&
+    !session.reviewedIds.includes(it.id)
+  );
+
+  // スコア計算
+  const scored = candidates.map(item => {
+    const days    = daysSinceReview(item.id);
+    const linkCnt = (links[item.id] || []).length;
+    const tagCnt  = (item.tags || []).length;
+    const isVoice = (item.body || '').length < 80 && !item.fields?.length; // 短い=音声メモ由来
+
+    let score = 0;
+    if (days < 3)   score += 0;    // まだ新しい
+    if (days >= 3)  score += 20;
+    if (days >= 7)  score += 40;
+    if (days >= 14) score += 30;
+    if (days >= 30) score += 20;
+    score += linkCnt * 10;         // リンクが多い=重要ノード
+    score += tagCnt  * 5;
+    if (isVoice) score += 15;      // 音声メモは要整理
+
+    return { item, score, days };
+  });
+
+  // スコア順でソート、上位から取得
+  const sorted = scored
+    .filter(x => x.days >= 3 || x.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  // タグ偏らないよう各タグから1件ずつ確保
+  const selected = [];
+  const usedTags = new Set();
+  const usedIds  = new Set();
+
+  // まず高スコア上位を選ぶ
+  for (const x of sorted) {
+    if (selected.length >= limit) break;
+    if (usedIds.has(x.item.id)) continue;
+    selected.push(x);
+    usedIds.add(x.item.id);
+    (x.item.tags || []).forEach(t => usedTags.add(t));
+  }
+
+  return selected;
+}
+
+// --- バッジ更新 ---
+function updateReviewBadge() {
+  const session = getTodaySession();
+  const pending = items.filter(it =>
+    !it.sensitive && !session.reviewedIds.includes(it.id) && daysSinceReview(it.id) >= 3
+  ).length;
+  const badge = document.getElementById('reviewBadge');
+  if (pending > 0) {
+    badge.style.display = 'flex';
+    badge.textContent   = pending > 9 ? '9+' : String(pending);
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// --- カードHTML ---
+function reviewCardHTML(entry) {
+  const { item, days } = entry;
+  const daysLabel = days >= 9999 ? '未レビュー'
+    : days === 0 ? '今日'
+    : `${days}日前`;
+  const badgeClass = days < 7 ? 'fresh' : days < 30 ? 'normal' : 'overdue';
+  const source     = (item.tags||[]).includes('voice') ? '🎤 音声' : '';
+
+  const body = item.body || '';
+  const fields = (item.fields || []);
+  const tagsHtml = (item.tags||[])
+    .map(t => `<span class="chip">#${escapeHtml(t)}</span>`).join('');
+  const linkCount = (getLinks()[item.id] || []).length;
+  const relatedHint = linkCount > 0
+    ? `<div class="review-related-hint">🔗 ${linkCount}件のつながりがあります</div>`
+    : '';
+
+  const truncated = body.length > 150;
+  const bodyPreview = truncated ? body.slice(0, 150) + '…' : body;
+
+  return `
+    <div class="review-card" id="reviewCard">
+      <div class="review-card-meta">
+        <span class="review-days-badge ${badgeClass}">${daysLabel}</span>
+        ${source ? `<span class="review-source-badge">${source}</span>` : ''}
+      </div>
+      <p class="review-card-title">${escapeHtml(item.title || '(無題)')}</p>
+      ${body ? `
+        <div class="review-card-body" id="reviewCardBody">${escapeHtml(bodyPreview)}</div>
+        ${truncated ? `<button class="review-expand-btn" id="expandBtn">▼ 全部表示</button>` : ''}
+      ` : ''}
+      ${fields.length ? `
+        <div class="review-card-fields">
+          ${fields.map(f => `
+            <div class="review-field-row">
+              <span class="review-field-key">${escapeHtml(f.key)}</span>: ${escapeHtml(f.value)}
+            </div>`).join('')}
+        </div>
+      ` : ''}
+      ${tagsHtml ? `<div class="review-tags">${tagsHtml}</div>` : ''}
+      ${relatedHint}
+      <div class="review-actions">
+        <button class="review-action-btn done" id="reviewDoneBtn">✅ 確認済み</button>
+        <button class="review-action-btn edit" id="reviewEditBtn">✏️ 編集する</button>
+        <button class="review-action-btn link" id="reviewLinkBtn">🔗 関連を探す</button>
+        <button class="review-action-btn skip" id="reviewSkipBtn">→ スキップ</button>
+      </div>
+    </div>`;
+}
+
+// --- レビュー完了画面 ---
+function reviewCompleteHTML(streak) {
+  const msgs = [
+    '知識が育っています。', '続けることが力になります。',
+    'この積み重ねが第二の脳を作ります。', 'すばらしい習慣です。'
+  ];
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  return `
+    <div class="review-complete">
+      <div class="review-complete-icon">🎉</div>
+      <p class="review-complete-title">レビュー完了!</p>
+      <p class="review-complete-sub">${msg}</p>
+      <div class="streak-count">🔥 ${streak.count}</div>
+      <div class="streak-label">日連続</div>
+      <p class="review-complete-sub" style="margin-top:12px;">
+        今日は ${reviewQueue.length}件を見直しました。
+      </p>
+      <button class="review-done-btn" id="reviewDoneClose">閉じる</button>
+    </div>`;
+}
+
+// --- レビュー進行 ---
+function showReviewCard(index) {
+  const body   = document.getElementById('reviewBody');
+  const fill   = document.getElementById('reviewProgressFill');
+  const counter= document.getElementById('reviewCounterText');
+  const total  = reviewQueue.length;
+
+  fill.style.width = `${Math.round(index / total * 100)}%`;
+  counter.textContent = `${index} / ${total} 完了`;
+
+  if (index >= total) {
+    // 完了
+    const streak = updateStreak();
+    body.innerHTML = reviewCompleteHTML(streak);
+    document.getElementById('reviewDoneClose').addEventListener('click', closeReview);
+    return;
+  }
+
+  const entry = reviewQueue[index];
+  body.innerHTML = reviewCardHTML(entry);
+
+  // 全文表示
+  document.getElementById('expandBtn')?.addEventListener('click', () => {
+    const el = document.getElementById('reviewCardBody');
+    el.textContent = entry.item.body;
+    el.classList.add('expanded');
+    document.getElementById('expandBtn').style.display = 'none';
+  });
+
+  // ✅ 確認済み
+  document.getElementById('reviewDoneBtn').addEventListener('click', () => {
+    markReviewed(entry.item.id);
+    addToSession(entry.item.id);
+    reviewIndex++;
+    showReviewCard(reviewIndex);
+  });
+
+  // ✏️ 編集
+  document.getElementById('reviewEditBtn').addEventListener('click', async () => {
+    markReviewed(entry.item.id);
+    addToSession(entry.item.id);
+    closeReview();
+    await openEdit(entry.item.id);
+  });
+
+  // 🔗 関連を探す
+  document.getElementById('reviewLinkBtn').addEventListener('click', async () => {
+    markReviewed(entry.item.id);
+    addToSession(entry.item.id);
+    closeReview();
+    await openEdit(entry.item.id);
+    // 少し待ってからスクロール
+    setTimeout(() => {
+      document.getElementById('relatedSection')?.scrollIntoView({ behavior:'smooth' });
+    }, 400);
+  });
+
+  // → スキップ
+  document.getElementById('reviewSkipBtn').addEventListener('click', () => {
+    addToSession(entry.item.id); // スキップも今日は表示しない
+    reviewIndex++;
+    showReviewCard(reviewIndex);
+  });
+}
+
+// --- レビューを開く ---
+function openReview() {
+  reviewQueue = selectReviewItems(7);
+  reviewIndex = 0;
+
+  const streak = getStreak();
+  document.getElementById('reviewStreakLabel').textContent =
+    streak.count > 0 ? `🔥 ${streak.count}日連続` : '';
+
+  if (reviewQueue.length === 0) {
+    document.getElementById('reviewBody').innerHTML = `
+      <div style="text-align:center;padding:40px 20px;color:var(--text-secondary);">
+        <div style="font-size:40px;margin-bottom:12px;">✨</div>
+        <p style="font-size:16px;font-weight:700;margin:0 0 8px;">今日はすべて最新です</p>
+        <p style="font-size:14px;line-height:1.7;">
+          3日以上経った項目が出てきたら<br>またここに表示されます。
+        </p>
+      </div>`;
+    document.getElementById('reviewProgressFill').style.width = '100%';
+    document.getElementById('reviewCounterText').textContent = '0 / 0';
+  } else {
+    showReviewCard(0);
+  }
+
+  document.getElementById('reviewOverlay').classList.add('open');
+}
+
+function closeReview() {
+  document.getElementById('reviewOverlay').classList.remove('open');
+  updateReviewBadge();
+  renderList(); // バッジ更新のため
+}
+
+document.getElementById('reviewBtn').addEventListener('click', openReview);
+document.getElementById('reviewCloseBtn').addEventListener('click', closeReview);
+document.getElementById('reviewOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('reviewOverlay')) closeReview();
+});
+
+// ============================================================
+// 関連項目 自動リンク
+// ============================================================
+
+// --- N-gram 抽出 ---
+function extractNgrams(text, n = 2) {
+  const t = (text || '').toLowerCase().replace(/[\s\u3000]+/g, '');
+  const grams = new Set();
+  for (let i = 0; i <= t.length - n; i++) grams.add(t.slice(i, i + n));
+  return grams;
+}
+
+// --- Jaccard 類似度 ---
+function jaccard(setA, setB) {
+  if (setA.size === 0 && setB.size === 0) return 0;
+  const intersection = [...setA].filter(x => setB.has(x)).length;
+  const union = new Set([...setA, ...setB]).size;
+  return intersection / union;
+}
+
+// --- タグ類似度 ---
+function tagSim(a, b) {
+  const aTags = new Set(a.tags || []);
+  const bTags = new Set(b.tags || []);
+  if (aTags.size === 0 && bTags.size === 0) return 0;
+  return jaccard(aTags, bTags);
+}
+
+// --- テキスト類似度(bigram) ---
+function textSim(a, b) {
+  const getText = (item) => {
+    if (item.sensitive) return `${item.title || ''} ${(item.tags||[]).join(' ')}`;
+    const cached = decryptedCache.get(item.id);
+    const body   = cached ? cached.body : (item.body || '');
+    const fields = cached
+      ? (cached.fields||[]).map(f=>`${f.key} ${f.value}`).join(' ')
+      : (item.fields||[]).map(f=>`${f.key} ${f.value}`).join(' ');
+    return `${item.title || ''} ${body} ${fields} ${(item.tags||[]).join(' ')}`;
+  };
+  const aNg = extractNgrams(getText(a), 2);
+  const bNg = extractNgrams(getText(b), 2);
+  if (aNg.size < 2 || bNg.size < 2) return 0;
+  return jaccard(aNg, bNg);
+}
+
+// --- 総合スコア (0〜100) ---
+function relatedScore(a, b) {
+  if (a.id === b.id) return 0;
+  const ts = tagSim(a, b);
+  const tx = textSim(a, b);
+  return Math.round((ts * 60 + tx * 40) * 100);
+}
+
+// --- スコア上位N件を返す ---
+function findRelated(item, limit = 5) {
+  return items
+    .filter(it => it.id !== item.id)
+    .map(it => ({ item: it, score: relatedScore(item, it) }))
+    .filter(x => x.score > 3)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+// --- 確認済みリンクの管理 ---
+const LINKS_KEY = 'qr_links';
+
+function getLinks() {
+  try { return JSON.parse(localStorage.getItem(LINKS_KEY) || '{}'); }
+  catch(_) { return {}; }
+}
+function addLink(fromId, toId) {
+  const links = getLinks();
+  if (!links[fromId]) links[fromId] = [];
+  if (!links[fromId].includes(toId)) links[fromId].push(toId);
+  if (!links[toId]) links[toId] = [];
+  if (!links[toId].includes(fromId)) links[toId].push(fromId);
+  localStorage.setItem(LINKS_KEY, JSON.stringify(links));
+}
+function removeLink(fromId, toId) {
+  const links = getLinks();
+  links[fromId] = (links[fromId]||[]).filter(id => id !== toId);
+  links[toId]   = (links[toId]||[]).filter(id => id !== fromId);
+  localStorage.setItem(LINKS_KEY, JSON.stringify(links));
+}
+function getLinkedItems(itemId) {
+  const ids = getLinks()[itemId] || [];
+  return items.filter(it => ids.includes(it.id));
+}
+
+// --- 関連項目セクションを描画 ---
+function renderRelatedItems(item) {
+  const el = document.getElementById('relatedSection');
+  if (!el) return;
+
+  const confirmed = getLinkedItems(item.id);
+  const confirmedIds = new Set(confirmed.map(c => c.id));
+
+  const autoResults = findRelated(item, 6)
+    .filter(r => !confirmedIds.has(r.item.id));
+
+  if (confirmed.length === 0 && autoResults.length === 0) {
+    el.innerHTML = `<p class="related-empty">
+      関連する項目が自動検出されませんでした。<br>
+      タグやメモを充実させると見つかりやすくなります。
+    </p>`;
+    setupAiRelatedBtn(item);
+    return;
+  }
+
+  const makeCard = (relItem, score, isConfirmed) => {
+    const snippet = (() => {
+      if (relItem.sensitive) return '🔒 保護中';
+      const cached = decryptedCache.get(relItem.id);
+      const body = cached ? cached.body : (relItem.body || '');
+      return (body || (relItem.fields||[]).map(f=>`${f.key}: ${f.value}`).join(' ')).slice(0, 45);
+    })();
+    const tagsHtml = (relItem.tags||[])
+      .map(t => `<span class="related-tag">#${escapeHtml(t)}</span>`).join('');
+    const scoreLabel = score != null ? `<span class="related-score">${score}%</span>` : '';
+    const icon = isConfirmed ? '🔗' : '∼';
+
+    return `
+      <div class="related-card${isConfirmed ? ' confirmed' : ''}" data-id="${relItem.id}">
+        <div class="related-main">
+          <div class="related-header">
+            <span class="related-icon">${icon}</span>
+            <span class="related-title">${escapeHtml(relItem.title||'(無題)')}</span>
+            ${scoreLabel}
+          </div>
+          ${snippet ? `<div class="related-snippet">${escapeHtml(snippet)}</div>` : ''}
+          ${tagsHtml ? `<div class="related-tags">${tagsHtml}</div>` : ''}
+        </div>
+        <div class="related-actions">
+          <button class="related-open-btn" data-id="${relItem.id}">→</button>
+          ${isConfirmed
+            ? `<button class="related-unlink-btn" data-id="${relItem.id}">×</button>`
+            : `<button class="related-link-btn" data-id="${relItem.id}">🔗</button>`}
+        </div>
+      </div>`;
+  };
+
+  el.innerHTML =
+    confirmed.map(it => makeCard(it, null, true)).join('') +
+    autoResults.map(r => makeCard(r.item, r.score, false)).join('');
+
+  // 「→ 開く」
+  el.querySelectorAll('.related-open-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      closeSheet();
+      await openEdit(btn.dataset.id);
+    });
+  });
+  // 「🔗 リンク確定」
+  el.querySelectorAll('.related-link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      addLink(item.id, btn.dataset.id);
+      renderRelatedItems(item);
+      renderList(); // バッジ更新
+    });
+  });
+  // 「× リンク解除」
+  el.querySelectorAll('.related-unlink-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!confirm('このリンクを削除しますか?')) return;
+      removeLink(item.id, btn.dataset.id);
+      renderRelatedItems(item);
+      renderList();
+    });
+  });
+
+  setupAiRelatedBtn(item);
+}
+
+// --- AI関連項目ボタンのセットアップ ---
+function setupAiRelatedBtn(item) {
+  const btn = document.getElementById('aiRelatedBtn');
+  if (!btn) return;
+  btn.onclick = async () => {
+    const geminiKey = localStorage.getItem('ml_gemini');
+    const claudeKey = localStorage.getItem('ml_claude');
+    const openaiKey = localStorage.getItem('ml_openai');
+    const proxyUrl  = localStorage.getItem('kansei_proxy_url');
+    if (!geminiKey && !claudeKey && !proxyUrl && !openaiKey) {
+      alert('APIキーが設定されていません。\nquick-ref の ⋯ メニューから設定してください。');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '✨ 検索中…';
+
+    try {
+      const candidates = items
+        .filter(it => it.id !== item.id && !it.sensitive)
+        .slice(0, 60) // コスト削減のため上限60件
+        .map(it => `${it.id.slice(0,8)}: ${it.title} [${(it.tags||[]).join(',')}]`)
+        .join('\n');
+
+      const prompt = `以下の「対象項目」と意味的に関連する項目を「候補一覧」から選んでください。
+
+対象項目:
+タイトル: ${item.title}
+タグ: ${(item.tags||[]).join(', ')}
+内容: ${(item.body||'').slice(0,200)}
+
+候補一覧:
+${candidates}
+
+意味的に関連する項目のIDプレフィックス(8文字)を最大5つ、JSON配列のみで返してください:
+["xxxxxxxx","xxxxxxxx"]
+説明・コメント不要。JSONのみ。`;
+
+      let raw = '';
+      if (geminiKey) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+        const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }) });
+        const d = await res.json();
+        raw = d.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      } else {
+        const endpoint = proxyUrl || 'https://api.anthropic.com/v1/messages';
+        const headers  = {'Content-Type':'application/json'};
+        if (!proxyUrl && claudeKey) { headers['x-api-key'] = claudeKey; headers['anthropic-version'] = '2023-06-01'; }
+        const res = await fetch(endpoint, { method:'POST', headers,
+          body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:256, messages:[{role:'user',content:prompt}] }) });
+        const d = await res.json();
+        raw = d.content?.[0]?.text || '[]';
+      }
+
+      const ids = JSON.parse(raw.replace(/```json|```/g,'').trim());
+      let added = 0;
+      ids.forEach(shortId => {
+        const found = items.find(it => it.id.startsWith(shortId) && it.id !== item.id);
+        if (found && !(getLinks()[item.id]||[]).includes(found.id)) {
+          addLink(item.id, found.id);
+          added++;
+        }
+      });
+
+      renderRelatedItems(item);
+      renderList();
+      btn.textContent = added > 0 ? `✨ ${added}件のつながりを発見` : '✨ 新たなつながりなし';
+    } catch(e) {
+      alert(`AI検索失敗: ${e.message}`);
+      btn.textContent = '✨ AIでさらに探す';
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+
+// ============================================================
+// 音声→AI自動構造化
+// ============================================================
+const voiceFab      = document.getElementById('voiceFab');
+const voiceModal    = document.getElementById('voiceModal');
+const voiceTranscript = document.getElementById('voiceTranscript');
+const voiceFinal    = document.getElementById('voiceFinal');
+const voiceInter    = document.getElementById('voiceInter');
+const voiceAnalyzeBtn = document.getElementById('voiceAnalyzeBtn');
+const voiceStopBtn  = document.getElementById('voiceStopBtn');
+const aiPreviewArea = document.getElementById('aiPreviewArea');
+
+let voiceRec   = null;
+let voiceIsRec = false;
+let voiceFullText = '';
+
+function openVoiceModal() {
+  voiceModal.classList.add('open');
+  voiceFinal.textContent  = '';
+  voiceInter.textContent  = '';
+  voiceFullText           = '';
+  aiPreviewArea.style.display = 'none';
+  voiceAnalyzeBtn.disabled = true;
+  document.getElementById('voiceDot').style.display = 'none';
+  document.getElementById('voiceStatusText').textContent = 'マイクで話してください';
+  startVoiceRec();
+}
+
+function closeVoiceModal() {
+  stopVoiceRec();
+  voiceModal.classList.remove('open');
+}
+
+function startVoiceRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('このブラウザは音声入力に対応していません。'); return; }
+
+  voiceRec = new SR();
+  voiceRec.lang = 'ja-JP';
+  voiceRec.continuous     = true;
+  voiceRec.interimResults = true;
+
+  voiceRec.onstart = () => {
+    voiceIsRec = true;
+    voiceFab.classList.add('recording');
+    document.getElementById('voiceDot').style.display = 'block';
+    document.getElementById('voiceStatusText').textContent = '録音中… 話し終わったら停止';
+  };
+
+  voiceRec.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) voiceFullText += t;
+      else interim += t;
+    }
+    voiceFinal.textContent = voiceFullText;
+    voiceInter.textContent = interim;
+    voiceAnalyzeBtn.disabled = voiceFullText.trim().length === 0;
+  };
+
+  voiceRec.onerror = (e) => {
+    if (e.error === 'not-allowed')
+      alert('マイクへのアクセスが許可されていません。\nSettings → Safari → マイク を確認してください。');
+    stopVoiceRec();
+  };
+
+  voiceRec.onend = () => { if (voiceIsRec) voiceRec.start(); }; // continuous再起動
+
+  try { voiceRec.start(); } catch(_) {}
+}
+
+function stopVoiceRec() {
+  voiceIsRec = false;
+  voiceFab.classList.remove('recording');
+  document.getElementById('voiceDot').style.display = 'none';
+  document.getElementById('voiceStatusText').textContent = '録音完了';
+  try { voiceRec?.stop(); } catch(_) {}
+  voiceRec = null;
+}
+
+voiceFab.addEventListener('click', openVoiceModal);
+document.getElementById('voiceCancelBtn').addEventListener('click', closeVoiceModal);
+voiceModal.addEventListener('click', (e) => { if (e.target === voiceModal) closeVoiceModal(); });
+
+voiceStopBtn.addEventListener('click', () => {
+  stopVoiceRec();
+  voiceAnalyzeBtn.disabled = voiceFullText.trim().length === 0;
+});
+
+// AI 構造化
+voiceAnalyzeBtn.addEventListener('click', async () => {
+  const text = voiceFullText.trim();
+  if (!text) return;
+  voiceAnalyzeBtn.disabled = true;
+  voiceAnalyzeBtn.textContent = '✨ 解析中…';
+  stopVoiceRec();
+
+  try {
+    const result = await callStructureAPI(text);
+    renderAIPreview(result);
+  } catch(e) {
+    alert(`AI解析に失敗しました:\n${e.message}`);
+    voiceAnalyzeBtn.disabled  = false;
+    voiceAnalyzeBtn.textContent = '✨ AI で整理する';
+  }
+});
+
+async function callStructureAPI(text) {
+  const prompt = `以下の話し言葉のメモを、クイック参照アプリ用のデータに整理してください。
+必ずJSONのみ返してください（マークダウンや説明文は不要）：
+{"title":"一言タイトル","tags":["タグ1","タグ2"],"body":"詳細メモ","fields":[{"key":"項目名","value":"値"}]}
+
+ルール:
+- title: 15字以内で要点を表す
+- tags: 2〜4個、既存タグ候補: ${getAllTagsSorted().slice(0,10).join(',')}
+- body: 話した内容をそのまま整理
+- fields: 数値・URL・固有名詞など構造化できるものだけ(なければ空配列)
+
+メモ: ${text}`;
+
+  // モデル選択: ml_gemini → ml_claude → ml_openai の順
+  const geminiKey = localStorage.getItem('ml_gemini');
+  const claudeKey = localStorage.getItem('ml_claude');
+  const openaiKey = localStorage.getItem('ml_openai');
+  const proxyUrl  = localStorage.getItem('kansei_proxy_url');
+
+  if (geminiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+    const res = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+    const d = await res.json();
+    return JSON.parse((d.candidates?.[0]?.content?.parts?.[0]?.text || '{}').replace(/```json|```/g,'').trim());
+  }
+
+  if (claudeKey || proxyUrl) {
+    const endpoint = proxyUrl || 'https://api.anthropic.com/v1/messages';
+    const headers  = { 'Content-Type': 'application/json' };
+    if (!proxyUrl) { headers['x-api-key'] = claudeKey; headers['anthropic-version'] = '2023-06-01'; }
+    const res = await fetch(endpoint, {
+      method: 'POST', headers,
+      body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:512, messages:[{role:'user',content:prompt}] })
+    });
+    if (!res.ok) throw new Error(`Claude HTTP ${res.status}`);
+    const d = await res.json();
+    return JSON.parse((d.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim());
+  }
+
+  if (openaiKey) {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${openaiKey}` },
+      body: JSON.stringify({ model:'gpt-4o-mini', max_tokens:512, messages:[{role:'user',content:prompt}] })
+    });
+    if (!res.ok) throw new Error(`OpenAI HTTP ${res.status}`);
+    const d = await res.json();
+    return JSON.parse((d.choices?.[0]?.message?.content || '{}').replace(/```json|```/g,'').trim());
+  }
+
+  // APIキーなし → そのままタイトルだけ設定して返す
+  return { title: text.slice(0,30), tags: [], body: text, fields: [] };
+}
+
+function renderAIPreview(data) {
+  document.getElementById('aiTitle').value = data.title || '';
+  document.getElementById('aiBody').value  = data.body  || '';
+
+  const tagsRow = document.getElementById('aiTagsRow');
+  tagsRow.innerHTML = '';
+  (data.tags || []).forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.cursor = 'pointer';
+    chip.textContent  = `#${tag}`;
+    chip.dataset.tag  = tag;
+    tagsRow.appendChild(chip);
+  });
+
+  aiPreviewArea.style.display = 'block';
+  voiceAnalyzeBtn.textContent = '✨ AI で整理する';
+  voiceAnalyzeBtn.disabled    = false;
+
+  // フィールドが取れていたらタイトルの下に小さく表示
+  if (data.fields?.length) {
+    const aiBody = document.getElementById('aiBody');
+    const fieldsText = data.fields.map(f => `${f.key}: ${f.value}`).join('\n');
+    if (!aiBody.value.includes(fieldsText)) {
+      aiBody.value = (aiBody.value + '\n\n' + fieldsText).trim();
+    }
+  }
+}
+
+// AI プレビューから保存
+document.getElementById('aiSaveBtn').addEventListener('click', async () => {
+  const title = document.getElementById('aiTitle').value.trim();
+  if (!title) { document.getElementById('aiTitle').focus(); return; }
+
+  const tags = [...document.getElementById('aiTagsRow').querySelectorAll('[data-tag]')]
+    .map(el => el.dataset.tag);
+  const body = document.getElementById('aiBody').value.trim();
+
+  const now = Date.now();
+  const item = {
+    id: crypto.randomUUID(), title, tags,
+    body, fields: [], url: '',
+    sensitive: false, createdAt: now, updatedAt: now
+  };
+
+  await dbPut(item);
+  await reload();
+  syncEcosystemTags();
+  closeVoiceModal();
+});
+
+// ============================================================
+// 曖昧検索(Ngramスコアリング)
+// ============================================================
+function ngramScore(query, text) {
+  if (!query || !text) return 0;
+  const q = query.toLowerCase();
+  const t = text.toLowerCase();
+  if (t.includes(q)) return 100;
+
+  // バイグラム
+  const bigrams = (s) => {
+    const arr = [];
+    for (let i = 0; i < s.length - 1; i++) arr.push(s.slice(i, i+2));
+    return arr;
+  };
+  const qBi = bigrams(q);
+  const tBi = bigrams(t);
+  if (qBi.length === 0) return t.includes(q[0]) ? 30 : 0;
+  const hits = qBi.filter(b => tBi.includes(b)).length;
+  return Math.round((hits / qBi.length) * 80);
+}
+
+function fuzzyMatchItem(item, query) {
+  if (!query.trim()) return true;
+  const q = query.trim();
+
+  let body = item.body || '';
+  let fieldsText = (item.fields || []).map(f => `${f.key} ${f.value}`).join(' ');
+  if (item.sensitive) {
+    const cached = decryptedCache.get(item.id);
+    if (cached) { body = cached.body || ''; fieldsText = (cached.fields||[]).map(f=>`${f.key} ${f.value}`).join(' '); }
+  }
+
+  const haystacks = [
+    item.title || '',
+    (item.tags || []).join(' '),
+    body,
+    fieldsText,
+    item.url || ''
+  ];
+
+  return haystacks.some(h => ngramScore(q, h) >= 40);
+}
+</script>
+</body>
+</html>
+
