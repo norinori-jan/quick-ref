@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini Proxy Test</title>
+</head>
+<body>
+  <h1>Gemini Proxy Test</h1>
+  <script>
+    async function testGemini() {
+      const res = await fetch("https://speak-native.arielfortuneoffice.workers.dev/gemini-proxy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Hello from GitHub Pages" }] }]
+        })
+      });
+      const data = await res.json();
+      console.log(data);
+    }
+    testGemini();
+  </script>
+</body>
+</html>
