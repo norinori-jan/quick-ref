@@ -3542,6 +3542,21 @@ function fuzzyMatchItem(item, query) {
   return haystacks.some(h => ngramScore(q, h) >= 40);
 }
 </script>
+<script src="sw.js"></script>
+<script>
+function sendToAI() {
+  const text = document.getElementById("input").value;
+  callStructureAPI(text).then(result => {
+    document.getElementById("output").textContent = result;
+  }).catch(err => {
+    document.getElementById("output").textContent = "Error: " + err.message;
+  });
+}
+</script>
+<input id="input" placeholder="メッセージを入力" />
+<button onclick="sendToAI()">送信</button>
+<pre id="output"></pre>
+
 </body>
 </html>
 
