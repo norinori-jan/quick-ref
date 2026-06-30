@@ -1,55 +1,62 @@
 // quick-ref Service Worker
-const CACHE_NAME = 'quick-ref-v2';
-const ASSETS = [
-  '/quick-ref/',
-  '/quick-ref/index.html',
-  '/quick-ref/manifest.json',
-  '/quick-ref/sw.js',
-  '/quick-ref/icon-192.png',
-  '/quick-ref/icon-512.png'
+// アプリシェルをキャッシュしてオフラインでも起動できるようにする
+
+const CACHE_NAME = 'quick-ref-cache-v1';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-// インストール: アセットをキャッシュ
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// 有効化: 古いキャッシュを削除
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(keys =>
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
       Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        keys.filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
       )
-    )
-  );
-  self.clients.claim();
-});
-
-// フェッチ: Stale-While-Revalidate
-// キャッシュがあれば即返しつつ、バックグラウンドで更新
-self.addEventListener('fetch', (e) => {
-  // GET以外・外部リクエストはスルー
-  if (e.request.method !== 'GET') return;
-  const url = new URL(e.request.url);
-  if (url.origin !== location.origin) return;
-
-  e.respondWith(
-    caches.open(CACHE_NAME).then(cache =>
-      cache.match(e.request).then(cached => {
-        const fetchAndUpdate = fetch(e.request).then(response => {
-          if (response && response.status === 200) {
-            cache.put(e.request, response.clone());
-          }
-          return response;
-        }).catch(() => cached);
-
-        return cached || fetchAndUpdate;
-      })
-    )
+    ).then(() => self.clients.claim())
   );
 });
 
+// Network-first for navigation requests, cache-first for everything else in scope.
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  // 外部API(Claude/Gemini/OpenAI等)はキャッシュしない
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          return res;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req).then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+        return res;
+      });
+    })
+  );
+});
