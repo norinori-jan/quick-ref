@@ -9,6 +9,16 @@
   "background_color": "#F7F7F8",
   "theme_color": "#F7F7F8",
   "lang": "ja",
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "share_title",
+      "text":  "share_text",
+      "url":   "share_url"
+    }
+  },
   "icons": [
     {
       "src": "icon-192.png",

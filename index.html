@@ -6,8 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F7F7F8">
+<meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-startup-image" href="icon-512.png">
 <title>クイック参照</title>
 <style>
 :root {
@@ -134,28 +136,84 @@ main { padding: 12px 16px 100px; max-width: 640px; margin: 0 auto; }
 .lock-badge { margin-right: 4px; }
 mark { background: rgba(255,214,0,0.45); border-radius: 2px; padding: 0 1px; }
 
-/* FAB */
-.fab {
-  position: fixed; right: 20px; bottom: calc(env(safe-area-inset-bottom) + 20px);
-  width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff;
-  font-size: 28px; border: none; box-shadow: 0 4px 14px rgba(0,122,255,0.4);
-  display: flex; align-items: center; justify-content: center; z-index: 20; cursor: pointer;
+/* ── QUICK INPUT DOCK ── */
+.quick-dock {
+  position: fixed; left: 0; right: 0;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  z-index: 20; display: flex; justify-content: center;
+  gap: 10px; padding: 0 16px; pointer-events: none;
 }
-.fab:active { background: var(--accent-press); transform: scale(0.96); }
-
-/* VOICE FAB */
-.voice-fab {
-  position: fixed; right: 84px; bottom: calc(env(safe-area-inset-bottom) + 20px);
-  width: 48px; height: 48px; border-radius: 50%;
-  background: #FF2D55; color: #fff; border: none; font-size: 20px;
-  box-shadow: 0 3px 10px rgba(255,45,85,0.4);
-  display: flex; align-items: center; justify-content: center; z-index: 20; cursor: pointer;
+.dock-btn {
+  pointer-events: auto;
+  flex: 1; max-width: 68px; height: 56px;
+  border-radius: 18px; border: none; color: #fff;
+  font-size: 22px; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 1px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+  cursor: pointer; -webkit-user-select: none; user-select: none;
+  transition: transform 0.12s, box-shadow 0.12s;
 }
-.voice-fab.recording { animation: voicePulse 1s infinite; background: #C41230; }
+.dock-btn:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+.dock-btn span.dock-label { font-size: 9px; font-weight: 700; opacity: 0.88; letter-spacing: 0.3px; }
+.dock-add  { background: var(--accent); min-width: 72px; max-width: 72px; }
+.dock-mic  { background: #FF2D55; }
+.dock-cam  { background: #1C1C1E; }
+.dock-photo{ background: #AF52DE; }
+.dock-video{ background: #FF9500; }
+.dock-mic.recording { animation: voicePulse 1s infinite; }
 @keyframes voicePulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(255,45,85,0.4); }
-  50%      { box-shadow: 0 0 0 10px rgba(255,45,85,0); }
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,45,85,0.5); }
+  50%      { box-shadow: 0 0 0 12px rgba(255,45,85,0); }
 }
+
+/* ── iPhone FORM OPTIMIZATIONS ── */
+/* テキスト入力：iOS 自動ズームを防ぎつつ快適に */
+input[type="text"], input[type="search"], input[type="url"],
+input[type="password"], textarea {
+  font-size: 16px !important; /* 16px未満だとiOSが自動ズームする */
+}
+/* タグ入力など素早く打てるよう最適化 */
+#tagInput    { autocapitalize: none; }
+#fTitle      { }
+#searchInput { }
+
+/* ── VIDEO ── */
+.video-item {
+  border-radius: 10px; overflow: hidden; margin-top: 8px;
+  position: relative; background: #000;
+}
+.video-item video {
+  width: 100%; max-height: 220px; display: block;
+  border-radius: 10px;
+}
+.video-item-del {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.6); border: none; color: #fff;
+  font-size: 16px; width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.video-item-label {
+  padding: 6px 10px; font-size: 12px; color: #ccc; background: #111;
+  border-radius: 0 0 10px 10px;
+}
+
+/* ── PASTE HINT ── */
+.paste-hint {
+  font-size: 12px; color: var(--text-secondary);
+  text-align: center; padding: 6px 0 2px; letter-spacing: 0.2px;
+}
+
+/* ── SHARE RECEIVED BANNER ── */
+.share-received-banner {
+  display: none; background: rgba(0,122,255,0.1);
+  border: 1px solid rgba(0,122,255,0.3);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
+  font-size: 13px; align-items: center; gap: 10px;
+}
+.share-received-banner.show { display: flex; }
+.share-received-text { flex: 1; color: var(--accent); font-weight: 600; }
+.share-received-use  { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.share-received-dismiss { background: none; border: none; color: var(--text-secondary); font-size: 16px; cursor: pointer; }
 
 /* OVERLAY / SHEET */
 .overlay {
@@ -694,6 +752,14 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 </header>
 
 <main>
+  <!-- 共有シートから受け取ったテキストの通知 -->
+  <div class="share-received-banner" id="shareReceivedBanner">
+    <span style="font-size:20px;">📨</span>
+    <span class="share-received-text" id="shareReceivedText">共有テキストを受信しました</span>
+    <button class="share-received-use" id="shareReceivedUse">新規作成に使う</button>
+    <button class="share-received-dismiss" id="shareReceivedDismiss">✕</button>
+  </div>
+
   <div id="themeBanner" style="display:none;" class="theme-banner">
     <span class="theme-banner-icon" id="themeBannerIcon">📋</span>
     <div class="theme-banner-text">
@@ -715,8 +781,20 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
   <div id="cardList"></div>
 </main>
 
-<button class="fab" id="fabBtn" aria-label="追加">＋</button>
-<button class="voice-fab" id="voiceFab" aria-label="音声入力">🎤</button>
+<!-- QUICK INPUT DOCK -->
+<div class="quick-dock" id="quickDock">
+  <button class="dock-btn dock-mic"   id="voiceFab"  aria-label="音声入力">🎤<span class="dock-label">音声</span></button>
+  <button class="dock-btn dock-cam"   id="dockCam"   aria-label="カメラ">📷<span class="dock-label">カメラ</span></button>
+  <button class="dock-btn dock-photo" id="dockPhoto"  aria-label="写真">🖼<span class="dock-label">写真</span></button>
+  <button class="dock-btn dock-video" id="dockVideo"  aria-label="動画">🎬<span class="dock-label">動画</span></button>
+  <button class="dock-btn dock-add"   id="fabBtn"    aria-label="追加">＋<span class="dock-label">追加</span></button>
+</div>
+
+<!-- hidden file inputs -->
+<input type="file" id="imgFileInput"   accept="image/*"       multiple style="display:none">
+<input type="file" id="imgCameraInput" accept="image/*"       capture="environment" style="display:none">
+<input type="file" id="videoFileInput" accept="video/*"       multiple style="display:none">
+<input type="file" id="videoCamInput"  accept="video/*"       capture="environment" style="display:none">
 
 <div class="voice-modal" id="voiceModal">
   <div class="voice-sheet">
@@ -758,11 +836,15 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
   </div>
   <div class="sheet-body">
     <label class="field-label">タイトル</label>
-    <input type="text" id="fTitle" placeholder="タイトルを入力" maxlength="100">
+    <input type="text" id="fTitle" placeholder="タイトルを入力" maxlength="100"
+      autocapitalize="sentences" autocorrect="on" spellcheck="true"
+      enterkeyhint="next" inputmode="text">
 
     <label class="field-label">タグ</label>
     <div class="tag-input-row">
-      <input type="text" id="tagInput" placeholder="タグを入力" maxlength="30">
+      <input type="text" id="tagInput" placeholder="タグを入力" maxlength="30"
+        autocapitalize="none" autocorrect="off" spellcheck="false"
+        enterkeyhint="done" inputmode="text">
       <button id="tagAddBtn">追加</button>
     </div>
     <div class="tag-chips" id="tagChips"></div>
@@ -797,7 +879,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
         <button type="button" onclick="fmtMark('pink')"   style="font-size:16px;">🔴</button>
         <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
       </div>
-      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="内容を入力"></div>
+      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="内容を入力"
+        autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
       <button type="button" class="expand-btn" id="expandMemoBtn">⛶ 全画面</button>
     </div>
 
@@ -805,22 +888,29 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <div id="fieldRows"></div>
     <button class="add-field-btn" id="addFieldBtn" type="button">+ 項目を追加</button>
 
-    <label class="field-label">画像</label>
+    <label class="field-label">📷 写真・動画</label>
     <div class="media-section">
       <div class="img-add-row">
-        <button type="button" class="img-add-btn" id="imgCameraBtn">📷 カメラ</button>
-        <button type="button" class="img-add-btn" id="imgPickBtn">🖼 ライブラリ</button>
+        <button type="button" class="img-add-btn" id="imgCameraBtn">📷 写真撮影</button>
+        <button type="button" class="img-add-btn" id="imgSelfieBtn">🤳 セルフィー</button>
+        <button type="button" class="img-add-btn" id="imgPickBtn">🖼 フォトライブラリ</button>
+      </div>
+      <div class="img-add-row" style="margin-top:6px;">
+        <button type="button" class="img-add-btn" id="videoCamBtn" style="color:#FF9500;border-color:#FF9500;">🎬 動画撮影</button>
+        <button type="button" class="img-add-btn" id="videoPickBtn" style="color:#FF9500;border-color:#FF9500;">📂 動画ライブラリ</button>
         <button type="button" class="img-add-btn bridge" id="imgIllustBtn">🎨 illust-studio</button>
       </div>
-      <input type="file" id="imgFileInput" accept="image/*" style="display:none">
-      <input type="file" id="imgCameraInput" accept="image/*" capture="environment" style="display:none">
+      <!-- iOSペーストヒント -->
+      <p class="paste-hint">💡 長押し → ペーストでクリップボードから貼り付けも可能</p>
+      <input type="file" id="imgSelfieInput" accept="image/*" capture="user" style="display:none">
       <div class="img-thumbs" id="imgThumbs"></div>
+      <div id="videoList"></div>
     </div>
 
-    <label class="field-label">音源</label>
+    <label class="field-label">🎙 音声・録音</label>
     <div class="media-section">
       <div class="audio-add-row">
-        <button type="button" class="audio-add-btn" id="recStartBtn">🎙 録音</button>
+        <button type="button" class="audio-add-btn" id="recStartBtn">🎙 録音開始</button>
         <button type="button" class="audio-add-btn music" id="musicSuiteBtn">🎵 music-suite</button>
       </div>
       <div class="rec-status" id="recStatus">
@@ -935,7 +1025,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <span class="sep"></span>
     <button type="button" onclick="popupFmt('insertUnorderedList')" style="font-size:16px;">≡</button>
   </div>
-  <div class="memo-popup-editor" id="memoPopupEditor" contenteditable="true" data-placeholder="内容を入力…"></div>
+  <div class="memo-popup-editor" id="memoPopupEditor" contenteditable="true" data-placeholder="内容を入力…"
+    autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 </div>
 
 <div class="review-overlay" id="reviewOverlay">
@@ -1284,8 +1375,13 @@ let draftFields = [];
 let draftSensitive = false;
 let draftImages = [];
 let draftAudios = [];
+let draftVideos = [];
 let objURLs = [];
 let mediaRecorder = null, recChunks = [], recTimerInterval = null, recSeconds = 0;
+let sharedText = null; // Share Targetで受け取ったテキスト
+
+// 触覚フィードバック (iOSはvibration API非対応だが念のため)
+function haptic(ms=10) { try { navigator.vibrate?.(ms); } catch(_){} }
 
 // ═══════════════════════════════════════
 // IMAGE PROCESSING
@@ -1347,6 +1443,7 @@ function renderAll() {
     const tags = (item.tags||[]).map(t=>`<span class="chip">${escapeHtml(t)}</span>`).join('');
     const imgCnt = attachmentMeta.filter(a=>a.itemId===item.id&&a.type==='image').length;
     const audCnt = attachmentMeta.filter(a=>a.itemId===item.id&&(a.type==='audio'||a.type==='music-ref')).length;
+    const vidCnt = attachmentMeta.filter(a=>a.itemId===item.id&&a.type==='video').length;
     const linkCnt = (getLinks()[item.id]||[]).length;
     const urlBadge = item.url ? `<span title="${escapeHtml(item.url)}">🔗</span>` : '';
     const lockBadge = item.sensitive ? '<span class="lock-badge">🔒</span>' : '';
@@ -1357,6 +1454,7 @@ function renderAll() {
         <div class="chips">${tags}</div>
         <div class="card-meta">
           ${imgCnt ? `<span>📷 ${imgCnt}</span>` : ''}
+          ${vidCnt ? `<span>🎬 ${vidCnt}</span>` : ''}
           ${audCnt ? `<span>🎙 ${audCnt}</span>` : ''}
           ${linkCnt ? `<span>🔗 ${linkCnt}</span>` : ''}
           ${urlBadge}
@@ -1391,7 +1489,7 @@ function renderTagFilter() {
 // ═══════════════════════════════════════
 function openNew() {
   editingId=null; draftTags=[]; draftFields=[]; draftSensitive=false;
-  revokeAllObjURLs(); draftImages=[]; draftAudios=[];
+  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[];
   document.getElementById('sheetTitle').textContent='新規追加';
   document.getElementById('fTitle').value='';
   document.getElementById('fBody').innerHTML='';
@@ -1402,6 +1500,7 @@ function openNew() {
   document.getElementById('fieldRows').innerHTML='';
   document.getElementById('imgThumbs').innerHTML='';
   document.getElementById('audioList').innerHTML='';
+  document.getElementById('videoList').innerHTML='';
   document.getElementById('relatedSection').innerHTML='';
   renderTagChips(); renderTagSuggestions();
   openSheet();
@@ -1420,7 +1519,7 @@ async function openEdit(id) {
   }
 
   editingId=id; draftTags=[...(item.tags||[])]; draftFields=[...plainFields]; draftSensitive=!!item.sensitive;
-  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; stopRecordingIfActive();
+  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[]; stopRecordingIfActive();
   document.getElementById('fTitle').value=item.title||'';
   document.getElementById('fBody').innerHTML=plainBody;
   document.getElementById('tagInput').value='';
@@ -1433,6 +1532,7 @@ async function openEdit(id) {
   document.getElementById('audioList').innerHTML='';
   await loadExistingImages(id);
   await loadExistingAudios(id);
+  await loadExistingVideos(id);
   openSheet();
   setTimeout(()=>renderRelatedItems(item), 80);
 }
@@ -1477,6 +1577,7 @@ async function saveItem() {
   await dbPut(item);
   await saveImageAttachments(item.id);
   await saveAudioAttachments(item.id);
+  await saveVideoAttachments(item.id);
   await reload();
   syncEcosystemTags();
   closeSheet();
@@ -1612,6 +1713,119 @@ function renderAudioList() {
     });
     el.appendChild(div);
   });
+}
+
+// ── VIDEO ATTACHMENTS ──
+function addVideoToDraft(blob, name) {
+  if (blob.size > 200 * 1024 * 1024) { showToast('動画が大きすぎます(上限200MB)'); return; }
+  const url = URL.createObjectURL(blob); objURLs.push(url);
+  draftVideos.push({ tempId: makeTempId(), blob, url, name: name||'video.mp4', isExisting: false });
+  renderVideoList();
+}
+async function loadExistingVideos(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  atts.filter(a => a.type === 'video').forEach(a => {
+    const url = URL.createObjectURL(a.blob); objURLs.push(url);
+    draftVideos.push({ tempId: makeTempId(), blob: a.blob, url, name: a.name, isExisting: true, attId: a.id });
+  }); renderVideoList();
+}
+async function saveVideoAttachments(itemId) {
+  for (const v of draftVideos) {
+    if (!v.isExisting) await dbPutAttachment({ id: crypto.randomUUID(), itemId, type: 'video', blob: v.blob, mimeType: v.blob.type||'video/mp4', name: v.name, createdAt: Date.now() });
+  }
+}
+function renderVideoList() {
+  const el = document.getElementById('videoList'); if (!el) return; el.innerHTML = '';
+  draftVideos.forEach((v, i) => {
+    const wrap = document.createElement('div'); wrap.className = 'video-item';
+    wrap.innerHTML = `
+      <video src="${v.url}" controls playsinline preload="metadata" style="width:100%;max-height:220px;border-radius:10px 10px 0 0;background:#000;"></video>
+      <div class="video-item-label">🎬 ${escapeHtml(v.name)}</div>
+      <button type="button" class="video-item-del" data-i="${i}">✕</button>`;
+    wrap.querySelector('[data-i]').addEventListener('click', async () => {
+      if (v.isExisting && v.attId) await dbDeleteAttachment(v.attId);
+      URL.revokeObjectURL(v.url); draftVideos.splice(i, 1); renderVideoList();
+    });
+    el.appendChild(wrap);
+  });
+}
+
+// カード上の動画バッジカウント (attachmentMetaにvideoを追加)
+function getVideoCnt(itemId) {
+  return attachmentMeta.filter(a => a.itemId === itemId && a.type === 'video').length;
+}
+
+// ── CLIPBOARD / PASTE ──
+async function tryPasteFromClipboard() {
+  try {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      for (const type of item.types) {
+        if (type.startsWith('image/')) {
+          const blob = await item.getType(type);
+          const resized = await resizeImageBlob(blob);
+          addBlobToDraft(resized, `paste-${Date.now()}.jpg`);
+          showToast('クリップボードから画像を貼り付けました');
+          return;
+        }
+        if (type === 'text/plain') {
+          const blob = await item.getType(type);
+          const text = await blob.text();
+          if (text.trim()) {
+            const ed = document.getElementById('fBody');
+            if (ed) { ed.focus(); document.execCommand('insertText', false, text); showToast('テキストを貼り付けました'); }
+            return;
+          }
+        }
+      }
+    }
+    showToast('クリップボードに画像・テキストがありません');
+  } catch(_) {
+    showToast('クリップボードへのアクセスが許可されていません');
+  }
+}
+
+async function resizeImageBlob(blob) {
+  return new Promise((resolve) => {
+    const img = new Image(), url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let {width: w, height: h} = img;
+      if (w > IMG_MAX_PX || h > IMG_MAX_PX) { const s = Math.min(IMG_MAX_PX/w, IMG_MAX_PX/h); w=Math.round(w*s); h=Math.round(h*s); }
+      const c = document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      c.toBlob(b => resolve(b), 'image/jpeg', IMG_QUALITY);
+    };
+    img.src = url;
+  });
+}
+
+// ── SHARE TARGET (Web Share Target API) ──
+function checkShareTarget() {
+  const params = new URLSearchParams(location.search);
+  const title = params.get('share_title')||'';
+  const text  = params.get('share_text') ||'';
+  const url   = params.get('share_url')  ||'';
+  const combined = [title, text, url].filter(Boolean).join('\n').trim();
+  if (!combined) return;
+  sharedText = combined;
+  // URLからパラメータ除去
+  history.replaceState(null, '', location.pathname + (location.hash||''));
+  // バナー表示
+  const banner = document.getElementById('shareReceivedBanner');
+  const label  = document.getElementById('shareReceivedText');
+  label.textContent = `📨 共有テキスト: ${combined.slice(0,40)}${combined.length>40?'…':''}`;
+  banner.classList.add('show');
+}
+function useSharedText() {
+  if (!sharedText) return;
+  openNew();
+  // タイトルに1行目、メモに全文
+  const lines = sharedText.split('\n');
+  document.getElementById('fTitle').value = lines[0].slice(0, 60);
+  document.getElementById('fBody').innerHTML = escapeHtml(sharedText).replace(/\n/g,'<br>');
+  document.getElementById('shareReceivedBanner').classList.remove('show');
+  sharedText = null;
 }
 
 // ═══════════════════════════════════════
@@ -2095,8 +2309,25 @@ function renderAIPreview(data) {
 // EVENT WIRING
 // ═══════════════════════════════════════
 function wireEvents() {
-  document.getElementById('fabBtn').addEventListener('click', openNew);
-  document.getElementById('voiceFab').addEventListener('click', openVoiceModal);
+  // ── QUICK INPUT DOCK ──
+  document.getElementById('fabBtn').addEventListener('click', () => { haptic(); openNew(); });
+  document.getElementById('voiceFab').addEventListener('click', () => { haptic(); openVoiceModal(); });
+  document.getElementById('dockCam').addEventListener('click', () => {
+    haptic();
+    // シートが開いていなければ先に新規作成
+    if (!document.getElementById('editSheet').classList.contains('open')) openNew();
+    setTimeout(() => document.getElementById('imgCameraInput').click(), 200);
+  });
+  document.getElementById('dockPhoto').addEventListener('click', () => {
+    haptic();
+    if (!document.getElementById('editSheet').classList.contains('open')) openNew();
+    setTimeout(() => document.getElementById('imgFileInput').click(), 200);
+  });
+  document.getElementById('dockVideo').addEventListener('click', () => {
+    haptic();
+    if (!document.getElementById('editSheet').classList.contains('open')) openNew();
+    setTimeout(() => document.getElementById('videoCamInput').click(), 200);
+  });
 
   document.getElementById('overlay').addEventListener('click', ()=>{ closeSheet(); closeSettingsSheet(); });
 
@@ -2116,13 +2347,50 @@ function wireEvents() {
   document.getElementById('addFieldBtn').addEventListener('click',()=>{ draftFields.push({key:'',value:''}); renderFieldRows(); });
   document.getElementById('sensitiveToggle').addEventListener('change',e=>{ draftSensitive=e.target.checked; });
 
-  document.getElementById('imgPickBtn').addEventListener('click',()=>document.getElementById('imgFileInput').click());
-  document.getElementById('imgCameraBtn').addEventListener('click',()=>document.getElementById('imgCameraInput').click());
+  // ── 画像ボタン（シート内） ──
+  document.getElementById('imgPickBtn').addEventListener('click', () => { haptic(); document.getElementById('imgFileInput').click(); });
+  document.getElementById('imgCameraBtn').addEventListener('click', () => { haptic(); document.getElementById('imgCameraInput').click(); });
+  document.getElementById('imgSelfieBtn').addEventListener('click', () => { haptic(); document.getElementById('imgSelfieInput').click(); });
   document.getElementById('imgIllustBtn').addEventListener('click', tryImportFromIllustStudio);
-  document.getElementById('imgFileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(f){const b=await resizeImage(f); addBlobToDraft(b,f.name);} e.target.value=''; });
-  document.getElementById('imgCameraInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(f){const b=await resizeImage(f); addBlobToDraft(b,f.name);} e.target.value=''; });
+
+  // 複数ファイル対応 (multiple属性あり)
+  const handleImgFiles = async (files) => {
+    for (const f of Array.from(files)) {
+      const b = await resizeImage(f); addBlobToDraft(b, f.name);
+    }
+  };
+  document.getElementById('imgFileInput').addEventListener('change', async e => { await handleImgFiles(e.target.files); e.target.value=''; });
+  document.getElementById('imgCameraInput').addEventListener('change', async e => { if(e.target.files[0]){ const b=await resizeImage(e.target.files[0]); addBlobToDraft(b,e.target.files[0].name); } e.target.value=''; });
+  document.getElementById('imgSelfieInput').addEventListener('change', async e => { if(e.target.files[0]){ const b=await resizeImage(e.target.files[0]); addBlobToDraft(b,e.target.files[0].name); } e.target.value=''; });
+
+  // ── 動画ボタン ──
+  document.getElementById('videoCamBtn').addEventListener('click', () => { haptic(); document.getElementById('videoCamInput').click(); });
+  document.getElementById('videoPickBtn').addEventListener('click', () => { haptic(); document.getElementById('videoFileInput').click(); });
+  document.getElementById('videoCamInput').addEventListener('change', e => { if(e.target.files[0]) addVideoToDraft(e.target.files[0], e.target.files[0].name); e.target.value=''; });
+  document.getElementById('videoFileInput').addEventListener('change', e => { Array.from(e.target.files).forEach(f => addVideoToDraft(f, f.name)); e.target.value=''; });
+
+  // ── 画像プレビュー ──
   document.getElementById('imgPreviewClose').addEventListener('click',()=>{ document.getElementById('imgPreviewOverlay').classList.remove('open'); document.getElementById('imgPreviewImg').src=''; });
   document.getElementById('imgPreviewOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('imgPreviewOverlay')){ document.getElementById('imgPreviewOverlay').classList.remove('open'); document.getElementById('imgPreviewImg').src=''; } });
+
+  // ── ペースト対応（sheetBodyへのpaste eventで画像をキャッチ） ──
+  document.querySelector('.sheet-body').addEventListener('paste', async e => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const blob = await resizeImageBlob(item.getAsFile());
+        addBlobToDraft(blob, `paste-${Date.now()}.jpg`);
+        showToast('画像を貼り付けました');
+        return;
+      }
+    }
+  });
+
+  // ── 共有バナー ──
+  document.getElementById('shareReceivedUse').addEventListener('click', () => { haptic(); useSharedText(); });
+  document.getElementById('shareReceivedDismiss').addEventListener('click', () => { document.getElementById('shareReceivedBanner').classList.remove('show'); sharedText=null; });
 
   document.getElementById('recStartBtn').addEventListener('click',async()=>{
     try {
@@ -2238,7 +2506,7 @@ async function init() {
     updateLockButton(); initThemeMode();
     renderTagFilter(); renderAll();
     wireEvents(); updateAIBadge();
-    checkImportHash(); checkIncomingTransfer();
+    checkImportHash(); checkIncomingTransfer(); checkShareTarget();
     updateBackupBanner(); updateReviewBadge();
   } catch(err) {
     console.error(err);
