@@ -19,30 +19,40 @@
       "url":   "share_url"
     }
   },
-  "icons": [
+  "shortcuts": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "name": "音声で追加",
+      "short_name": "音声追加",
+      "description": "マイクを起動して音声で即登録",
+      "url": "./index.html?shortcut=voice",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "name": "カメラで追加",
+      "short_name": "カメラ追加",
+      "description": "カメラを起動して写真を即登録",
+      "url": "./index.html?shortcut=camera",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "テキストで追加",
+      "short_name": "テキスト追加",
+      "description": "入力シートを開いて即登録",
+      "url": "./index.html?shortcut=new",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "デイリーレビュー",
+      "short_name": "レビュー",
+      "description": "今日の復習カードを開く",
+      "url": "./index.html?shortcut=review",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
+  ],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

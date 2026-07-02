@@ -974,7 +974,29 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <label class="field-label">Proxyサーバー URL</label>
     <input type="url" id="sProxyUrl" placeholder="https://your-worker.workers.dev" autocomplete="off">
     <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">空欄の場合は各APIに直接リクエスト</p>
-    <label class="field-label" style="margin-top:24px;">📤 エコシステム連携</label>
+    <label class="field-label" style="margin-top:24px;">☁️ iCloud Drive 連携</label>
+    <div style="background:rgba(0,122,255,0.06);border:1px solid rgba(0,122,255,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;">自動バックアップ先</p>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">iCloud Drive → ファイルアプリ に自動保存します。MacBookでもFinderからアクセス可能になります。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="icloudSaveBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">☁️ 今すぐiCloudに保存</button>
+        <button id="icloudAutoToggleBtn" style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;" id="icloudAutoBtn">⏰ 自動保存設定</button>
+      </div>
+      <div id="icloudStatus" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
+    </div>
+
+    <div style="background:rgba(52,199,89,0.06);border:1px solid rgba(52,199,89,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">📱 ホーム画面ショートカット（Siri連携）</p>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">「Hey Siri、クイック参照に追加」で音声登録できます。ホーム画面アイコンの長押しでも起動可能。</p>
+      <button id="siriShortcutBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">🔗 Shortcuts設定ガイドを表示</button>
+    </div>
+
+    <div style="background:rgba(175,82,222,0.06);border:1px solid rgba(175,82,222,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">🖥 MacBook到着後（秋〜）</p>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">同じSafariでURLを開くだけで即同期。iCloud DriveのJSONをFinderから開いてインポートも可能。Universal Clipboardでコピペも繋がります。</p>
+    </div>
+
+    <label class="field-label" style="margin-top:16px;">📤 エコシステム連携</label>
     <button id="sendToEcoBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:15px;color:var(--accent);font-weight:600;cursor:pointer;">全データを他アプリへ送信 (is_transfer)</button>
     <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">music-suite / kansei / illust-studio と共有する場合に使用</p>
   </div>
@@ -1047,6 +1069,10 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 <div class="action-sheet" id="menuSheet">
   <div class="action-sheet-handle"></div>
   <h3>データ管理</h3>
+  <button type="button" class="action-btn" id="icloudMenuBtn">
+    <span class="action-icon">☁️</span>
+    <span class="action-btn-inner"><span class="action-label">iCloud Driveに保存</span><span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バックアップ</span></span>
+  </button>
   <button type="button" class="action-btn" id="exportBtn">
     <span class="action-icon">📤</span>
     <span class="action-btn-inner"><span class="action-label">JSONエクスポート</span><span class="action-desc">全データをファイルに書き出し</span></span>
@@ -1103,6 +1129,21 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <button type="button" class="icon-dl-btn" id="iconDl512">↓ 512px</button>
   </div>
   <button type="button" class="icon-modal-close" id="iconModalClose">閉じる</button>
+</div>
+
+<!-- iCLOUD GUIDE MODAL -->
+<div class="add-guide" id="icloudGuide">
+  <div class="add-guide-sheet">
+    <h3>☁️ iCloud Drive に保存する方法</h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">ダウンロードされたファイルを「ファイル」アプリでiCloud Driveに移動してください。MacBookからもFinderでアクセスできます。</p>
+    <div class="add-guide-url" id="icloudGuideFilename" style="font-size:13px;word-break:break-all;"></div>
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ダウンロードフォルダに保存されます</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>「<strong>ファイル</strong>」アプリを開く → 「最近使った項目」</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ファイルを長押し → <strong>「移動」</strong> をタップ</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p><strong>iCloud Drive</strong> → 任意のフォルダを選択して移動</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">5</div><p>MacBook到着後は Finder → iCloud Drive から即アクセス可能</p></div>
+    <button type="button" class="add-guide-close" id="icloudGuideClose">閉じる</button>
+  </div>
 </div>
 
 <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
@@ -1895,6 +1936,164 @@ async function doImport(file) {
 }
 
 // ═══════════════════════════════════════
+// iCLOUD DRIVE 連携
+// ═══════════════════════════════════════
+const ICLOUD_BACKUP_KEY = 'qr_icloud_last_save';
+const ICLOUD_AUTO_KEY   = 'qr_icloud_auto';
+
+function getiCloudLastSave() {
+  const ts = localStorage.getItem(ICLOUD_BACKUP_KEY);
+  if (!ts) return null;
+  const d = new Date(Number(ts));
+  return d.toLocaleDateString('ja-JP') + ' ' + d.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+}
+
+// iCloud Drive = iOS の「ファイル」アプリ内への保存
+// Webからは直接書き込みできないため「ダウンロード→ファイルアプリで移動」の
+// UXを最大限スムーズにするガイド付きエクスポートを提供する
+async function saveToiCloud() {
+  // エクスポートデータ生成（doExportと同じ形式）
+  const exportItems = allItems.map(item => {
+    const out = {id:item.id,title:item.title,tags:item.tags,url:item.url||'',sensitive:item.sensitive,createdAt:item.createdAt,updatedAt:item.updatedAt};
+    if (item.sensitive) { out.encBody=encFieldToJSON(item.encBody); out.encFields=encFieldToJSON(item.encFields); }
+    else { out.body=item.body; out.fields=item.fields; }
+    return out;
+  });
+  const payload = {
+    version: '2.0', source: 'quick-ref',
+    exportedAt: Date.now(), pinMeta: getPinMeta(),
+    tags: getAllTagsSorted(), items: exportItems
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `quick-ref-${new Date().toISOString().slice(0,10)}.json`;
+
+  // iOS Safari: ダウンロード → ファイルアプリ → iCloud Drive に移動
+  const blob = new Blob([json], {type: 'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  localStorage.setItem(ICLOUD_BACKUP_KEY, String(Date.now()));
+  recordBackupNow();
+  updateiCloudStatus();
+
+  // iCloudガイドを表示（iOS）
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (isIOS) { showICloudGuide(filename); }
+  else { showToast('☁️ ' + filename + ' をダウンロードしました'); }
+
+  // Background Sync 登録（オンライン復帰時にSWへ通知）
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.sync.register('icloud-backup').catch(() => {});
+  }
+}
+
+function updateiCloudStatus() {
+  const last = getiCloudLastSave();
+  const el   = document.getElementById('icloudStatus');
+  if (el) el.textContent = last ? '最終保存: ' + last : '未保存';
+  const desc = document.getElementById('icloudMenuDesc');
+  if (desc) desc.textContent = last ? '最終: ' + last : 'ファイルアプリ経由で自動バックアップ';
+}
+
+function showICloudGuide(filename) {
+  const guide = document.getElementById('icloudGuide');
+  document.getElementById('icloudGuideFilename').textContent = filename;
+  guide.classList.add('open');
+}
+
+// 自動保存: Periodic Background Sync 登録
+async function setupPeriodicSync() {
+  if (!('serviceWorker' in navigator) || !('PeriodicSyncManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.periodicSync.register('daily-backup-reminder', { minInterval: 24 * 60 * 60 * 1000 });
+    localStorage.setItem(ICLOUD_AUTO_KEY, '1');
+    showToast('✅ 毎日バックアップリマインダーを設定しました');
+    updateAutoToggleBtn();
+  } catch (e) {
+    // フォールバック: ローカル通知を促すガイド
+    alert('Periodic Syncはこのブラウザで未対応です。\n手動でメニュー→iCloud保存をお使いください。');
+  }
+}
+async function cancelPeriodicSync() {
+  if (!('serviceWorker' in navigator) || !('PeriodicSyncManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.periodicSync.unregister('daily-backup-reminder');
+  } catch(_) {}
+  localStorage.removeItem(ICLOUD_AUTO_KEY);
+  showToast('自動バックアップを解除しました');
+  updateAutoToggleBtn();
+}
+function updateAutoToggleBtn() {
+  const btn = document.getElementById('icloudAutoToggleBtn');
+  if (!btn) return;
+  const on = !!localStorage.getItem(ICLOUD_AUTO_KEY);
+  btn.textContent = on ? '✅ 自動保存ON' : '⏰ 自動保存設定';
+  btn.style.background = on ? 'rgba(52,199,89,0.12)' : '';
+  btn.style.color       = on ? '#1A8C3A' : '';
+  btn.style.borderColor = on ? 'rgba(52,199,89,0.3)' : '';
+}
+
+// ═══════════════════════════════════════
+// Siri Shortcuts ガイド
+// ═══════════════════════════════════════
+function showSiriShortcutGuide() {
+  const base = location.origin + location.pathname;
+  const msg = [
+    '【Siri Shortcuts 設定手順】',
+    '',
+    '① ショートカットアプリを開く',
+    '② 右上「＋」→「アクションを追加」',
+    '③「URLを開く」を追加',
+    '④ 以下のURLを入力:',
+    '',
+    '  音声追加: ' + base + '?shortcut=voice',
+    '  カメラ追加: ' + base + '?shortcut=camera',
+    '  新規追加: ' + base + '?shortcut=new',
+    '  レビュー: ' + base + '?shortcut=review',
+    '',
+    '⑤ Siriフレーズを設定（例:「参照に追加」）',
+    '',
+    '設定後「Hey Siri、参照に追加」で即起動します。',
+  ].join('\n');
+  alert(msg);
+}
+
+// ═══════════════════════════════════════
+// Shortcut URL パラメータ処理
+// ═══════════════════════════════════════
+function checkShortcutParam() {
+  const params = new URLSearchParams(location.search);
+  const sc = params.get('shortcut');
+  if (!sc) return;
+  history.replaceState(null, '', location.pathname + (location.hash || ''));
+  // 少し遅らせてUIが準備できてから起動
+  setTimeout(() => {
+    if (sc === 'voice')  { openVoiceModal(); }
+    if (sc === 'camera') { openNew(); setTimeout(() => document.getElementById('imgCameraInput').click(), 300); }
+    if (sc === 'new')    { openNew(); }
+    if (sc === 'review') { openReview(); }
+    if (sc === 'export') { saveToiCloud(); }
+  }, 600);
+}
+
+// ═══════════════════════════════════════
+// Service Worker メッセージ受信
+// ═══════════════════════════════════════
+function setupSWMessages() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'SW_SYNC_ICLOUD')    { saveToiCloud(); }
+    if (e.data?.type === 'TRIGGER_ICLOUD_EXPORT') { saveToiCloud(); }
+  });
+}
+
+// ═══════════════════════════════════════
 // MENU
 // ═══════════════════════════════════════
 function openMenu() { document.getElementById('menuOverlay').classList.add('open'); document.getElementById('menuSheet').classList.add('open'); }
@@ -2454,6 +2653,18 @@ function wireEvents() {
     localStorage.removeItem(PIN_META_KEY); sessionKey=null; decryptedCache.clear(); await reload(); updateLockButton(); closePinModal(false); alert('パスコードと保護された項目をリセットしました。');
   });
 
+  // ── iCloud / Shortcuts ──
+  document.getElementById('icloudSaveBtn').addEventListener('click', () => { haptic(); saveToiCloud(); });
+  document.getElementById('icloudAutoToggleBtn').addEventListener('click', () => {
+    haptic();
+    if (localStorage.getItem(ICLOUD_AUTO_KEY)) cancelPeriodicSync();
+    else setupPeriodicSync();
+  });
+  document.getElementById('siriShortcutBtn').addEventListener('click', () => showSiriShortcutGuide());
+  document.getElementById('icloudMenuBtn').addEventListener('click', () => { closeMenu(); saveToiCloud(); });
+  document.getElementById('icloudGuideClose')?.addEventListener('click', () => document.getElementById('icloudGuide').classList.remove('open'));
+  document.getElementById('icloudGuide')?.addEventListener('click', e => { if (e.target === document.getElementById('icloudGuide')) document.getElementById('icloudGuide').classList.remove('open'); });
+
   document.getElementById('settingsBtn').addEventListener('click', openSettingsSheet);
   document.getElementById('settingsCancelBtn').addEventListener('click', closeSettingsSheet);
   document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
@@ -2502,21 +2713,35 @@ function wireEvents() {
 async function init() {
   try {
     await openDB();
-    allItems=await dbGetAll(); attachmentMeta=await dbGetAllAttachmentMeta();
-    updateLockButton(); initThemeMode();
-    renderTagFilter(); renderAll();
-    wireEvents(); updateAIBadge();
-    checkImportHash(); checkIncomingTransfer(); checkShareTarget();
-    updateBackupBanner(); updateReviewBadge();
+    allItems = await dbGetAll();
+    attachmentMeta = await dbGetAllAttachmentMeta();
+    updateLockButton();
+    initThemeMode();
+    renderTagFilter();
+    renderAll();
+    wireEvents();
+    updateAIBadge();
+    updateiCloudStatus();
+    updateAutoToggleBtn();
+    checkImportHash();
+    checkIncomingTransfer();
+    checkShareTarget();
+    checkShortcutParam();
+    setupSWMessages();
+    updateBackupBanner();
+    updateReviewBadge();
   } catch(err) {
     console.error(err);
-    document.getElementById('loadingOverlay').textContent='DB起動に失敗しました。リロードしてください。'; return;
+    document.getElementById('loadingOverlay').textContent = 'DB起動に失敗しました。リロードしてください。';
+    return;
   }
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW:',e)));
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e))
+  );
 }
 
 init();
