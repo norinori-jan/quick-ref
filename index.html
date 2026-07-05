@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="apple-touch-startup-image" href="icon-512.png">
-<title>クイチE��参�E</title>
+<title>繧ｯ繧､繝・け蜿ら・</title>
 <style>
 :root {
   --bg: #F7F7F8;
@@ -74,7 +74,7 @@ header {
 .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* MAIN */
-main { padding: 12px 16px 100px; max-width: 640px; margin: 0 auto; }
+main { padding: 12px 16px 140px; max-width: 640px; margin: 0 auto; }
 .empty { text-align: center; color: var(--text-secondary); padding: 60px 20px; font-size: 15px; line-height: 1.7; }
 
 /* BACKUP BANNER */
@@ -136,7 +136,7 @@ main { padding: 12px 16px 100px; max-width: 640px; margin: 0 auto; }
 .lock-badge { margin-right: 4px; }
 mark { background: rgba(255,214,0,0.45); border-radius: 2px; padding: 0 1px; }
 
-/* ── QUICK INPUT DOCK ── */
+/* 笏笏 QUICK INPUT DOCK 笏笏 */
 .quick-dock {
   position: fixed; left: 0; right: 0;
   bottom: calc(env(safe-area-inset-bottom) + 12px);
@@ -166,18 +166,18 @@ mark { background: rgba(255,214,0,0.45); border-radius: 2px; padding: 0 1px; }
   50%      { box-shadow: 0 0 0 12px rgba(255,45,85,0); }
 }
 
-/* ── iPhone FORM OPTIMIZATIONS ── */
-/* チE��スト�E力：iOS 自動ズームを防ぎつつ快適に */
+/* 笏笏 iPhone FORM OPTIMIZATIONS 笏笏 */
+/* 繝・く繧ｹ繝亥・蜉幢ｼ喨OS 閾ｪ蜍輔ぜ繝ｼ繝繧帝亟縺弱▽縺､蠢ｫ驕ｩ縺ｫ */
 input[type="text"], input[type="search"], input[type="url"],
 input[type="password"], textarea {
-  font-size: 16px !important; /* 16px未満だとiOSが�E動ズームする */
+  font-size: 16px !important; /* 16px譛ｪ貅縺縺ｨiOS縺瑚・蜍輔ぜ繝ｼ繝縺吶ｋ */
 }
-/* タグ入力など素早く打てるよぁE��適匁E*/
+/* 繧ｿ繧ｰ蜈･蜉帙↑縺ｩ邏譌ｩ縺乗遠縺ｦ繧九ｈ縺・怙驕ｩ蛹・*/
 #tagInput    { autocapitalize: none; }
 #fTitle      { }
 #searchInput { }
 
-/* ── VIDEO ── */
+/* 笏笏 VIDEO 笏笏 */
 .video-item {
   border-radius: 10px; overflow: hidden; margin-top: 8px;
   position: relative; background: #000;
@@ -197,13 +197,13 @@ input[type="password"], textarea {
   border-radius: 0 0 10px 10px;
 }
 
-/* ── PASTE HINT ── */
+/* 笏笏 PASTE HINT 笏笏 */
 .paste-hint {
   font-size: 12px; color: var(--text-secondary);
   text-align: center; padding: 6px 0 2px; letter-spacing: 0.2px;
 }
 
-/* ── SHARE RECEIVED BANNER ── */
+/* 笏笏 SHARE RECEIVED BANNER 笏笏 */
 .share-received-banner {
   display: none; background: rgba(0,122,255,0.1);
   border: 1px solid rgba(0,122,255,0.3);
@@ -727,67 +727,67 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
+<div class="loading-overlay" id="loadingOverlay">隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ窶ｦ</div>
 
 <header>
   <div class="header-top">
-    <h1>クイチE��参�E</h1>
+    <h1>繧ｯ繧､繝・け蜿ら・</h1>
     <div class="header-actions">
-      <span id="countLabel">0件</span>
-      <button class="review-btn" id="reviewBtn" aria-label="チE��リーレビュー">🗓<span class="review-badge" id="reviewBadge" style="display:none;"></span></button>
-      <button class="icon-btn" id="lockToggleBtn" title="ロチE��">🔑</button>
-      <button class="icon-btn" id="settingsBtn" title="設宁E>⚙︁E/button>
-      <button class="icon-btn" id="menuBtn" title="メニュー">⋯</button>
+      <span id="countLabel">0莉ｶ</span>
+      <button class="review-btn" id="reviewBtn" aria-label="繝・う繝ｪ繝ｼ繝ｬ繝薙Η繝ｼ">欄<span class="review-badge" id="reviewBadge" style="display:none;"></span></button>
+      <button class="icon-btn" id="lockToggleBtn" title="繝ｭ繝・け">泊</button>
+      <button class="icon-btn" id="settingsBtn" title="險ｭ螳・>笞呻ｸ・/button>
+      <button class="icon-btn" id="menuBtn" title="繝｡繝九Η繝ｼ">站ｯ</button>
     </div>
   </div>
   <div class="search-row">
-    <span class="search-icon">🔍</span>
-    <input type="search" id="searchInput" placeholder="タイトル・メモ・タグで検索" autocomplete="off" autocorrect="off">
-    <button class="search-clear" id="searchClear">✁E/button>
+    <span class="search-icon">剥</span>
+    <input type="search" id="searchInput" placeholder="繧ｿ繧､繝医Ν繝ｻ繝｡繝｢繝ｻ繧ｿ繧ｰ縺ｧ讀懃ｴ｢" autocomplete="off" autocorrect="off">
+    <button class="search-clear" id="searchClear">笨・/button>
   </div>
   <div class="tag-filter-row" id="tagFilterRow">
-    <button class="filter-chip active" data-tag="__all__">すべて</button>
-    <button class="filter-chip" id="linkFilterBtn">🔗 リンク雁E/button>
+    <button class="filter-chip active" data-tag="__all__">縺吶∋縺ｦ</button>
+    <button class="filter-chip" id="linkFilterBtn">迫 繝ｪ繝ｳ繧ｯ髮・/button>
   </div>
 </header>
 
 <main>
-  <!-- 共有シートから受け取ったテキスト�E通知 -->
+  <!-- 蜈ｱ譛峨す繝ｼ繝医°繧牙女縺大叙縺｣縺溘ユ繧ｭ繧ｹ繝医・騾夂衍 -->
   <div class="share-received-banner" id="shareReceivedBanner">
-    <span style="font-size:20px;">📨</span>
-    <span class="share-received-text" id="shareReceivedText">共有テキストを受信しました</span>
-    <button class="share-received-use" id="shareReceivedUse">新規作�Eに使ぁE/button>
-    <button class="share-received-dismiss" id="shareReceivedDismiss">✁E/button>
+    <span style="font-size:20px;">鐙</span>
+    <span class="share-received-text" id="shareReceivedText">蜈ｱ譛峨ユ繧ｭ繧ｹ繝医ｒ蜿嶺ｿ｡縺励∪縺励◆</span>
+    <button class="share-received-use" id="shareReceivedUse">譁ｰ隕丈ｽ懈・縺ｫ菴ｿ縺・/button>
+    <button class="share-received-dismiss" id="shareReceivedDismiss">笨・/button>
   </div>
 
   <div id="themeBanner" style="display:none;" class="theme-banner">
-    <span class="theme-banner-icon" id="themeBannerIcon">📋</span>
+    <span class="theme-banner-icon" id="themeBannerIcon">搭</span>
     <div class="theme-banner-text">
-      <span id="themeBannerLabel">チE�EチE/span>
-      <div class="theme-banner-sub" id="themeBannerSub">絞り込み中</div>
+      <span id="themeBannerLabel">繝・・繝・/span>
+      <div class="theme-banner-sub" id="themeBannerSub">邨槭ｊ霎ｼ縺ｿ荳ｭ</div>
     </div>
     <div class="theme-banner-actions">
-      <button class="theme-banner-btn outline" id="themeBannerIconBtn">🎨 アイコン</button>
-      <button class="theme-banner-btn outline" id="themeBannerKanseiBtn">📝 kansei</button>
-      <button class="theme-banner-btn" id="themeBannerAddBtn">+ 追加方況E/button>
+      <button class="theme-banner-btn outline" id="themeBannerIconBtn">耳 繧｢繧､繧ｳ繝ｳ</button>
+      <button class="theme-banner-btn outline" id="themeBannerKanseiBtn">統 kansei</button>
+      <button class="theme-banner-btn" id="themeBannerAddBtn">+ 霑ｽ蜉譁ｹ豕・/button>
     </div>
   </div>
   <div id="backupBanner" style="display:none;" class="backup-banner">
-    <span>⚠�E�E/span>
-    <span class="backup-banner-text" id="backupBannerText">バックアチE�Eを取ってください</span>
-    <button class="backup-banner-btn" id="backupBannerBtn">今すぁE/button>
+    <span>笞・・/span>
+    <span class="backup-banner-text" id="backupBannerText">繝舌ャ繧ｯ繧｢繝・・繧貞叙縺｣縺ｦ縺上□縺輔＞</span>
+    <button class="backup-banner-btn" id="backupBannerBtn">莉翫☆縺・/button>
   </div>
-  <div class="empty" id="emptyState" style="display:none;">まだ何もありません、Ebr>右下�E�E�から追加してください、E/div>
+  <div class="empty" id="emptyState" style="display:none;">縺ｾ縺菴輔ｂ縺ゅｊ縺ｾ縺帙ｓ縲・br>蜿ｳ荳九・・九°繧芽ｿｽ蜉縺励※縺上□縺輔＞縲・/div>
   <div id="cardList"></div>
 </main>
 
 <!-- QUICK INPUT DOCK -->
 <div class="quick-dock" id="quickDock">
-  <button class="dock-btn dock-mic"   id="voiceFab"  aria-label="音声入劁E>🎤<span class="dock-label">音声</span></button>
-  <button class="dock-btn dock-cam"   id="dockCam"   aria-label="カメラ">📷<span class="dock-label">カメラ</span></button>
-  <button class="dock-btn dock-photo" id="dockPhoto"  aria-label="写真">🖼<span class="dock-label">写真</span></button>
-  <button class="dock-btn dock-video" id="dockVideo"  aria-label="動画">🎬<span class="dock-label">動画</span></button>
-  <button class="dock-btn dock-add"   id="fabBtn"    aria-label="追加">�E�Espan class="dock-label">追加</span></button>
+  <button class="dock-btn dock-mic"   id="voiceFab"  aria-label="髻ｳ螢ｰ蜈･蜉・>痔<span class="dock-label">髻ｳ螢ｰ</span></button>
+  <button class="dock-btn dock-cam"   id="dockCam"   aria-label="繧ｫ繝｡繝ｩ">胴<span class="dock-label">繧ｫ繝｡繝ｩ</span></button>
+  <button class="dock-btn dock-photo" id="dockPhoto"  aria-label="蜀咏悄">名<span class="dock-label">蜀咏悄</span></button>
+  <button class="dock-btn dock-video" id="dockVideo"  aria-label="蜍慕判">汐<span class="dock-label">蜍慕判</span></button>
+  <button class="dock-btn dock-add"   id="fabBtn"    aria-label="霑ｽ蜉">・・span class="dock-label">霑ｽ蜉</span></button>
 </div>
 
 <!-- hidden file inputs -->
@@ -801,27 +801,27 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <div class="voice-sheet-handle"></div>
     <div class="voice-status" id="voiceStatus">
       <span class="voice-dot" id="voiceDot" style="display:none;"></span>
-      <span id="voiceStatusText">マイクで話してください</span>
+      <span id="voiceStatusText">繝槭う繧ｯ縺ｧ隧ｱ縺励※縺上□縺輔＞</span>
     </div>
     <div class="voice-transcript" id="voiceTranscript">
       <span id="voiceFinal"></span><span class="voice-interim" id="voiceInter"></span>
     </div>
     <div class="voice-actions">
-      <button class="voice-stop-btn" id="voiceStopBtn">⏹ 停止</button>
-      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>✨ AI で整琁E��めE/button>
+      <button class="voice-stop-btn" id="voiceStopBtn">竢ｹ 蛛懈ｭ｢</button>
+      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>笨ｨ AI 縺ｧ謨ｴ逅・☆繧・/button>
     </div>
     <div id="aiPreviewArea" style="display:none;">
       <div class="ai-preview">
-        <div class="ai-preview-header">🤁EAI が整琁E��た�E容</div>
+        <div class="ai-preview-header">､・AI 縺梧紛逅・＠縺溷・螳ｹ</div>
         <div class="ai-preview-body">
-          <div class="ai-field"><div class="ai-field-label">タイトル</div><div class="ai-field-value"><input type="text" id="aiTitle"></div></div>
-          <div class="ai-field"><div class="ai-field-label">タグ</div><div class="ai-field-value ai-tags-row" id="aiTagsRow"></div></div>
-          <div class="ai-field"><div class="ai-field-label">メモ</div><div class="ai-field-value"><textarea id="aiBody"></textarea></div></div>
+          <div class="ai-field"><div class="ai-field-label">繧ｿ繧､繝医Ν</div><div class="ai-field-value"><input type="text" id="aiTitle"></div></div>
+          <div class="ai-field"><div class="ai-field-label">繧ｿ繧ｰ</div><div class="ai-field-value ai-tags-row" id="aiTagsRow"></div></div>
+          <div class="ai-field"><div class="ai-field-label">繝｡繝｢</div><div class="ai-field-value"><textarea id="aiBody"></textarea></div></div>
         </div>
       </div>
-      <button class="voice-save-btn" id="aiSaveBtn">💾 こ�E冁E��で保孁E/button>
+      <button class="voice-save-btn" id="aiSaveBtn">沈 縺薙・蜀・ｮｹ縺ｧ菫晏ｭ・/button>
     </div>
-    <button class="voice-cancel-btn" id="voiceCancelBtn">キャンセル</button>
+    <button class="voice-cancel-btn" id="voiceCancelBtn">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
   </div>
 </div>
 
@@ -830,30 +830,30 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 <div class="sheet" id="editSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <button id="cancelBtn">キャンセル</button>
-    <h2 id="sheetTitle">新規追加</h2>
-    <button class="save" id="saveBtn">保孁E/button>
+    <button id="cancelBtn">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
+    <h2 id="sheetTitle">譁ｰ隕剰ｿｽ蜉</h2>
+    <button class="save" id="saveBtn">菫晏ｭ・/button>
   </div>
   <div class="sheet-body">
-    <label class="field-label">タイトル</label>
-    <input type="text" id="fTitle" placeholder="タイトルを�E劁E maxlength="100"
+    <label class="field-label">繧ｿ繧､繝医Ν</label>
+    <input type="text" id="fTitle" placeholder="繧ｿ繧､繝医Ν繧貞・蜉・ maxlength="100"
       autocapitalize="sentences" autocorrect="on" spellcheck="true"
       enterkeyhint="next" inputmode="text">
 
-    <label class="field-label">タグ</label>
+    <label class="field-label">繧ｿ繧ｰ</label>
     <div class="tag-input-row">
-      <input type="text" id="tagInput" placeholder="タグを�E劁E maxlength="30"
+      <input type="text" id="tagInput" placeholder="繧ｿ繧ｰ繧貞・蜉・ maxlength="30"
         autocapitalize="none" autocorrect="off" spellcheck="false"
         enterkeyhint="done" inputmode="text">
-      <button id="tagAddBtn">追加</button>
+      <button id="tagAddBtn">霑ｽ蜉</button>
     </div>
     <div class="tag-chips" id="tagChips"></div>
     <div class="tag-suggestions" id="tagSuggestions"></div>
 
     <div class="toggle-row" style="margin-top:16px;">
       <div class="toggle-row-text">
-        <span class="toggle-row-title">個人惁E��として保護</span>
-        <span class="toggle-row-desc">メモ・構造化頁E��を暗号化しまぁEタイトル・タグは保護されません)</span>
+        <span class="toggle-row-title">蛟倶ｺｺ諠・ｱ縺ｨ縺励※菫晁ｭｷ</span>
+        <span class="toggle-row-desc">繝｡繝｢繝ｻ讒矩蛹夜・岼繧呈囓蜿ｷ蛹悶＠縺ｾ縺・繧ｿ繧､繝医Ν繝ｻ繧ｿ繧ｰ縺ｯ菫晁ｭｷ縺輔ｌ縺ｾ縺帙ｓ)</span>
       </div>
       <label class="switch">
         <input type="checkbox" id="sensitiveToggle">
@@ -861,144 +861,144 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
       </label>
     </div>
 
-    <label class="field-label">URL�E�リンク雁E��・任意！E/label>
+    <label class="field-label">URL・医Μ繝ｳ繧ｯ髮・畑繝ｻ莉ｻ諢擾ｼ・/label>
     <div class="url-field-row">
       <input type="text" id="inputUrl" placeholder="https://...">
-      <button type="button" class="open-link-btn" id="previewUrlBtn">ↁE/button>
+      <button type="button" class="open-link-btn" id="previewUrlBtn">竊・/button>
     </div>
 
-    <label class="field-label">メモ</label>
+    <label class="field-label">繝｡繝｢</label>
     <div class="rich-editor-wrap">
       <div class="rich-toolbar">
         <button type="button" onmousedown="return false" onclick="fmtCmd('bold')"><strong>B</strong></button>
         <button type="button" onclick="fmtCmd('italic')"><em>I</em></button>
         <button type="button" onclick="fmtCmd('underline')"><u>U</u></button>
         <span class="sep"></span>
-        <button type="button" onclick="fmtMark('yellow')" style="font-size:16px;">🟡</button>
-        <button type="button" onclick="fmtMark('green')"  style="font-size:16px;">🟢</button>
-        <button type="button" onclick="fmtMark('pink')"   style="font-size:16px;">🔴</button>
-        <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
+        <button type="button" onclick="fmtMark('yellow')" style="font-size:16px;">泯</button>
+        <button type="button" onclick="fmtMark('green')"  style="font-size:16px;">泙</button>
+        <button type="button" onclick="fmtMark('pink')"   style="font-size:16px;">閥</button>
+        <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">笨蒜mt</button>
       </div>
-      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="冁E��を�E劁E
+      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="蜀・ｮｹ繧貞・蜉・
         autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
-      <button type="button" class="expand-btn" id="expandMemoBtn">⛶ 全画面</button>
+      <button type="button" class="expand-btn" id="expandMemoBtn">笵ｶ 蜈ｨ逕ｻ髱｢</button>
     </div>
 
-    <label class="field-label">構造化頁E���E�任意！E/label>
+    <label class="field-label">讒矩蛹夜・岼・井ｻｻ諢擾ｼ・/label>
     <div id="fieldRows"></div>
-    <button class="add-field-btn" id="addFieldBtn" type="button">+ 頁E��を追加</button>
+    <button class="add-field-btn" id="addFieldBtn" type="button">+ 鬆・岼繧定ｿｽ蜉</button>
 
-    <label class="field-label">📷 写真・動画</label>
+    <label class="field-label">胴 蜀咏悄繝ｻ蜍慕判</label>
     <div class="media-section">
       <div class="img-add-row">
-        <button type="button" class="img-add-btn" id="imgCameraBtn">📷 写真撮影</button>
-        <button type="button" class="img-add-btn" id="imgSelfieBtn">🤳 セルフィー</button>
-        <button type="button" class="img-add-btn" id="imgPickBtn">🖼 フォトライブラリ</button>
+        <button type="button" class="img-add-btn" id="imgCameraBtn">胴 蜀咏悄謦ｮ蠖ｱ</button>
+        <button type="button" class="img-add-btn" id="imgSelfieBtn">､ｳ 繧ｻ繝ｫ繝輔ぅ繝ｼ</button>
+        <button type="button" class="img-add-btn" id="imgPickBtn">名 繝輔か繝医Λ繧､繝悶Λ繝ｪ</button>
       </div>
       <div class="img-add-row" style="margin-top:6px;">
-        <button type="button" class="img-add-btn" id="videoCamBtn" style="color:#FF9500;border-color:#FF9500;">🎬 動画撮影</button>
-        <button type="button" class="img-add-btn" id="videoPickBtn" style="color:#FF9500;border-color:#FF9500;">📂 動画ライブラリ</button>
-        <button type="button" class="img-add-btn bridge" id="imgIllustBtn">🎨 illust-studio</button>
+        <button type="button" class="img-add-btn" id="videoCamBtn" style="color:#FF9500;border-color:#FF9500;">汐 蜍慕判謦ｮ蠖ｱ</button>
+        <button type="button" class="img-add-btn" id="videoPickBtn" style="color:#FF9500;border-color:#FF9500;">唐 蜍慕判繝ｩ繧､繝悶Λ繝ｪ</button>
+        <button type="button" class="img-add-btn bridge" id="imgIllustBtn">耳 illust-studio</button>
       </div>
-      <!-- iOSペ�EストヒンチE-->
-      <p class="paste-hint">💡 長押ぁEↁEペ�EストでクリチE�Eボ�Eドから貼り付けも可能</p>
+      <!-- iOS繝壹・繧ｹ繝医ヲ繝ｳ繝・-->
+      <p class="paste-hint">庁 髟ｷ謚ｼ縺・竊・繝壹・繧ｹ繝医〒繧ｯ繝ｪ繝・・繝懊・繝峨°繧芽ｲｼ繧贋ｻ倥￠繧ょ庄閭ｽ</p>
       <input type="file" id="imgSelfieInput" accept="image/*" capture="user" style="display:none">
       <div class="img-thumbs" id="imgThumbs"></div>
       <div id="videoList"></div>
     </div>
 
-    <label class="field-label">🎙 音声・録音</label>
+    <label class="field-label">児 髻ｳ螢ｰ繝ｻ骭ｲ髻ｳ</label>
     <div class="media-section">
       <div class="audio-add-row">
-        <button type="button" class="audio-add-btn" id="recStartBtn">🎙 録音開姁E/button>
-        <button type="button" class="audio-add-btn music" id="musicSuiteBtn">🎵 music-suite</button>
+        <button type="button" class="audio-add-btn" id="recStartBtn">児 骭ｲ髻ｳ髢句ｧ・/button>
+        <button type="button" class="audio-add-btn music" id="musicSuiteBtn">七 music-suite</button>
       </div>
       <div class="rec-status" id="recStatus">
         <span class="rec-dot"></span>
         <span class="rec-timer" id="recTimer">00:00</span>
-        <button type="button" class="rec-stop-btn" id="recStopBtn">■ 停止</button>
+        <button type="button" class="rec-stop-btn" id="recStopBtn">笆 蛛懈ｭ｢</button>
       </div>
       <div id="audioList"></div>
     </div>
 
-    <label class="field-label">🔗 関連頁E��</label>
+    <label class="field-label">迫 髢｢騾｣鬆・岼</label>
     <div id="relatedSection"></div>
-    <button type="button" class="ai-related-btn" id="aiRelatedBtn">✨ AIでさらに探ぁE/button>
+    <button type="button" class="ai-related-btn" id="aiRelatedBtn">笨ｨ AI縺ｧ縺輔ｉ縺ｫ謗｢縺・/button>
 
     <div class="danger-zone" id="dangerZone" style="display:none;">
-      <button class="delete-btn" id="deleteBtn">こ�E頁E��を削除</button>
+      <button class="delete-btn" id="deleteBtn">縺薙・鬆・岼繧貞炎髯､</button>
     </div>
   </div>
 </div>
 
 <div class="img-preview-overlay" id="imgPreviewOverlay">
-  <button class="img-preview-close" id="imgPreviewClose">✁E/button>
+  <button class="img-preview-close" id="imgPreviewClose">笨・/button>
   <img id="imgPreviewImg" src="" alt="">
 </div>
 
 <div class="overlay" id="pinOverlay" style="z-index:40;"></div>
 <div class="pin-modal" id="pinModal">
-  <h3 id="pinModalTitle">パスコードを設宁E/h3>
-  <p class="pin-desc" id="pinModalDesc">個人惁E��として保護する頁E��のパスコードです、E/p>
-  <input type="password" id="pinInput1" placeholder="パスコーチE autocomplete="off">
-  <input type="password" id="pinInput2" placeholder="確認�Eため再�E劁E autocomplete="off" style="display:none;">
+  <h3 id="pinModalTitle">繝代せ繧ｳ繝ｼ繝峨ｒ險ｭ螳・/h3>
+  <p class="pin-desc" id="pinModalDesc">蛟倶ｺｺ諠・ｱ縺ｨ縺励※菫晁ｭｷ縺吶ｋ鬆・岼縺ｮ繝代せ繧ｳ繝ｼ繝峨〒縺吶・/p>
+  <input type="password" id="pinInput1" placeholder="繝代せ繧ｳ繝ｼ繝・ autocomplete="off">
+  <input type="password" id="pinInput2" placeholder="遒ｺ隱阪・縺溘ａ蜀榊・蜉・ autocomplete="off" style="display:none;">
   <p class="pin-error" id="pinError" style="display:none;"></p>
   <div class="pin-actions">
-    <button type="button" id="pinCancelBtn">キャンセル</button>
-    <button type="button" id="pinConfirmBtn" class="primary">設定すめE/button>
+    <button type="button" id="pinCancelBtn">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
+    <button type="button" id="pinConfirmBtn" class="primary">險ｭ螳壹☆繧・/button>
   </div>
-  <button type="button" id="pinForgotBtn" class="pin-forgot" style="display:none;">パスコードを忘れた場吁E/button>
+  <button type="button" id="pinForgotBtn" class="pin-forgot" style="display:none;">繝代せ繧ｳ繝ｼ繝峨ｒ蠢倥ｌ縺溷ｴ蜷・/button>
 </div>
 
 <div class="sheet" id="settingsSheet" style="z-index:35;">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <button id="settingsCancelBtn">閉じめE/button>
-    <h2>設宁E/ AI連携</h2>
-    <button class="save" id="settingsSaveBtn">保孁E/button>
+    <button id="settingsCancelBtn">髢峨§繧・/button>
+    <h2>險ｭ螳・/ AI騾｣謳ｺ</h2>
+    <button class="save" id="settingsSaveBtn">菫晏ｭ・/button>
   </div>
   <div class="sheet-body">
-    <label class="field-label">🤁EAIモチE��選抁E/label>
+    <label class="field-label">､・AI繝｢繝・Ν驕ｸ謚・/label>
     <div id="modelSelect" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
       <button class="model-btn" data-model="claude">Claude</button>
       <button class="model-btn" data-model="gemini">Gemini</button>
       <button class="model-btn" data-model="openai">OpenAI</button>
     </div>
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;" id="modelDetail"></p>
-    <label class="field-label">Claude APIキー</label>
+    <label class="field-label">Claude API繧ｭ繝ｼ</label>
     <input type="password" id="sClaudeKey" placeholder="sk-ant-..." autocomplete="off">
-    <label class="field-label">Gemini APIキー</label>
+    <label class="field-label">Gemini API繧ｭ繝ｼ</label>
     <input type="password" id="sGeminiKey" placeholder="AIza..." autocomplete="off">
-    <label class="field-label">OpenAI APIキー</label>
+    <label class="field-label">OpenAI API繧ｭ繝ｼ</label>
     <input type="password" id="sOpenAIKey" placeholder="sk-..." autocomplete="off">
-    <label class="field-label">Proxyサーバ�E URL</label>
+    <label class="field-label">Proxy繧ｵ繝ｼ繝舌・ URL</label>
     <input type="url" id="sProxyUrl" placeholder="https://your-worker.workers.dev" autocomplete="off">
-    <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">空欁E�E場合�E各APIに直接リクエスチE/p>
-    <label class="field-label" style="margin-top:24px;">☁E��EiCloud Drive 連携</label>
+    <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">遨ｺ谺・・蝣ｴ蜷医・蜷БPI縺ｫ逶ｴ謗･繝ｪ繧ｯ繧ｨ繧ｹ繝・/p>
+    <label class="field-label" style="margin-top:24px;">笘・ｸ・iCloud Drive 騾｣謳ｺ</label>
     <div style="background:rgba(0,122,255,0.06);border:1px solid rgba(0,122,255,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
-      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;">自動バチE��アチE�E允E/p>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">iCloud Drive ↁEファイルアプリ に自動保存します、EacBookでめEinderからアクセス可能になります、E/p>
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;">閾ｪ蜍輔ヰ繝・け繧｢繝・・蜈・/p>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">iCloud Drive 竊・繝輔ぃ繧､繝ｫ繧｢繝励Μ 縺ｫ閾ｪ蜍穂ｿ晏ｭ倥＠縺ｾ縺吶・acBook縺ｧ繧・inder縺九ｉ繧｢繧ｯ繧ｻ繧ｹ蜿ｯ閭ｽ縺ｫ縺ｪ繧翫∪縺吶・/p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="icloudSaveBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">☁E��E今すぐiCloudに保孁E/button>
-        <button id="icloudAutoToggleBtn" style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;" id="icloudAutoBtn">⏰ 自動保存設宁E/button>
+        <button id="icloudSaveBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">笘・ｸ・莉翫☆縺進Cloud縺ｫ菫晏ｭ・/button>
+        <button id="icloudAutoToggleBtn" style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;" id="icloudAutoBtn">竢ｰ 閾ｪ蜍穂ｿ晏ｭ倩ｨｭ螳・/button>
       </div>
       <div id="icloudStatus" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
     </div>
 
     <div style="background:rgba(52,199,89,0.06);border:1px solid rgba(52,199,89,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
-      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">📱 ホ�Eム画面ショートカチE���E�Eiri連携�E�E/p>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">「Hey Siri、クイチE��参�Eに追加」で音声登録できます。�Eーム画面アイコンの長押しでも起動可能、E/p>
-      <button id="siriShortcutBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">🔗 Shortcuts設定ガイドを表示</button>
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">導 繝帙・繝逕ｻ髱｢繧ｷ繝ｧ繝ｼ繝医き繝・ヨ・・iri騾｣謳ｺ・・/p>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">縲粂ey Siri縲√け繧､繝・け蜿ら・縺ｫ霑ｽ蜉縲阪〒髻ｳ螢ｰ逋ｻ骭ｲ縺ｧ縺阪∪縺吶ゅ・繝ｼ繝逕ｻ髱｢繧｢繧､繧ｳ繝ｳ縺ｮ髟ｷ謚ｼ縺励〒繧りｵｷ蜍募庄閭ｽ縲・/p>
+      <button id="siriShortcutBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">迫 Shortcuts險ｭ螳壹ぎ繧､繝峨ｒ陦ｨ遉ｺ</button>
     </div>
 
     <div style="background:rgba(175,82,222,0.06);border:1px solid rgba(175,82,222,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
-      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">🖥 MacBook到着後（秋〜！E/p>
-      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">同じSafariでURLを開くだけで即同期。iCloud DriveのJSONをFinderから開いてインポ�Eトも可能。Universal Clipboardでコピ�Eも繋がります、E/p>
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">箕 MacBook蛻ｰ逹蠕鯉ｼ育ｧ九懶ｼ・/p>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">蜷後§Safari縺ｧURL繧帝幕縺上□縺代〒蜊ｳ蜷梧悄縲ＪCloud Drive縺ｮJSON繧巽inder縺九ｉ髢九＞縺ｦ繧､繝ｳ繝昴・繝医ｂ蜿ｯ閭ｽ縲６niversal Clipboard縺ｧ繧ｳ繝斐・繧らｹ九′繧翫∪縺吶・/p>
     </div>
 
-    <label class="field-label" style="margin-top:16px;">📤 エコシスチE��連携</label>
-    <button id="sendToEcoBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:15px;color:var(--accent);font-weight:600;cursor:pointer;">全チE�Eタを他アプリへ送信 (is_transfer)</button>
-    <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">music-suite / kansei / illust-studio と共有する場合に使用</p>
+    <label class="field-label" style="margin-top:16px;">豆 繧ｨ繧ｳ繧ｷ繧ｹ繝・Β騾｣謳ｺ</label>
+    <button id="sendToEcoBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:15px;color:var(--accent);font-weight:600;cursor:pointer;">蜈ｨ繝・・繧ｿ繧剃ｻ悶い繝励Μ縺ｸ騾∽ｿ｡ (is_transfer)</button>
+    <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">music-suite / kansei / illust-studio 縺ｨ蜈ｱ譛峨☆繧句ｴ蜷医↓菴ｿ逕ｨ</p>
   </div>
 </div>
 
@@ -1007,33 +1007,33 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <span style="font-size:13px;font-weight:700;">AI</span>
     <span id="aiModelBadge" style="font-size:11px;background:rgba(0,122,255,0.12);color:var(--accent);border-radius:100px;padding:2px 10px;font-weight:700;"></span>
     <div style="flex:1;"></div>
-    <button id="aiPanelClose" style="background:none;border:none;font-size:18px;color:var(--text-secondary);padding:4px;cursor:pointer;">✁E/button>
+    <button id="aiPanelClose" style="background:none;border:none;font-size:18px;color:var(--text-secondary);padding:4px;cursor:pointer;">笨・/button>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-    <button class="ai-action-btn" data-action="summarize">📝 要紁E/button>
-    <button class="ai-action-btn" data-action="organize">🗂 整琁E/button>
-    <button class="ai-action-btn" data-action="expand">✨ 補足</button>
-    <button class="ai-action-btn" data-action="question">❁E質問生戁E/button>
+    <button class="ai-action-btn" data-action="summarize">統 隕∫ｴ・/button>
+    <button class="ai-action-btn" data-action="organize">翌 謨ｴ逅・/button>
+    <button class="ai-action-btn" data-action="expand">笨ｨ 陬懆ｶｳ</button>
+    <button class="ai-action-btn" data-action="question">笶・雉ｪ蝠冗函謌・/button>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:10px;">
-    <input type="text" id="aiCustomPrompt" placeholder="カスタム持E��を�E力…" style="flex:1;font-size:15px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-family:inherit;color:var(--text);">
-    <button id="aiCustomSend" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;">送信</button>
+    <input type="text" id="aiCustomPrompt" placeholder="繧ｫ繧ｹ繧ｿ繝謖・､ｺ繧貞・蜉帚ｦ" style="flex:1;font-size:15px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-family:inherit;color:var(--text);">
+    <button id="aiCustomSend" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;">騾∽ｿ｡</button>
   </div>
   <div id="aiResult" style="display:none;background:var(--bg);border-radius:10px;padding:12px;font-size:14px;line-height:1.7;max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
   <div id="aiResultActions" style="display:none;gap:8px;margin-top:8px;flex-wrap:wrap;">
-    <button id="aiInsertBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;">↩ メモに挿入</button>
-    <button id="aiReplaceBtn" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);">置揁E/button>
+    <button id="aiInsertBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;">竊ｩ 繝｡繝｢縺ｫ謖ｿ蜈･</button>
+    <button id="aiReplaceBtn" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);">鄂ｮ謠・/button>
   </div>
-  <div id="aiLoading" style="display:none;text-align:center;padding:16px;color:var(--text-secondary);font-size:14px;">⏳ 生�E中</div>
+  <div id="aiLoading" style="display:none;text-align:center;padding:16px;color:var(--text-secondary);font-size:14px;">竢ｳ 逕滓・荳ｭ</div>
 </div>
 
 <div class="memo-popup" id="memoPopup">
   <div class="memo-popup-header">
-    <button id="memoPopupClose">完亁E/button>
-    <h2>メモ編雁E/h2>
+    <button id="memoPopupClose">螳御ｺ・/button>
+    <h2>繝｡繝｢邱ｨ髮・/h2>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button id="memoAiBtn" style="background:rgba(0,122,255,0.1);border:none;border-radius:8px;padding:6px 12px;font-size:13px;color:var(--accent);font-weight:700;cursor:pointer;">✦ AI</button>
-      <button id="memoPopupClear" style="color:var(--text-secondary);font-size:13px;background:none;border:none;cursor:pointer;">書式クリア</button>
+      <button id="memoAiBtn" style="background:rgba(0,122,255,0.1);border:none;border-radius:8px;padding:6px 12px;font-size:13px;color:var(--accent);font-weight:700;cursor:pointer;">笨ｦ AI</button>
+      <button id="memoPopupClear" style="color:var(--text-secondary);font-size:13px;background:none;border:none;cursor:pointer;">譖ｸ蠑上け繝ｪ繧｢</button>
     </div>
   </div>
   <div class="memo-popup-toolbar">
@@ -1041,13 +1041,13 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <button type="button" onclick="popupFmt('italic')"><em>I</em></button>
     <button type="button" onclick="popupFmt('underline')"><u>U</u></button>
     <span class="sep"></span>
-    <button type="button" onclick="popupMark('yellow')" style="font-size:18px;">🟡</button>
-    <button type="button" onclick="popupMark('green')"  style="font-size:18px;">🟢</button>
-    <button type="button" onclick="popupMark('pink')"   style="font-size:18px;">🔴</button>
+    <button type="button" onclick="popupMark('yellow')" style="font-size:18px;">泯</button>
+    <button type="button" onclick="popupMark('green')"  style="font-size:18px;">泙</button>
+    <button type="button" onclick="popupMark('pink')"   style="font-size:18px;">閥</button>
     <span class="sep"></span>
-    <button type="button" onclick="popupFmt('insertUnorderedList')" style="font-size:16px;">≡</button>
+    <button type="button" onclick="popupFmt('insertUnorderedList')" style="font-size:16px;">竕｡</button>
   </div>
-  <div class="memo-popup-editor" id="memoPopupEditor" contenteditable="true" data-placeholder="冁E��を�E力…"
+  <div class="memo-popup-editor" id="memoPopupEditor" contenteditable="true" data-placeholder="蜀・ｮｹ繧貞・蜉帚ｦ"
     autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 </div>
 
@@ -1055,8 +1055,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
   <div class="review-sheet">
     <div class="review-header">
       <div class="review-header-top">
-        <span class="review-title">🗓 チE��リーレビュー</span>
-        <button class="review-close-btn" id="reviewCloseBtn">✁E/button>
+        <span class="review-title">欄 繝・う繝ｪ繝ｼ繝ｬ繝薙Η繝ｼ</span>
+        <button class="review-close-btn" id="reviewCloseBtn">笨・/button>
       </div>
       <div class="review-progress-track"><div class="review-progress-fill" id="reviewProgressFill" style="width:0%"></div></div>
       <div class="review-counter"><span id="reviewCounterText">0 / 0</span><span id="reviewStreakLabel"></span></div>
@@ -1068,81 +1068,81 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 <div class="overlay" id="menuOverlay"></div>
 <div class="action-sheet" id="menuSheet">
   <div class="action-sheet-handle"></div>
-  <h3>チE�Eタ管琁E/h3>
+  <h3>繝・・繧ｿ邂｡逅・/h3>
   <button type="button" class="action-btn" id="icloudMenuBtn">
-    <span class="action-icon">☁E��E/span>
-    <span class="action-btn-inner"><span class="action-label">iCloud Driveに保孁E/span><span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バチE��アチE�E</span></span>
+    <span class="action-icon">笘・ｸ・/span>
+    <span class="action-btn-inner"><span class="action-label">iCloud Drive縺ｫ菫晏ｭ・/span><span class="action-desc" id="icloudMenuDesc">繝輔ぃ繧､繝ｫ繧｢繝励Μ邨檎罰縺ｧ閾ｪ蜍輔ヰ繝・け繧｢繝・・</span></span>
   </button>
   <button type="button" class="action-btn" id="exportBtn">
-    <span class="action-icon">📤</span>
-    <span class="action-btn-inner"><span class="action-label">JSONエクスポ�EチE/span><span class="action-desc">全チE�Eタをファイルに書き�EぁE/span></span>
+    <span class="action-icon">豆</span>
+    <span class="action-btn-inner"><span class="action-label">JSON繧ｨ繧ｯ繧ｹ繝昴・繝・/span><span class="action-desc">蜈ｨ繝・・繧ｿ繧偵ヵ繧｡繧､繝ｫ縺ｫ譖ｸ縺榊・縺・/span></span>
   </button>
   <button type="button" class="action-btn" id="importBtn">
-    <span class="action-icon">📥</span>
-    <span class="action-btn-inner"><span class="action-label">JSONインポ�EチE/span><span class="action-desc">バックアチE�Eから復允E�Eマ�Eジ</span></span>
+    <span class="action-icon">踏</span>
+    <span class="action-btn-inner"><span class="action-label">JSON繧､繝ｳ繝昴・繝・/span><span class="action-desc">繝舌ャ繧ｯ繧｢繝・・縺九ｉ蠕ｩ蜈・・繝槭・繧ｸ</span></span>
   </button>
   <button type="button" class="action-btn" id="tagBridgeBtn">
-    <span class="action-icon">🔗</span>
-    <span class="action-btn-inner"><span class="action-label">タグを他アプリと共朁E/span><span class="action-desc">illust-studio / music-suite などに同期</span></span>
+    <span class="action-icon">迫</span>
+    <span class="action-btn-inner"><span class="action-label">繧ｿ繧ｰ繧剃ｻ悶い繝励Μ縺ｨ蜈ｱ譛・/span><span class="action-desc">illust-studio / music-suite 縺ｪ縺ｩ縺ｫ蜷梧悄</span></span>
   </button>
   <button type="button" class="action-btn" id="kanseiExportBtn">
-    <span class="action-icon">📝</span>
-    <span class="action-btn-inner"><span class="action-label">素材を kansei に送る</span><span class="action-desc">表示中の頁E��を旅行記原稿生�EチE�Eルへ</span></span>
+    <span class="action-icon">統</span>
+    <span class="action-btn-inner"><span class="action-label">邏譚舌ｒ kansei 縺ｫ騾√ｋ</span><span class="action-desc">陦ｨ遉ｺ荳ｭ縺ｮ鬆・岼繧呈羅陦瑚ｨ伜次遞ｿ逕滓・繝・・繝ｫ縺ｸ</span></span>
   </button>
   <button type="button" class="action-btn" id="iconGenBtn">
-    <span class="action-icon">🎨</span>
-    <span class="action-btn-inner"><span class="action-label">アイコンを生成�EダウンローチE/span><span class="action-desc">ホ�Eム画面用 icon-192.png / icon-512.png</span></span>
+    <span class="action-icon">耳</span>
+    <span class="action-btn-inner"><span class="action-label">繧｢繧､繧ｳ繝ｳ繧堤函謌舌・繝繧ｦ繝ｳ繝ｭ繝ｼ繝・/span><span class="action-desc">繝帙・繝逕ｻ髱｢逕ｨ icon-192.png / icon-512.png</span></span>
   </button>
   <button type="button" class="action-btn" id="themeUrlBtn">
-    <span class="action-icon">📱</span>
-    <span class="action-btn-inner"><span class="action-label">チE�Eマ別URL一覧を表示</span><span class="action-desc">タグごとのホ�Eム画面追加用URL</span></span>
+    <span class="action-icon">導</span>
+    <span class="action-btn-inner"><span class="action-label">繝・・繝槫挨URL荳隕ｧ繧定｡ｨ遉ｺ</span><span class="action-desc">繧ｿ繧ｰ縺斐→縺ｮ繝帙・繝逕ｻ髱｢霑ｽ蜉逕ｨURL</span></span>
   </button>
 </div>
 
 <div class="add-guide" id="addGuide">
   <div class="add-guide-sheet">
-    <h3 id="addGuideTitle">📱 ホ�Eム画面に追加する方況E/h3>
+    <h3 id="addGuideTitle">導 繝帙・繝逕ｻ髱｢縺ｫ霑ｽ蜉縺吶ｋ譁ｹ豕・/h3>
     <div class="add-guide-url" id="addGuideUrl"></div>
-    <div class="add-guide-step"><div class="add-guide-num">1</div><p>上�EURLをSafariで開く</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">2</div><p>Safari下部の<strong>共有�Eタン(□ↁE</strong>をタチE�E</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">3</div><p><strong>「�Eーム画面に追加、E/strong>を選抁E/p></div>
-    <div class="add-guide-step"><div class="add-guide-num">4</div><p>名前を確認して<strong>「追加、E/strong>をタチE�E</p></div>
-    <button type="button" class="add-guide-close" id="addGuideClose">閉じめE/button>
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>荳翫・URL繧担afari縺ｧ髢九￥</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>Safari荳矩Κ縺ｮ<strong>蜈ｱ譛峨・繧ｿ繝ｳ(笆｡竊・</strong>繧偵ち繝・・</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p><strong>縲後・繝ｼ繝逕ｻ髱｢縺ｫ霑ｽ蜉縲・/strong>繧帝∈謚・/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p>蜷榊燕繧堤｢ｺ隱阪＠縺ｦ<strong>縲瑚ｿｽ蜉縲・/strong>繧偵ち繝・・</p></div>
+    <button type="button" class="add-guide-close" id="addGuideClose">髢峨§繧・/button>
   </div>
 </div>
 
 <div class="overlay" id="iconOverlay" style="z-index:40;"></div>
 <div class="icon-modal" id="iconModal">
-  <h3>🎨 アイコンを生戁E/h3>
+  <h3>耳 繧｢繧､繧ｳ繝ｳ繧堤函謌・/h3>
   <div class="icon-preview-row">
-    <div class="icon-preview-wrap"><canvas id="iconCanvas192" width="192" height="192" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">192ÁE92</div></div>
-    <div class="icon-preview-wrap"><canvas id="iconCanvas512" width="512" height="512" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">512ÁE12</div></div>
+    <div class="icon-preview-wrap"><canvas id="iconCanvas192" width="192" height="192" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">192ﾃ・92</div></div>
+    <div class="icon-preview-wrap"><canvas id="iconCanvas512" width="512" height="512" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">512ﾃ・12</div></div>
   </div>
   <div class="icon-controls">
-    <div class="icon-control-row"><label>絵斁E��E斁E��E/label><input type="text" id="iconEmoji" value="叁E maxlength="4" placeholder="叁E></div>
-    <div class="icon-control-row"><label>背景色</label><input type="color" id="iconBgColor" value="#007AFF"><input type="color" id="iconBgColor2" value="#005ECB" title="グラチE�Eション終端色"><span style="font-size:12px;color:var(--text-secondary);">グラチE/span></div>
-    <div class="icon-control-row"><label>斁E��色</label><input type="color" id="iconFgColor" value="#FFFFFF"></div>
-    <div class="icon-control-row"><label>斁E��サイズ</label><input type="range" id="iconFontSize" min="20" max="90" value="55"></div>
+    <div class="icon-control-row"><label>邨ｵ譁・ｭ・譁・ｭ・/label><input type="text" id="iconEmoji" value="蜿・ maxlength="4" placeholder="蜿・></div>
+    <div class="icon-control-row"><label>閭梧勹濶ｲ</label><input type="color" id="iconBgColor" value="#007AFF"><input type="color" id="iconBgColor2" value="#005ECB" title="繧ｰ繝ｩ繝・・繧ｷ繝ｧ繝ｳ邨らｫｯ濶ｲ"><span style="font-size:12px;color:var(--text-secondary);">繧ｰ繝ｩ繝・/span></div>
+    <div class="icon-control-row"><label>譁・ｭ苓牡</label><input type="color" id="iconFgColor" value="#FFFFFF"></div>
+    <div class="icon-control-row"><label>譁・ｭ励し繧､繧ｺ</label><input type="range" id="iconFontSize" min="20" max="90" value="55"></div>
   </div>
   <div class="icon-dl-row">
-    <button type="button" class="icon-dl-btn" id="iconDl192">ↁE192px</button>
-    <button type="button" class="icon-dl-btn" id="iconDl512">ↁE512px</button>
+    <button type="button" class="icon-dl-btn" id="iconDl192">竊・192px</button>
+    <button type="button" class="icon-dl-btn" id="iconDl512">竊・512px</button>
   </div>
-  <button type="button" class="icon-modal-close" id="iconModalClose">閉じめE/button>
+  <button type="button" class="icon-modal-close" id="iconModalClose">髢峨§繧・/button>
 </div>
 
 <!-- iCLOUD GUIDE MODAL -->
 <div class="add-guide" id="icloudGuide">
   <div class="add-guide-sheet">
-    <h3>☁E��EiCloud Drive に保存する方況E/h3>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">ダウンロードされたファイルを「ファイル」アプリでiCloud Driveに移動してください、EacBookからめEinderでアクセスできます、E/p>
+    <h3>笘・ｸ・iCloud Drive 縺ｫ菫晏ｭ倥☆繧区婿豕・/h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">繝繧ｦ繝ｳ繝ｭ繝ｼ繝峨＆繧後◆繝輔ぃ繧､繝ｫ繧偵後ヵ繧｡繧､繝ｫ縲阪い繝励Μ縺ｧiCloud Drive縺ｫ遘ｻ蜍輔＠縺ｦ縺上□縺輔＞縲・acBook縺九ｉ繧・inder縺ｧ繧｢繧ｯ繧ｻ繧ｹ縺ｧ縺阪∪縺吶・/p>
     <div class="add-guide-url" id="icloudGuideFilename" style="font-size:13px;word-break:break-all;"></div>
-    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ダウンロードフォルダに保存されまぁE/p></div>
-    <div class="add-guide-step"><div class="add-guide-num">2</div><p>、Estrong>ファイル</strong>」アプリを開ぁEↁE「最近使った頁E��、E/p></div>
-    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ファイルを長押ぁEↁE<strong>「移動、E/strong> をタチE�E</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">4</div><p><strong>iCloud Drive</strong> ↁE任意�Eフォルダを選択して移勁E/p></div>
-    <div class="add-guide-step"><div class="add-guide-num">5</div><p>MacBook到着後�E Finder ↁEiCloud Drive から即アクセス可能</p></div>
-    <button type="button" class="add-guide-close" id="icloudGuideClose">閉じめE/button>
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>繝繧ｦ繝ｳ繝ｭ繝ｼ繝峨ヵ繧ｩ繝ｫ繝縺ｫ菫晏ｭ倥＆繧後∪縺・/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>縲・strong>繝輔ぃ繧､繝ｫ</strong>縲阪い繝励Μ繧帝幕縺・竊・縲梧怙霑台ｽｿ縺｣縺滄・岼縲・/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p>繝輔ぃ繧､繝ｫ繧帝聞謚ｼ縺・竊・<strong>縲檎ｧｻ蜍輔・/strong> 繧偵ち繝・・</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p><strong>iCloud Drive</strong> 竊・莉ｻ諢上・繝輔か繝ｫ繝繧帝∈謚槭＠縺ｦ遘ｻ蜍・/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">5</div><p>MacBook蛻ｰ逹蠕後・ Finder 竊・iCloud Drive 縺九ｉ蜊ｳ繧｢繧ｯ繧ｻ繧ｹ蜿ｯ閭ｽ</p></div>
+    <button type="button" class="add-guide-close" id="icloudGuideClose">髢峨§繧・/button>
   </div>
 </div>
 
@@ -1158,8 +1158,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 <script src="./shared/senders/app-bridge.js"></script>
 <script>
 'use strict';
-// ══════════════════════════════════════╁E// DB LAYER (attachments対忁E
-// ══════════════════════════════════════╁Econst DB_NAME = 'quickRefDB';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// DB LAYER (attachments蟇ｾ蠢・
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const DB_NAME = 'quickRefDB';
 const DB_VERSION = 2;
 
 window.norinoriInitSyncUi?.({
@@ -1260,8 +1260,8 @@ async function dbGetAllAttachmentMeta() {
   });
 }
 
-// ══════════════════════════════════════╁E// CRYPTO (PIN保護)
-// ══════════════════════════════════════╁Econst PIN_META_KEY = 'qr_pin_meta';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// CRYPTO (PIN菫晁ｭｷ)
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const PIN_META_KEY = 'qr_pin_meta';
 function bytesToBase64(bytes) {
   let b = ''; bytes.forEach(x => b += String.fromCharCode(x)); return btoa(b);
 }
@@ -1330,9 +1330,9 @@ function ensureUnlocked() {
 }
 function updateLockButton() {
   const btn = document.getElementById('lockToggleBtn');
-  if (!hasPinSetup()) { btn.textContent = '🔑'; btn.title = 'パスコード未設宁E; }
-  else if (sessionKey) { btn.textContent = '🔓'; btn.title = 'タチE�EでロチE��'; }
-  else { btn.textContent = '🔒'; btn.title = 'タチE�EでロチE��解除'; }
+  if (!hasPinSetup()) { btn.textContent = '泊'; btn.title = '繝代せ繧ｳ繝ｼ繝画悴險ｭ螳・; }
+  else if (sessionKey) { btn.textContent = '箔'; btn.title = '繧ｿ繝・・縺ｧ繝ｭ繝・け'; }
+  else { btn.textContent = '白'; btn.title = '繧ｿ繝・・縺ｧ繝ｭ繝・け隗｣髯､'; }
 }
 function openPinModal() {
   pinMode = hasPinSetup() ? 'unlock' : 'setup';
@@ -1340,16 +1340,16 @@ function openPinModal() {
   document.getElementById('pinInput1').value = '';
   document.getElementById('pinInput2').value = '';
   if (pinMode === 'setup') {
-    document.getElementById('pinModalTitle').textContent = 'パスコードを設宁E;
-    document.getElementById('pinModalDesc').textContent = '個人惁E��として保護する頁E��用のパスコードです。忘れると冁E��は復允E��きません、E;
+    document.getElementById('pinModalTitle').textContent = '繝代せ繧ｳ繝ｼ繝峨ｒ險ｭ螳・;
+    document.getElementById('pinModalDesc').textContent = '蛟倶ｺｺ諠・ｱ縺ｨ縺励※菫晁ｭｷ縺吶ｋ鬆・岼逕ｨ縺ｮ繝代せ繧ｳ繝ｼ繝峨〒縺吶ょｿ倥ｌ繧九→蜀・ｮｹ縺ｯ蠕ｩ蜈・〒縺阪∪縺帙ｓ縲・;
     document.getElementById('pinInput2').style.display = 'block';
-    document.getElementById('pinConfirmBtn').textContent = '設定すめE;
+    document.getElementById('pinConfirmBtn').textContent = '險ｭ螳壹☆繧・;
     document.getElementById('pinForgotBtn').style.display = 'none';
   } else {
-    document.getElementById('pinModalTitle').textContent = 'パスコードを入劁E;
-    document.getElementById('pinModalDesc').textContent = '保護された頁E��を見るにはパスコードが忁E��です、E;
+    document.getElementById('pinModalTitle').textContent = '繝代せ繧ｳ繝ｼ繝峨ｒ蜈･蜉・;
+    document.getElementById('pinModalDesc').textContent = '菫晁ｭｷ縺輔ｌ縺滄・岼繧定ｦ九ｋ縺ｫ縺ｯ繝代せ繧ｳ繝ｼ繝峨′蠢・ｦ√〒縺吶・;
     document.getElementById('pinInput2').style.display = 'none';
-    document.getElementById('pinConfirmBtn').textContent = '開く';
+    document.getElementById('pinConfirmBtn').textContent = '髢九￥';
     document.getElementById('pinForgotBtn').style.display = 'block';
   }
   document.getElementById('pinOverlay').classList.add('open');
@@ -1362,8 +1362,8 @@ function closePinModal(success) {
   if (unlockResolver) { const r = unlockResolver; unlockResolver = null; r(success); }
 }
 
-// ══════════════════════════════════════╁E// SEARCH
-// ══════════════════════════════════════╁Efunction escapeHtml(str) {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// SEARCH
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function escapeHtml(str) {
   return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function bigrams(str) {
@@ -1403,8 +1403,8 @@ function highlightText(text, query) {
   return escaped.replace(re, m => `<mark>${m}</mark>`);
 }
 
-// ══════════════════════════════════════╁E// APP STATE
-// ══════════════════════════════════════╁Elet allItems = [];
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// APP STATE
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・let allItems = [];
 let attachmentMeta = [];
 let filterTag = '__all__';
 let linkFilterActive = false;
@@ -1422,12 +1422,12 @@ let draftAudios = [];
 let draftVideos = [];
 let objURLs = [];
 let mediaRecorder = null, recChunks = [], recTimerInterval = null, recSeconds = 0;
-let sharedText = null; // Share Targetで受け取ったテキスチE
-// 触覚フィードバチE�� (iOSはvibration API非対応だが念のため)
+let sharedText = null; // Share Target縺ｧ蜿励￠蜿悶▲縺溘ユ繧ｭ繧ｹ繝・
+// 隗ｦ隕壹ヵ繧｣繝ｼ繝峨ヰ繝・け (iOS縺ｯvibration API髱槫ｯｾ蠢懊□縺悟ｿｵ縺ｮ縺溘ａ)
 function haptic(ms=10) { try { navigator.vibrate?.(ms); } catch(_){} }
 
-// ══════════════════════════════════════╁E// IMAGE PROCESSING
-// ══════════════════════════════════════╁Econst IMG_MAX_PX = 800, IMG_QUALITY = 0.75;
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// IMAGE PROCESSING
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const IMG_MAX_PX = 800, IMG_QUALITY = 0.75;
 function resizeImage(file) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -1448,8 +1448,8 @@ function resizeImage(file) {
 function makeTempId() { return 'tmp_'+Date.now()+'_'+Math.random().toString(36).slice(2); }
 function revokeAllObjURLs() { objURLs.forEach(u=>URL.revokeObjectURL(u)); objURLs=[]; }
 
-// ══════════════════════════════════════╁E// RENDER
-// ══════════════════════════════════════╁Efunction getAllTagsSorted() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// RENDER
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function getAllTagsSorted() {
   const freq = {};
   allItems.forEach(it=>(it.tags||[]).forEach(t=>{ freq[t]=(freq[t]||0)+1; }));
   return Object.keys(freq).sort((a,b)=>freq[b]-freq[a]||a.localeCompare(b,'ja'));
@@ -1463,39 +1463,39 @@ function renderAll() {
 
   const list = document.getElementById('cardList');
   const empty = document.getElementById('emptyState');
-  document.getElementById('countLabel').textContent = `${allItems.length}件`;
+  document.getElementById('countLabel').textContent = `${allItems.length}莉ｶ`;
 
   if (items.length===0) { list.innerHTML=''; empty.style.display=''; return; }
   empty.style.display='none';
 
   list.innerHTML = items.map(item => {
-    const titleHtml = highlightText(item.title||'無顁E, searchQuery);
+    const titleHtml = highlightText(item.title||'辟｡鬘・, searchQuery);
     let bodyHtml = '';
     if (item.sensitive) {
       const c = decryptedCache.get(item.id);
-      bodyHtml = c ? escapeHtml((c.body||'').slice(0,100)) : '<em style="color:var(--text-secondary)">🔒 保護中</em>';
+      bodyHtml = c ? escapeHtml((c.body||'').slice(0,100)) : '<em style="color:var(--text-secondary)">白 菫晁ｭｷ荳ｭ</em>';
     } else {
       const raw = item.body||'';
       bodyHtml = searchQuery ? highlightText(raw.replace(/<[^>]+>/g,' ').slice(0,100), searchQuery)
-                             : (raw.length<300 ? raw : raw.slice(0,300)+'…');
+                             : (raw.length<300 ? raw : raw.slice(0,300)+'窶ｦ');
     }
     const tags = (item.tags||[]).map(t=>`<span class="chip">${escapeHtml(t)}</span>`).join('');
     const imgCnt = attachmentMeta.filter(a=>a.itemId===item.id&&a.type==='image').length;
     const audCnt = attachmentMeta.filter(a=>a.itemId===item.id&&(a.type==='audio'||a.type==='music-ref')).length;
     const vidCnt = attachmentMeta.filter(a=>a.itemId===item.id&&a.type==='video').length;
     const linkCnt = (getLinks()[item.id]||[]).length;
-    const urlBadge = item.url ? `<span title="${escapeHtml(item.url)}">🔗</span>` : '';
-    const lockBadge = item.sensitive ? '<span class="lock-badge">🔒</span>' : '';
+    const urlBadge = item.url ? `<span title="${escapeHtml(item.url)}">迫</span>` : '';
+    const lockBadge = item.sensitive ? '<span class="lock-badge">白</span>' : '';
     return `
       <div class="card" data-id="${item.id}">
         <div class="card-title">${lockBadge}${titleHtml}</div>
         ${bodyHtml ? `<div class="card-snippet">${bodyHtml}</div>` : ''}
         <div class="chips">${tags}</div>
         <div class="card-meta">
-          ${imgCnt ? `<span>📷 ${imgCnt}</span>` : ''}
-          ${vidCnt ? `<span>🎬 ${vidCnt}</span>` : ''}
-          ${audCnt ? `<span>🎙 ${audCnt}</span>` : ''}
-          ${linkCnt ? `<span>🔗 ${linkCnt}</span>` : ''}
+          ${imgCnt ? `<span>胴 ${imgCnt}</span>` : ''}
+          ${vidCnt ? `<span>汐 ${vidCnt}</span>` : ''}
+          ${audCnt ? `<span>児 ${audCnt}</span>` : ''}
+          ${linkCnt ? `<span>迫 ${linkCnt}</span>` : ''}
           ${urlBadge}
         </div>
       </div>`;
@@ -1510,11 +1510,11 @@ function renderTagFilter() {
   const allTags = new Set(); allItems.forEach(i=>(i.tags||[]).forEach(t=>allTags.add(t)));
   const row = document.getElementById('tagFilterRow');
   const chips = ['__all__',...allTags].map(tag=>{
-    const label = tag==='__all__' ? 'すべて' : tag;
+    const label = tag==='__all__' ? '縺吶∋縺ｦ' : tag;
     const active = filterTag===tag ? 'active' : '';
     return `<button class="filter-chip ${active}" data-tag="${escapeHtml(tag)}">${escapeHtml(label)}</button>`;
   });
-  row.innerHTML = chips.join('') + `<button class="filter-chip${linkFilterActive?' active':''}" id="linkFilterBtn">🔗 リンク雁E/button>`;
+  row.innerHTML = chips.join('') + `<button class="filter-chip${linkFilterActive?' active':''}" id="linkFilterBtn">迫 繝ｪ繝ｳ繧ｯ髮・/button>`;
   row.querySelectorAll('.filter-chip[data-tag]').forEach(btn=>{
     btn.addEventListener('click',()=>{ filterTag=btn.dataset.tag; renderTagFilter(); renderAll(); });
   });
@@ -1523,11 +1523,11 @@ function renderTagFilter() {
   });
 }
 
-// ══════════════════════════════════════╁E// EDIT SHEET
-// ══════════════════════════════════════╁Efunction openNew() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// EDIT SHEET
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function openNew() {
   editingId=null; draftTags=[]; draftFields=[]; draftSensitive=false;
   revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[];
-  document.getElementById('sheetTitle').textContent='新規追加';
+  document.getElementById('sheetTitle').textContent='譁ｰ隕剰ｿｽ蜉';
   document.getElementById('fTitle').value='';
   document.getElementById('fBody').innerHTML='';
   document.getElementById('tagInput').value='';
@@ -1562,7 +1562,7 @@ async function openEdit(id) {
   document.getElementById('tagInput').value='';
   document.getElementById('inputUrl').value=item.url||'';
   document.getElementById('sensitiveToggle').checked=draftSensitive;
-  document.getElementById('sheetTitle').textContent='編雁E;
+  document.getElementById('sheetTitle').textContent='邱ｨ髮・;
   document.getElementById('dangerZone').style.display='';
   renderTagChips(); renderTagSuggestions(); renderFieldRows();
   document.getElementById('imgThumbs').innerHTML='';
@@ -1587,7 +1587,7 @@ function closeSheet() {
 
 async function saveItem() {
   const title = document.getElementById('fTitle').value.trim();
-  if (!title) { showToast('タイトルを�E力してください'); return; }
+  if (!title) { showToast('繧ｿ繧､繝医Ν繧貞・蜉帙＠縺ｦ縺上□縺輔＞'); return; }
   if (document.getElementById('tagInput').value.trim()) commitTagInput();
 
   const wantsSensitive = document.getElementById('sensitiveToggle').checked;
@@ -1618,22 +1618,22 @@ async function saveItem() {
   await reload();
   syncEcosystemTags();
   closeSheet();
-  showToast(editingId ? '更新しました' : '追加しました');
+  showToast(editingId ? '譖ｴ譁ｰ縺励∪縺励◆' : '霑ｽ蜉縺励∪縺励◆');
 }
 
 async function deleteItem() {
   if (!editingId) return;
-  if (!confirm('こ�E頁E��を削除しますか�E�E)) return;
+  if (!confirm('縺薙・鬆・岼繧貞炎髯､縺励∪縺吶°・・)) return;
   await dbDeleteAttachmentsByItemId(editingId);
   await dbDelete(editingId);
   await reload(); syncEcosystemTags(); closeSheet();
-  showToast('削除しました');
+  showToast('蜑企勁縺励∪縺励◆');
 }
 
-// ── TAG CHIPS ──
+// 笏笏 TAG CHIPS 笏笏
 function renderTagChips() {
   document.getElementById('tagChips').innerHTML = draftTags.map((t,i)=>
-    `<span class="tag-chip">${escapeHtml(t)}<button onclick="removeTag(${i})">✁E/button></span>`
+    `<span class="tag-chip">${escapeHtml(t)}<button onclick="removeTag(${i})">笨・/button></span>`
   ).join('');
 }
 function removeTag(i) { draftTags.splice(i,1); renderTagChips(); renderTagSuggestions(); }
@@ -1651,25 +1651,25 @@ function renderTagSuggestions() {
 }
 function addTagDirect(tag) { if (!draftTags.includes(tag)) draftTags.push(tag); renderTagChips(); renderTagSuggestions(); }
 
-// ── FIELD ROWS ──
+// 笏笏 FIELD ROWS 笏笏
 function renderFieldRows() {
   document.getElementById('fieldRows').innerHTML = draftFields.map((f,i)=>`
     <div class="field-row">
-      <input class="fkey" type="text" placeholder="頁E��吁E value="${escapeHtml(f.key)}" oninput="draftFields[${i}].key=this.value">
-      <input type="text" placeholder="値" value="${escapeHtml(f.value)}" oninput="draftFields[${i}].value=this.value">
-      <button class="remove-field" onclick="removeField(${i})">ÁE/button>
+      <input class="fkey" type="text" placeholder="鬆・岼蜷・ value="${escapeHtml(f.key)}" oninput="draftFields[${i}].key=this.value">
+      <input type="text" placeholder="蛟､" value="${escapeHtml(f.value)}" oninput="draftFields[${i}].value=this.value">
+      <button class="remove-field" onclick="removeField(${i})">ﾃ・/button>
     </div>`).join('');
 }
 function removeField(i) { draftFields.splice(i,1); renderFieldRows(); }
 
-// ── IMAGE ATTACHMENTS ──
+// 笏笏 IMAGE ATTACHMENTS 笏笏
 function renderImageThumbs() {
   document.getElementById('imgThumbs').innerHTML='';
   draftImages.forEach((img,i)=>{
     const wrap=document.createElement('div'); wrap.className='img-thumb-wrap';
     const thumb=document.createElement('img'); thumb.className='img-thumb'; thumb.src=img.url;
     thumb.addEventListener('click',()=>openImgPreview(img.url));
-    const del=document.createElement('button'); del.type='button'; del.className='img-thumb-del'; del.textContent='ÁE;
+    const del=document.createElement('button'); del.type='button'; del.className='img-thumb-del'; del.textContent='ﾃ・;
     del.addEventListener('click',async()=>{
       if (img.isExisting&&img.attId) await dbDeleteAttachment(img.attId);
       URL.revokeObjectURL(img.url); draftImages.splice(i,1); renderImageThumbs();
@@ -1678,7 +1678,7 @@ function renderImageThumbs() {
   });
 }
 function addBlobToDraft(blob,name) {
-  if (blob.size>5*1024*1024) { showToast('画像サイズが大きすぎまぁE上限5MB)'); return; }
+  if (blob.size>5*1024*1024) { showToast('逕ｻ蜒上し繧､繧ｺ縺悟､ｧ縺阪☆縺弱∪縺・荳企剞5MB)'); return; }
   const url=URL.createObjectURL(blob); objURLs.push(url);
   draftImages.push({tempId:makeTempId(),blob,url,name:name||'image.jpg',isExisting:false});
   renderImageThumbs();
@@ -1697,18 +1697,18 @@ async function saveImageAttachments(itemId) {
 }
 function tryImportFromIllustStudio() {
   try {
-    const raw=localStorage.getItem('is_transfer'); if (!raw) { alert('illust-studioからの転送データが見つかりません、E); return; }
+    const raw=localStorage.getItem('is_transfer'); if (!raw) { alert('illust-studio縺九ｉ縺ｮ霆｢騾√ョ繝ｼ繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・); return; }
     const data=JSON.parse(raw);
-    const src=data.image||data.dataUrl||data.src||null; if (!src) { alert('画像データが取得できませんでした、E); return; }
+    const src=data.image||data.dataUrl||data.src||null; if (!src) { alert('逕ｻ蜒上ョ繝ｼ繧ｿ縺悟叙蠕励〒縺阪∪縺帙ｓ縺ｧ縺励◆縲・); return; }
     fetch(src).then(r=>r.blob()).then(blob=>{ addBlobToDraft(blob,data.title?`${data.title}.png`:'illust-studio.png'); localStorage.removeItem('is_transfer'); });
-  } catch(e) { alert('is_transfer読み込み失敁E '+e.message); }
+  } catch(e) { alert('is_transfer隱ｭ縺ｿ霎ｼ縺ｿ螟ｱ謨・ '+e.message); }
 }
 function openImgPreview(url) {
   document.getElementById('imgPreviewImg').src=url;
   document.getElementById('imgPreviewOverlay').classList.add('open');
 }
 
-// ── AUDIO ATTACHMENTS ──
+// 笏笏 AUDIO ATTACHMENTS 笏笏
 function formatTime(sec) { const m=String(Math.floor(sec/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0'); return `${m}:${s}`; }
 function stopRecordingIfActive() {
   if (mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
@@ -1739,10 +1739,10 @@ function renderAudioList() {
     const div=document.createElement('div');
     if (aud.type==='music-ref') {
       div.className='music-ref-item';
-      div.innerHTML=`<span class="music-ref-icon">🎵</span><div class="music-ref-info"><div class="music-ref-title">${escapeHtml(aud.name)}</div><div class="music-ref-meta">${[aud.meta.bpm?`BPM ${aud.meta.bpm}`:'',aud.meta.key?`Key: ${aud.meta.key}`:''].filter(Boolean).join(' / ')}</div></div><button type="button" class="music-ref-del" data-i="${i}">ÁE/button>`;
+      div.innerHTML=`<span class="music-ref-icon">七</span><div class="music-ref-info"><div class="music-ref-title">${escapeHtml(aud.name)}</div><div class="music-ref-meta">${[aud.meta.bpm?`BPM ${aud.meta.bpm}`:'',aud.meta.key?`Key: ${aud.meta.key}`:''].filter(Boolean).join(' / ')}</div></div><button type="button" class="music-ref-del" data-i="${i}">ﾃ・/button>`;
     } else {
       div.className='audio-item';
-      div.innerHTML=`<span class="audio-item-label">${escapeHtml(aud.name)}</span><audio src="${aud.url}" controls preload="metadata"></audio><button type="button" class="audio-item-del" data-i="${i}">ÁE/button>`;
+      div.innerHTML=`<span class="audio-item-label">${escapeHtml(aud.name)}</span><audio src="${aud.url}" controls preload="metadata"></audio><button type="button" class="audio-item-del" data-i="${i}">ﾃ・/button>`;
     }
     div.querySelector('[data-i]').addEventListener('click',async()=>{
       if (aud.isExisting&&aud.attId) await dbDeleteAttachment(aud.attId);
@@ -1752,9 +1752,9 @@ function renderAudioList() {
   });
 }
 
-// ── VIDEO ATTACHMENTS ──
+// 笏笏 VIDEO ATTACHMENTS 笏笏
 function addVideoToDraft(blob, name) {
-  if (blob.size > 200 * 1024 * 1024) { showToast('動画が大きすぎまぁE上限200MB)'); return; }
+  if (blob.size > 200 * 1024 * 1024) { showToast('蜍慕判縺悟､ｧ縺阪☆縺弱∪縺・荳企剞200MB)'); return; }
   const url = URL.createObjectURL(blob); objURLs.push(url);
   draftVideos.push({ tempId: makeTempId(), blob, url, name: name||'video.mp4', isExisting: false });
   renderVideoList();
@@ -1777,8 +1777,8 @@ function renderVideoList() {
     const wrap = document.createElement('div'); wrap.className = 'video-item';
     wrap.innerHTML = `
       <video src="${v.url}" controls playsinline preload="metadata" style="width:100%;max-height:220px;border-radius:10px 10px 0 0;background:#000;"></video>
-      <div class="video-item-label">🎬 ${escapeHtml(v.name)}</div>
-      <button type="button" class="video-item-del" data-i="${i}">✁E/button>`;
+      <div class="video-item-label">汐 ${escapeHtml(v.name)}</div>
+      <button type="button" class="video-item-del" data-i="${i}">笨・/button>`;
     wrap.querySelector('[data-i]').addEventListener('click', async () => {
       if (v.isExisting && v.attId) await dbDeleteAttachment(v.attId);
       URL.revokeObjectURL(v.url); draftVideos.splice(i, 1); renderVideoList();
@@ -1787,12 +1787,12 @@ function renderVideoList() {
   });
 }
 
-// カード上�E動画バッジカウンチE(attachmentMetaにvideoを追加)
+// 繧ｫ繝ｼ繝我ｸ翫・蜍慕判繝舌ャ繧ｸ繧ｫ繧ｦ繝ｳ繝・(attachmentMeta縺ｫvideo繧定ｿｽ蜉)
 function getVideoCnt(itemId) {
   return attachmentMeta.filter(a => a.itemId === itemId && a.type === 'video').length;
 }
 
-// ── CLIPBOARD / PASTE ──
+// 笏笏 CLIPBOARD / PASTE 笏笏
 async function tryPasteFromClipboard() {
   try {
     const items = await navigator.clipboard.read();
@@ -1802,7 +1802,7 @@ async function tryPasteFromClipboard() {
           const blob = await item.getType(type);
           const resized = await resizeImageBlob(blob);
           addBlobToDraft(resized, `paste-${Date.now()}.jpg`);
-          showToast('クリチE�Eボ�Eドから画像を貼り付けました');
+          showToast('繧ｯ繝ｪ繝・・繝懊・繝峨°繧臥判蜒上ｒ雋ｼ繧贋ｻ倥￠縺ｾ縺励◆');
           return;
         }
         if (type === 'text/plain') {
@@ -1810,15 +1810,15 @@ async function tryPasteFromClipboard() {
           const text = await blob.text();
           if (text.trim()) {
             const ed = document.getElementById('fBody');
-            if (ed) { ed.focus(); document.execCommand('insertText', false, text); showToast('チE��ストを貼り付けました'); }
+            if (ed) { ed.focus(); document.execCommand('insertText', false, text); showToast('繝・く繧ｹ繝医ｒ雋ｼ繧贋ｻ倥￠縺ｾ縺励◆'); }
             return;
           }
         }
       }
     }
-    showToast('クリチE�Eボ�Eドに画像�EチE��ストがありません');
+    showToast('繧ｯ繝ｪ繝・・繝懊・繝峨↓逕ｻ蜒上・繝・く繧ｹ繝医′縺ゅｊ縺ｾ縺帙ｓ');
   } catch(_) {
-    showToast('クリチE�Eボ�Eドへのアクセスが許可されてぁE��せん');
+    showToast('繧ｯ繝ｪ繝・・繝懊・繝峨∈縺ｮ繧｢繧ｯ繧ｻ繧ｹ縺瑚ｨｱ蜿ｯ縺輔ｌ縺ｦ縺・∪縺帙ｓ');
   }
 }
 
@@ -1837,7 +1837,7 @@ async function resizeImageBlob(blob) {
   });
 }
 
-// ── SHARE TARGET (Web Share Target API) ──
+// 笏笏 SHARE TARGET (Web Share Target API) 笏笏
 function checkShareTarget() {
   const params = new URLSearchParams(location.search);
   const title = params.get('share_title')||'';
@@ -1846,26 +1846,26 @@ function checkShareTarget() {
   const combined = [title, text, url].filter(Boolean).join('\n').trim();
   if (!combined) return;
   sharedText = combined;
-  // URLからパラメータ除去
+  // URL縺九ｉ繝代Λ繝｡繝ｼ繧ｿ髯､蜴ｻ
   history.replaceState(null, '', location.pathname + (location.hash||''));
-  // バナー表示
+  // 繝舌リ繝ｼ陦ｨ遉ｺ
   const banner = document.getElementById('shareReceivedBanner');
   const label  = document.getElementById('shareReceivedText');
-  label.textContent = `📨 共有テキスチE ${combined.slice(0,40)}${combined.length>40?'…':''}`;
+  label.textContent = `鐙 蜈ｱ譛峨ユ繧ｭ繧ｹ繝・ ${combined.slice(0,40)}${combined.length>40?'窶ｦ':''}`;
   banner.classList.add('show');
 }
 function useSharedText() {
   if (!sharedText) return;
   openNew();
-  // タイトルに1行目、メモに全斁E  const lines = sharedText.split('\n');
+  // 繧ｿ繧､繝医Ν縺ｫ1陦檎岼縲√Γ繝｢縺ｫ蜈ｨ譁・  const lines = sharedText.split('\n');
   document.getElementById('fTitle').value = lines[0].slice(0, 60);
   document.getElementById('fBody').innerHTML = escapeHtml(sharedText).replace(/\n/g,'<br>');
   document.getElementById('shareReceivedBanner').classList.remove('show');
   sharedText = null;
 }
 
-// ══════════════════════════════════════╁E// EXPORT / IMPORT
-// ══════════════════════════════════════╁Econst BACKUP_KEY='qr_last_backup';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// EXPORT / IMPORT
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const BACKUP_KEY='qr_last_backup';
 const ECOSYSTEM_TAGS_KEY='ecosystem_tags';
 function encFieldToJSON(ef) { if (!ef) return null; return {iv:bytesToBase64(ef.iv),data:bytesToBase64(ef.data)}; }
 function encFieldFromJSON(o) { if (!o) return null; return {iv:base64ToBytes(o.iv),data:base64ToBytes(o.data)}; }
@@ -1877,8 +1877,8 @@ function recordBackupNow() { localStorage.setItem(BACKUP_KEY,String(Date.now()))
 function updateBackupBanner() {
   const days=getLastBackupDays();
   const el=document.getElementById('backupBanner');
-  if (days===null) { el.style.display='flex'; document.getElementById('backupBannerText').textContent='まだバックアチE�Eがありません。エクスポ�Eトで保存してください、E; }
-  else if (days>=7) { el.style.display='flex'; document.getElementById('backupBannerText').textContent=`最終バチE��アチE�Eから ${days} 日経過してぁE��す。`; }
+  if (days===null) { el.style.display='flex'; document.getElementById('backupBannerText').textContent='縺ｾ縺繝舌ャ繧ｯ繧｢繝・・縺後≠繧翫∪縺帙ｓ縲ゅお繧ｯ繧ｹ繝昴・繝医〒菫晏ｭ倥＠縺ｦ縺上□縺輔＞縲・; }
+  else if (days>=7) { el.style.display='flex'; document.getElementById('backupBannerText').textContent=`譛邨ゅヰ繝・け繧｢繝・・縺九ｉ ${days} 譌･邨碁℃縺励※縺・∪縺吶Ａ; }
   else { el.style.display='none'; }
 }
 function syncEcosystemTags() {
@@ -1908,7 +1908,7 @@ async function doImport(file) {
       try {
         const payload=JSON.parse(e.target.result);
         const items=payload.items||payload; if (!Array.isArray(items)) throw new Error('Invalid format');
-        const choice=confirm(`${items.length}件のチE�Eタが見つかりました、EnOK=マ�Eジ / キャンセル=全て上書き`);
+        const choice=confirm(`${items.length}莉ｶ縺ｮ繝・・繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺励◆縲・nOK=繝槭・繧ｸ / 繧ｭ繝｣繝ｳ繧ｻ繝ｫ=蜈ｨ縺ｦ荳頑嶌縺港);
         if (!choice) {
           const db=await openDB();
           await new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).clear(); tx.oncomplete=res; tx.onerror=rej; });
@@ -1920,16 +1920,16 @@ async function doImport(file) {
           else { item.body=raw.body||''; item.fields=raw.fields||[]; }
           await dbPut(item); count++;
         }
-        if (payload.pinMeta&&!getPinMeta()) { if (confirm('パスコード設定をインポ�Eトしますか�E�E)) setPinMeta(payload.pinMeta); }
-        await reload(); resolve({ok:true,msg:`${count}件をインポ�Eトしました。`});
-      } catch(e) { resolve({ok:false,msg:`エラー: ${e.message}`}); }
+        if (payload.pinMeta&&!getPinMeta()) { if (confirm('繝代せ繧ｳ繝ｼ繝芽ｨｭ螳壹ｒ繧､繝ｳ繝昴・繝医＠縺ｾ縺吶°・・)) setPinMeta(payload.pinMeta); }
+        await reload(); resolve({ok:true,msg:`${count}莉ｶ繧偵う繝ｳ繝昴・繝医＠縺ｾ縺励◆縲Ａ});
+      } catch(e) { resolve({ok:false,msg:`繧ｨ繝ｩ繝ｼ: ${e.message}`}); }
     };
     r.readAsText(file);
   });
 }
 
-// ══════════════════════════════════════╁E// iCLOUD DRIVE 連携
-// ══════════════════════════════════════╁Econst ICLOUD_BACKUP_KEY = 'qr_icloud_last_save';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// iCLOUD DRIVE 騾｣謳ｺ
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const ICLOUD_BACKUP_KEY = 'qr_icloud_last_save';
 const ICLOUD_AUTO_KEY   = 'qr_icloud_auto';
 
 function getiCloudLastSave() {
@@ -1939,9 +1939,9 @@ function getiCloudLastSave() {
   return d.toLocaleDateString('ja-JP') + ' ' + d.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
 }
 
-// iCloud Drive = iOS の「ファイル」アプリ冁E��の保孁E// Webからは直接書き込みできなぁE��め「ダウンロード�Eファイルアプリで移動」�E
-// UXを最大限スムーズにするガイド付きエクスポ�Eトを提供すめEasync function saveToiCloud() {
-  // エクスポ�Eトデータ生�E�E�EoExportと同じ形式！E  const exportItems = allItems.map(item => {
+// iCloud Drive = iOS 縺ｮ縲後ヵ繧｡繧､繝ｫ縲阪い繝励Μ蜀・∈縺ｮ菫晏ｭ・// Web縺九ｉ縺ｯ逶ｴ謗･譖ｸ縺崎ｾｼ縺ｿ縺ｧ縺阪↑縺・◆繧√後ム繧ｦ繝ｳ繝ｭ繝ｼ繝俄・繝輔ぃ繧､繝ｫ繧｢繝励Μ縺ｧ遘ｻ蜍輔阪・
+// UX繧呈怙螟ｧ髯舌せ繝繝ｼ繧ｺ縺ｫ縺吶ｋ繧ｬ繧､繝我ｻ倥″繧ｨ繧ｯ繧ｹ繝昴・繝医ｒ謠蝉ｾ帙☆繧・async function saveToiCloud() {
+  // 繧ｨ繧ｯ繧ｹ繝昴・繝医ョ繝ｼ繧ｿ逕滓・・・oExport縺ｨ蜷後§蠖｢蠑擾ｼ・  const exportItems = allItems.map(item => {
     const out = {id:item.id,title:item.title,tags:item.tags,url:item.url||'',sensitive:item.sensitive,createdAt:item.createdAt,updatedAt:item.updatedAt};
     if (item.sensitive) { out.encBody=encFieldToJSON(item.encBody); out.encFields=encFieldToJSON(item.encFields); }
     else { out.body=item.body; out.fields=item.fields; }
@@ -1955,7 +1955,7 @@ function getiCloudLastSave() {
   const json = JSON.stringify(payload, null, 2);
   const filename = `quick-ref-${new Date().toISOString().slice(0,10)}.json`;
 
-  // iOS Safari: ダウンローチEↁEファイルアプリ ↁEiCloud Drive に移勁E  const blob = new Blob([json], {type: 'application/json'});
+  // iOS Safari: 繝繧ｦ繝ｳ繝ｭ繝ｼ繝・竊・繝輔ぃ繧､繝ｫ繧｢繝励Μ 竊・iCloud Drive 縺ｫ遘ｻ蜍・  const blob = new Blob([json], {type: 'application/json'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = filename;
@@ -1966,11 +1966,11 @@ function getiCloudLastSave() {
   recordBackupNow();
   updateiCloudStatus();
 
-  // iCloudガイドを表示�E�EOS�E�E  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  // iCloud繧ｬ繧､繝峨ｒ陦ｨ遉ｺ・・OS・・  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
   if (isIOS) { showICloudGuide(filename); }
-  else { showToast('☁E��E' + filename + ' をダウンロードしました'); }
+  else { showToast('笘・ｸ・' + filename + ' 繧偵ム繧ｦ繝ｳ繝ｭ繝ｼ繝峨＠縺ｾ縺励◆'); }
 
-  // Background Sync 登録�E�オンライン復帰時にSWへ通知�E�E  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  // Background Sync 逋ｻ骭ｲ・医が繝ｳ繝ｩ繧､繝ｳ蠕ｩ蟶ｰ譎ゅ↓SW縺ｸ騾夂衍・・  if ('serviceWorker' in navigator && 'SyncManager' in window) {
     const reg = await navigator.serviceWorker.ready;
     await reg.sync.register('icloud-backup').catch(() => {});
   }
@@ -1979,9 +1979,9 @@ function getiCloudLastSave() {
 function updateiCloudStatus() {
   const last = getiCloudLastSave();
   const el   = document.getElementById('icloudStatus');
-  if (el) el.textContent = last ? '最終保孁E ' + last : '未保孁E;
+  if (el) el.textContent = last ? '譛邨ゆｿ晏ｭ・ ' + last : '譛ｪ菫晏ｭ・;
   const desc = document.getElementById('icloudMenuDesc');
-  if (desc) desc.textContent = last ? '最絁E ' + last : 'ファイルアプリ経由で自動バチE��アチE�E';
+  if (desc) desc.textContent = last ? '譛邨・ ' + last : '繝輔ぃ繧､繝ｫ繧｢繝励Μ邨檎罰縺ｧ閾ｪ蜍輔ヰ繝・け繧｢繝・・';
 }
 
 function showICloudGuide(filename) {
@@ -1990,17 +1990,17 @@ function showICloudGuide(filename) {
   guide.classList.add('open');
 }
 
-// 自動保孁E Periodic Background Sync 登録
+// 閾ｪ蜍穂ｿ晏ｭ・ Periodic Background Sync 逋ｻ骭ｲ
 async function setupPeriodicSync() {
   if (!('serviceWorker' in navigator) || !('PeriodicSyncManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
     await reg.periodicSync.register('daily-backup-reminder', { minInterval: 24 * 60 * 60 * 1000 });
     localStorage.setItem(ICLOUD_AUTO_KEY, '1');
-    showToast('✁E毎日バックアチE�Eリマインダーを設定しました');
+    showToast('笨・豈取律繝舌ャ繧ｯ繧｢繝・・繝ｪ繝槭う繝ｳ繝繝ｼ繧定ｨｭ螳壹＠縺ｾ縺励◆');
     updateAutoToggleBtn();
   } catch (e) {
-    // フォールバック: ローカル通知を俁E��ガイチE    alert('Periodic Syncはこ�Eブラウザで未対応です、En手動でメニュー→iCloud保存をお使ぁE��ださい、E);
+    // 繝輔か繝ｼ繝ｫ繝舌ャ繧ｯ: 繝ｭ繝ｼ繧ｫ繝ｫ騾夂衍繧剃ｿ・☆繧ｬ繧､繝・    alert('Periodic Sync縺ｯ縺薙・繝悶Λ繧ｦ繧ｶ縺ｧ譛ｪ蟇ｾ蠢懊〒縺吶・n謇句虚縺ｧ繝｡繝九Η繝ｼ竊段Cloud菫晏ｭ倥ｒ縺贋ｽｿ縺・￥縺縺輔＞縲・);
   }
 }
 async function cancelPeriodicSync() {
@@ -2010,47 +2010,47 @@ async function cancelPeriodicSync() {
     await reg.periodicSync.unregister('daily-backup-reminder');
   } catch(_) {}
   localStorage.removeItem(ICLOUD_AUTO_KEY);
-  showToast('自動バチE��アチE�Eを解除しました');
+  showToast('閾ｪ蜍輔ヰ繝・け繧｢繝・・繧定ｧ｣髯､縺励∪縺励◆');
   updateAutoToggleBtn();
 }
 function updateAutoToggleBtn() {
   const btn = document.getElementById('icloudAutoToggleBtn');
   if (!btn) return;
   const on = !!localStorage.getItem(ICLOUD_AUTO_KEY);
-  btn.textContent = on ? '✁E自動保存ON' : '⏰ 自動保存設宁E;
+  btn.textContent = on ? '笨・閾ｪ蜍穂ｿ晏ｭ楼N' : '竢ｰ 閾ｪ蜍穂ｿ晏ｭ倩ｨｭ螳・;
   btn.style.background = on ? 'rgba(52,199,89,0.12)' : '';
   btn.style.color       = on ? '#1A8C3A' : '';
   btn.style.borderColor = on ? 'rgba(52,199,89,0.3)' : '';
 }
 
-// ══════════════════════════════════════╁E// Siri Shortcuts ガイチE// ══════════════════════════════════════╁Efunction showSiriShortcutGuide() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// Siri Shortcuts 繧ｬ繧､繝・// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function showSiriShortcutGuide() {
   const base = location.origin + location.pathname;
   const msg = [
-    '【Siri Shortcuts 設定手頁E��E,
+    '縲心iri Shortcuts 險ｭ螳壽焔鬆・・,
     '',
-    '① ショートカチE��アプリを開ぁE,
-    '② 右上「＋」�E「アクションを追加、E,
-    '③「URLを開く」を追加',
-    '④ 以下�EURLを�E劁E',
+    '竭 繧ｷ繝ｧ繝ｼ繝医き繝・ヨ繧｢繝励Μ繧帝幕縺・,
+    '竭｡ 蜿ｳ荳翫鯉ｼ九坂・縲後い繧ｯ繧ｷ繝ｧ繝ｳ繧定ｿｽ蜉縲・,
+    '竭｢縲袈RL繧帝幕縺上阪ｒ霑ｽ蜉',
+    '竭｣ 莉･荳九・URL繧貞・蜉・',
     '',
-    '  音声追加: ' + base + '?shortcut=voice',
-    '  カメラ追加: ' + base + '?shortcut=camera',
-    '  新規追加: ' + base + '?shortcut=new',
-    '  レビュー: ' + base + '?shortcut=review',
+    '  髻ｳ螢ｰ霑ｽ蜉: ' + base + '?shortcut=voice',
+    '  繧ｫ繝｡繝ｩ霑ｽ蜉: ' + base + '?shortcut=camera',
+    '  譁ｰ隕剰ｿｽ蜉: ' + base + '?shortcut=new',
+    '  繝ｬ繝薙Η繝ｼ: ' + base + '?shortcut=review',
     '',
-    '⑤ Siriフレーズを設定（侁E「参照に追加」！E,
+    '竭､ Siri繝輔Ξ繝ｼ繧ｺ繧定ｨｭ螳夲ｼ井ｾ・縲悟盾辣ｧ縺ｫ霑ｽ蜉縲搾ｼ・,
     '',
-    '設定後「Hey Siri、参照に追加」で即起動します、E,
+    '險ｭ螳壼ｾ後粂ey Siri縲∝盾辣ｧ縺ｫ霑ｽ蜉縲阪〒蜊ｳ襍ｷ蜍輔＠縺ｾ縺吶・,
   ].join('\n');
   alert(msg);
 }
 
-// ══════════════════════════════════════╁E// Shortcut URL パラメータ処琁E// ══════════════════════════════════════╁Efunction checkShortcutParam() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// Shortcut URL 繝代Λ繝｡繝ｼ繧ｿ蜃ｦ逅・// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function checkShortcutParam() {
   const params = new URLSearchParams(location.search);
   const sc = params.get('shortcut');
   if (!sc) return;
   history.replaceState(null, '', location.pathname + (location.hash || ''));
-  // 少し遁E��せてUIが準備できてから起勁E  setTimeout(() => {
+  // 蟆代＠驕・ｉ縺帙※UI縺梧ｺ門ｙ縺ｧ縺阪※縺九ｉ襍ｷ蜍・  setTimeout(() => {
     if (sc === 'voice')  { openVoiceModal(); }
     if (sc === 'camera') { openNew(); setTimeout(() => document.getElementById('imgCameraInput').click(), 300); }
     if (sc === 'new')    { openNew(); }
@@ -2059,8 +2059,8 @@ function updateAutoToggleBtn() {
   }, 600);
 }
 
-// ══════════════════════════════════════╁E// Service Worker メチE��ージ受信
-// ══════════════════════════════════════╁Efunction setupSWMessages() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// Service Worker 繝｡繝・そ繝ｼ繧ｸ蜿嶺ｿ｡
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function setupSWMessages() {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'SW_SYNC_ICLOUD')    { saveToiCloud(); }
@@ -2068,14 +2068,14 @@ function updateAutoToggleBtn() {
   });
 }
 
-// ══════════════════════════════════════╁E// MENU
-// ══════════════════════════════════════╁Efunction openMenu() { document.getElementById('menuOverlay').classList.add('open'); document.getElementById('menuSheet').classList.add('open'); }
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// MENU
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function openMenu() { document.getElementById('menuOverlay').classList.add('open'); document.getElementById('menuSheet').classList.add('open'); }
 function closeMenu() { document.getElementById('menuOverlay').classList.remove('open'); document.getElementById('menuSheet').classList.remove('open'); }
 
-// ══════════════════════════════════════╁E// ICON GENERATOR
-// ══════════════════════════════════════╁Efunction drawIcon(canvas) {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// ICON GENERATOR
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function drawIcon(canvas) {
   const size=canvas.width, ctx=canvas.getContext('2d'), r=size*0.22;
-  const text=document.getElementById('iconEmoji').value||'叁E;
+  const text=document.getElementById('iconEmoji').value||'蜿・;
   const fontSize=Math.round(size*Number(document.getElementById('iconFontSize').value)/100);
   ctx.clearRect(0,0,size,size);
   ctx.beginPath(); ctx.moveTo(r,0); ctx.lineTo(size-r,0); ctx.arcTo(size,0,size,r,r);
@@ -2104,10 +2104,10 @@ function downloadIcon(canvasId,filename) {
 function openIconModal() { document.getElementById('iconOverlay').classList.add('open'); document.getElementById('iconModal').classList.add('open'); setTimeout(refreshIconPreviews,50); }
 function closeIconModal() { document.getElementById('iconOverlay').classList.remove('open'); document.getElementById('iconModal').classList.remove('open'); }
 
-// ══════════════════════════════════════╁E// THEME MODE
-// ══════════════════════════════════════╁Econst TAG_EMOJI_MAP={'音楽':'🎵','music':'🎵','セキュリチE��':'🔐','security':'🔐','占ぁE:'☯','コマンチE:'💻','command':'💻','イラスチE:'🎨','illust':'🎨','仕亁E:'📋','work':'📋','個人':'🔑','レシチE:'🍳','旁E��E:'✈︁E,'メモ':'📝'};
-const TAG_COLOR_MAP={'音楽':['#FF2D55','#C41230'],'music':['#FF2D55','#C41230'],'セキュリチE��':['#34C759','#1A6E2E'],'コマンチE:['#1C1C1E','#3A3A3C'],'イラスチE:['#FF9500','#C45E00'],'仕亁E:['#007AFF','#004ECC']};
-function getTagEmoji(tag) { return TAG_EMOJI_MAP[tag]||TAG_EMOJI_MAP[tag.toLowerCase()]||'📌'; }
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// THEME MODE
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const TAG_EMOJI_MAP={'髻ｳ讌ｽ':'七','music':'七','繧ｻ繧ｭ繝･繝ｪ繝・ぅ':'柏','security':'柏','蜊縺・:'笘ｯ','繧ｳ繝槭Φ繝・:'捗','command':'捗','繧､繝ｩ繧ｹ繝・:'耳','illust':'耳','莉穂ｺ・:'搭','work':'搭','蛟倶ｺｺ':'泊','繝ｬ繧ｷ繝・:'叉','譌・｡・:'笨茨ｸ・,'繝｡繝｢':'統'};
+const TAG_COLOR_MAP={'髻ｳ讌ｽ':['#FF2D55','#C41230'],'music':['#FF2D55','#C41230'],'繧ｻ繧ｭ繝･繝ｪ繝・ぅ':['#34C759','#1A6E2E'],'繧ｳ繝槭Φ繝・:['#1C1C1E','#3A3A3C'],'繧､繝ｩ繧ｹ繝・:['#FF9500','#C45E00'],'莉穂ｺ・:['#007AFF','#004ECC']};
+function getTagEmoji(tag) { return TAG_EMOJI_MAP[tag]||TAG_EMOJI_MAP[tag.toLowerCase()]||'東'; }
 function getTagColors(tag) { return TAG_COLOR_MAP[tag]||TAG_COLOR_MAP[tag.toLowerCase()]||['#007AFF','#005ECB']; }
 const urlTag=new URLSearchParams(location.search).get('tag');
 let themeTag=urlTag||null;
@@ -2117,21 +2117,21 @@ function initThemeMode() {
   const emoji=getTagEmoji(themeTag);
   document.getElementById('themeBannerIcon').textContent=emoji;
   document.getElementById('themeBannerLabel').textContent=`#${themeTag}`;
-  document.getElementById('themeBannerSub').textContent='チE�Eマモードで起動中';
+  document.getElementById('themeBannerSub').textContent='繝・・繝槭Δ繝ｼ繝峨〒襍ｷ蜍穂ｸｭ';
   document.getElementById('themeBanner').style.display='flex';
-  document.title=`${emoji} ${themeTag}  EクイチE��参�E`;
-  document.getElementById('searchInput').placeholder=`#${themeTag} 冁E��検索`;
+  document.title=`${emoji} ${themeTag} 窶・繧ｯ繧､繝・け蜿ら・`;
+  document.getElementById('searchInput').placeholder=`#${themeTag} 蜀・ｒ讀懃ｴ｢`;
 }
 function sendToKansei(targetTag) {
   const filtered=allItems.filter(item=>targetTag?(item.tags||[]).includes(targetTag):true).filter(i=>!i.sensitive);
   const materials=filtered.map(item=>({title:item.title,tags:item.tags,body:item.body||'',fields:item.fields||[],updatedAt:item.updatedAt}));
-  if (!materials.length) { alert('送れる素材がありません、E); return; }
+  if (!materials.length) { alert('騾√ｌ繧狗ｴ譚舌′縺ゅｊ縺ｾ縺帙ｓ縲・); return; }
   localStorage.setItem('kansei_materials',JSON.stringify({source:'quick-ref',tag:targetTag||null,materials,exportedAt:Date.now()}));
-  if (confirm(`${materials.length}件の素材をkanseiに送りました。kanseiを開きますか�E�`)) location.href=location.origin+'/kansei/draft.html';
+  if (confirm(`${materials.length}莉ｶ縺ｮ邏譚舌ｒkansei縺ｫ騾√ｊ縺ｾ縺励◆縲Ｌansei繧帝幕縺阪∪縺吶°・歔)) location.href=location.origin+'/kansei/draft.html';
 }
 
-// ══════════════════════════════════════╁E// DAILY REVIEW
-// ══════════════════════════════════════╁Econst REVIEW_LOG_KEY='qr_review_log', REVIEW_STREAK_KEY='qr_review_streak', REVIEW_SESSION_KEY='qr_review_session';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// DAILY REVIEW
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const REVIEW_LOG_KEY='qr_review_log', REVIEW_STREAK_KEY='qr_review_streak', REVIEW_SESSION_KEY='qr_review_session';
 let reviewQueue=[], reviewIndex=0;
 function getReviewLog() { try { return JSON.parse(localStorage.getItem(REVIEW_LOG_KEY)||'{}'); } catch(_) { return {}; } }
 function markReviewed(id) { const l=getReviewLog(); l[id]={reviewedAt:Date.now(),count:(l[id]?.count||0)+1}; localStorage.setItem(REVIEW_LOG_KEY,JSON.stringify(l)); }
@@ -2162,31 +2162,31 @@ function updateReviewBadge() {
 }
 function reviewCardHTML(entry) {
   const {item,days}=entry;
-  const daysLabel=days>=9999?'未レビュー':days===0?'今日':`${days}日前`;
+  const daysLabel=days>=9999?'譛ｪ繝ｬ繝薙Η繝ｼ':days===0?'莉頑律':`${days}譌･蜑港;
   const badgeClass=days<7?'fresh':days<30?'normal':'overdue';
   const body=item.body||''; const fields=item.fields||[];
   const tagsHtml=(item.tags||[]).map(t=>`<span class="chip">#${escapeHtml(t)}</span>`).join('');
   const truncated=body.replace(/<[^>]+>/g,'').length>150;
-  const bodyPreview=truncated?body.slice(0,150)+'…':body;
+  const bodyPreview=truncated?body.slice(0,150)+'窶ｦ':body;
   return `<div class="review-card">
     <div class="review-card-meta"><span class="review-days-badge ${badgeClass}">${daysLabel}</span></div>
-    <p class="review-card-title">${escapeHtml(item.title||'(無顁E')}</p>
-    ${body?`<div class="review-card-body" id="reviewCardBody">${bodyPreview}</div>${truncated?`<button class="review-expand-btn" id="expandBtn">▼ 全部表示</button>`:''}`:''}
+    <p class="review-card-title">${escapeHtml(item.title||'(辟｡鬘・')}</p>
+    ${body?`<div class="review-card-body" id="reviewCardBody">${bodyPreview}</div>${truncated?`<button class="review-expand-btn" id="expandBtn">笆ｼ 蜈ｨ驛ｨ陦ｨ遉ｺ</button>`:''}`:''}
     ${fields.length?`<div class="review-card-fields">${fields.map(f=>`<div class="review-field-row"><span class="review-field-key">${escapeHtml(f.key)}</span>: ${escapeHtml(f.value)}</div>`).join('')}</div>`:''}
     ${tagsHtml?`<div class="review-tags">${tagsHtml}</div>`:''}
     <div class="review-actions">
-      <button class="review-action-btn done" id="reviewDoneBtn">✁E確認済み</button>
-      <button class="review-action-btn" id="reviewEditBtn">✏︁E編雁E��めE/button>
-      <button class="review-action-btn" id="reviewSkipBtn">ↁEスキチE�E</button>
+      <button class="review-action-btn done" id="reviewDoneBtn">笨・遒ｺ隱肴ｸ医∩</button>
+      <button class="review-action-btn" id="reviewEditBtn">笨擾ｸ・邱ｨ髮・☆繧・/button>
+      <button class="review-action-btn" id="reviewSkipBtn">竊・繧ｹ繧ｭ繝・・</button>
     </div>
   </div>`;
 }
 function showReviewCard(index) {
   const body=document.getElementById('reviewBody'), fill=document.getElementById('reviewProgressFill'), counter=document.getElementById('reviewCounterText'), total=reviewQueue.length;
-  fill.style.width=`${total?Math.round(index/total*100):100}%`; counter.textContent=`${index} / ${total} 完亁E;
+  fill.style.width=`${total?Math.round(index/total*100):100}%`; counter.textContent=`${index} / ${total} 螳御ｺ・;
   if (index>=total) {
     const s=updateStreak();
-    body.innerHTML=`<div class="review-complete"><div class="review-complete-icon">🎉</div><p class="review-complete-title">レビュー完亁E</p><p class="review-complete-sub">続けることが力になります、E/p><div class="streak-count">🔥 ${s.count}</div><div class="streak-label">日連綁E/div><p class="review-complete-sub" style="margin-top:12px;">今日は${reviewQueue.length}件を見直しました、E/p><button class="review-done-btn" id="reviewDoneClose">閉じめE/button></div>`;
+    body.innerHTML=`<div class="review-complete"><div class="review-complete-icon">脂</div><p class="review-complete-title">繝ｬ繝薙Η繝ｼ螳御ｺ・</p><p class="review-complete-sub">邯壹￠繧九％縺ｨ縺悟鴨縺ｫ縺ｪ繧翫∪縺吶・/p><div class="streak-count">櫨 ${s.count}</div><div class="streak-label">譌･騾｣邯・/div><p class="review-complete-sub" style="margin-top:12px;">莉頑律縺ｯ${reviewQueue.length}莉ｶ繧定ｦ狗峩縺励∪縺励◆縲・/p><button class="review-done-btn" id="reviewDoneClose">髢峨§繧・/button></div>`;
     document.getElementById('reviewDoneClose').addEventListener('click',closeReview); return;
   }
   const entry=reviewQueue[index]; body.innerHTML=reviewCardHTML(entry);
@@ -2197,17 +2197,17 @@ function showReviewCard(index) {
 }
 function openReview() {
   reviewQueue=selectReviewItems(7); reviewIndex=0;
-  const s=getStreak(); document.getElementById('reviewStreakLabel').textContent=s.count>0?`🔥 ${s.count}日連続`:'';
+  const s=getStreak(); document.getElementById('reviewStreakLabel').textContent=s.count>0?`櫨 ${s.count}譌･騾｣邯啻:'';
   if (reviewQueue.length===0) {
-    document.getElementById('reviewBody').innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:12px;">✨</div><p style="font-size:16px;font-weight:700;margin:0 0 8px;">今日はすべて最新でぁE/p><p style="font-size:14px;line-height:1.7;">3日以上経った頁E��が�Eてきたらここに表示されます、E/p></div>`;
+    document.getElementById('reviewBody').innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:12px;">笨ｨ</div><p style="font-size:16px;font-weight:700;margin:0 0 8px;">莉頑律縺ｯ縺吶∋縺ｦ譛譁ｰ縺ｧ縺・/p><p style="font-size:14px;line-height:1.7;">3譌･莉･荳顔ｵ後▲縺滄・岼縺悟・縺ｦ縺阪◆繧峨％縺薙↓陦ｨ遉ｺ縺輔ｌ縺ｾ縺吶・/p></div>`;
     document.getElementById('reviewProgressFill').style.width='100%'; document.getElementById('reviewCounterText').textContent='0 / 0';
   } else { showReviewCard(0); }
   document.getElementById('reviewOverlay').classList.add('open');
 }
 function closeReview() { document.getElementById('reviewOverlay').classList.remove('open'); updateReviewBadge(); renderAll(); }
 
-// ══════════════════════════════════════╁E// RELATED ITEMS
-// ══════════════════════════════════════╁Econst LINKS_KEY='qr_links';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// RELATED ITEMS
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const LINKS_KEY='qr_links';
 function getLinks() { try { return JSON.parse(localStorage.getItem(LINKS_KEY)||'{}'); } catch(_) { return {}; } }
 function addLink(fromId,toId) { const l=getLinks(); [fromId,toId].forEach(a=>{ const b=a===fromId?toId:fromId; if (!l[a]) l[a]=[]; if (!l[a].includes(b)) l[a].push(b); }); localStorage.setItem(LINKS_KEY,JSON.stringify(l)); }
 function removeLink(fromId,toId) { const l=getLinks(); l[fromId]=(l[fromId]||[]).filter(i=>i!==toId); l[toId]=(l[toId]||[]).filter(i=>i!==fromId); localStorage.setItem(LINKS_KEY,JSON.stringify(l)); }
@@ -2226,81 +2226,81 @@ function renderRelatedItems(item) {
   const el=document.getElementById('relatedSection'); if (!el) return;
   const confirmed=getLinkedItems(item.id), cIds=new Set(confirmed.map(c=>c.id));
   const auto=findRelated(item,6).filter(r=>!cIds.has(r.item.id));
-  if (!confirmed.length&&!auto.length) { el.innerHTML='<p class="related-empty">関連する頁E��が�E動検�Eされませんでした、E/p>'; setupAiRelatedBtn(item); return; }
+  if (!confirmed.length&&!auto.length) { el.innerHTML='<p class="related-empty">髢｢騾｣縺吶ｋ鬆・岼縺瑚・蜍墓､懷・縺輔ｌ縺ｾ縺帙ｓ縺ｧ縺励◆縲・/p>'; setupAiRelatedBtn(item); return; }
   const mkCard=(relItem,score,isConf)=>{
     const cached=decryptedCache.get(relItem.id);
-    const snippet=relItem.sensitive?'🔒 保護中':((cached?cached.body:relItem.body||'').replace(/<[^>]+>/g,'').slice(0,45));
+    const snippet=relItem.sensitive?'白 菫晁ｭｷ荳ｭ':((cached?cached.body:relItem.body||'').replace(/<[^>]+>/g,'').slice(0,45));
     const tagsHtml=(relItem.tags||[]).map(t=>`<span class="related-tag">#${escapeHtml(t)}</span>`).join('');
     return `<div class="related-card${isConf?' confirmed':''}" data-id="${relItem.id}">
       <div class="related-main">
-        <div class="related-header"><span class="related-icon">${isConf?'🔗':'∼'}</span><span class="related-title">${escapeHtml(relItem.title||'(無顁E')}</span>${score!=null?`<span class="related-score">${score}%</span>`:''}</div>
+        <div class="related-header"><span class="related-icon">${isConf?'迫':'竏ｼ'}</span><span class="related-title">${escapeHtml(relItem.title||'(辟｡鬘・')}</span>${score!=null?`<span class="related-score">${score}%</span>`:''}</div>
         ${snippet?`<div class="related-snippet">${escapeHtml(snippet)}</div>`:''}
         ${tagsHtml?`<div class="related-tags">${tagsHtml}</div>`:''}
       </div>
       <div class="related-actions">
-        <button class="related-open-btn" data-id="${relItem.id}">ↁE/button>
-        ${isConf?`<button class="related-unlink-btn" data-id="${relItem.id}">ÁE/button>`:`<button class="related-link-btn" data-id="${relItem.id}">🔗</button>`}
+        <button class="related-open-btn" data-id="${relItem.id}">竊・/button>
+        ${isConf?`<button class="related-unlink-btn" data-id="${relItem.id}">ﾃ・/button>`:`<button class="related-link-btn" data-id="${relItem.id}">迫</button>`}
       </div>
     </div>`;
   };
   el.innerHTML=confirmed.map(it=>mkCard(it,null,true)).join('')+auto.map(r=>mkCard(r.item,r.score,false)).join('');
   el.querySelectorAll('.related-open-btn').forEach(btn=>btn.addEventListener('click',async()=>{ closeSheet(); await openEdit(btn.dataset.id); }));
   el.querySelectorAll('.related-link-btn').forEach(btn=>btn.addEventListener('click',()=>{ addLink(item.id,btn.dataset.id); renderRelatedItems(item); renderAll(); }));
-  el.querySelectorAll('.related-unlink-btn').forEach(btn=>btn.addEventListener('click',()=>{ if (!confirm('こ�Eリンクを削除しますか�E�E)) return; removeLink(item.id,btn.dataset.id); renderRelatedItems(item); renderAll(); }));
+  el.querySelectorAll('.related-unlink-btn').forEach(btn=>btn.addEventListener('click',()=>{ if (!confirm('縺薙・繝ｪ繝ｳ繧ｯ繧貞炎髯､縺励∪縺吶°・・)) return; removeLink(item.id,btn.dataset.id); renderRelatedItems(item); renderAll(); }));
   setupAiRelatedBtn(item);
 }
 function setupAiRelatedBtn(item) {
   const btn=document.getElementById('aiRelatedBtn'); if (!btn) return;
   btn.onclick=async()=>{
     const geminiKey=localStorage.getItem('ml_gemini'), claudeKey=localStorage.getItem('ml_claude'), proxyUrl=localStorage.getItem('kansei_proxy_url');
-    if (!geminiKey&&!claudeKey&&!proxyUrl&&!localStorage.getItem('ml_openai')) { alert('APIキーが設定されてぁE��せん。⚙�E�設定から�E力してください、E); return; }
-    btn.disabled=true; btn.textContent='✨ 検索中…';
+    if (!geminiKey&&!claudeKey&&!proxyUrl&&!localStorage.getItem('ml_openai')) { alert('API繧ｭ繝ｼ縺瑚ｨｭ螳壹＆繧後※縺・∪縺帙ｓ縲や囮・剰ｨｭ螳壹°繧牙・蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+    btn.disabled=true; btn.textContent='笨ｨ 讀懃ｴ｢荳ｭ窶ｦ';
     try {
       const candidates=allItems.filter(it=>it.id!==item.id&&!it.sensitive).slice(0,60).map(it=>`${it.id.slice(0,8)}: ${it.title} [${(it.tags||[]).join(',')}]`).join('\n');
-      const prompt=`以下�E「対象頁E��」と意味皁E��関連する頁E��を「候補一覧」から選んでください、En対象: タイトル: ${item.title} タグ: ${(item.tags||[]).join(', ')}\n候裁E\n${candidates}\n\nIDプレフィチE��ス(8斁E��Eを最大5つ、JSON配�Eのみ返してください:\n["xxxxxxxx"]`;
+      const prompt=`莉･荳九・縲悟ｯｾ雎｡鬆・岼縲阪→諢丞袖逧・↓髢｢騾｣縺吶ｋ鬆・岼繧偵悟呵｣應ｸ隕ｧ縲阪°繧蛾∈繧薙〒縺上□縺輔＞縲・n蟇ｾ雎｡: 繧ｿ繧､繝医Ν: ${item.title} 繧ｿ繧ｰ: ${(item.tags||[]).join(', ')}\n蛟呵｣・\n${candidates}\n\nID繝励Ξ繝輔ぅ繝・け繧ｹ(8譁・ｭ・繧呈怙螟ｧ5縺､縲゛SON驟榊・縺ｮ縺ｿ霑斐＠縺ｦ縺上□縺輔＞:\n["xxxxxxxx"]`;
       let raw='';
       if (geminiKey) { const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})}); const d=await res.json(); raw=d.candidates?.[0]?.content?.parts?.[0]?.text||'[]'; }
       else { const ep=proxyUrl||'https://api.anthropic.com/v1/messages',headers={'Content-Type':'application/json'}; if (!proxyUrl&&claudeKey){headers['x-api-key']=claudeKey;headers['anthropic-version']='2023-06-01';} const res=await fetch(ep,{method:'POST',headers,body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:256,messages:[{role:'user',content:prompt}]})}); const d=await res.json(); raw=d.content?.[0]?.text||'[]'; }
       const ids=JSON.parse(raw.replace(/```json|```/g,'').trim()); let added=0;
       ids.forEach(sid=>{ const found=allItems.find(it=>it.id.startsWith(sid)&&it.id!==item.id); if (found&&!(getLinks()[item.id]||[]).includes(found.id)){ addLink(item.id,found.id); added++; } });
       renderRelatedItems(item); renderAll();
-      btn.textContent=added>0?`✨ ${added}件のつながりを発見`:'✨ 新たなつながりなぁE;
-    } catch(e) { alert(`AI検索失敁E ${e.message}`); btn.textContent='✨ AIでさらに探ぁE; }
+      btn.textContent=added>0?`笨ｨ ${added}莉ｶ縺ｮ縺､縺ｪ縺後ｊ繧堤匱隕義:'笨ｨ 譁ｰ縺溘↑縺､縺ｪ縺後ｊ縺ｪ縺・;
+    } catch(e) { alert(`AI讀懃ｴ｢螟ｱ謨・ ${e.message}`); btn.textContent='笨ｨ AI縺ｧ縺輔ｉ縺ｫ謗｢縺・; }
     finally { btn.disabled=false; }
   };
 }
 
-// ══════════════════════════════════════╁E// VOICE ↁEAI
-// ══════════════════════════════════════╁Elet voiceRec=null, voiceIsRec=false, voiceFullText='';
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// VOICE 竊・AI
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・let voiceRec=null, voiceIsRec=false, voiceFullText='';
 function openVoiceModal() {
   document.getElementById('voiceModal').classList.add('open');
   document.getElementById('voiceFinal').textContent=''; document.getElementById('voiceInter').textContent='';
   voiceFullText=''; document.getElementById('aiPreviewArea').style.display='none';
   document.getElementById('voiceAnalyzeBtn').disabled=true;
   document.getElementById('voiceDot').style.display='none';
-  document.getElementById('voiceStatusText').textContent='マイクで話してください';
+  document.getElementById('voiceStatusText').textContent='繝槭う繧ｯ縺ｧ隧ｱ縺励※縺上□縺輔＞';
   startVoiceRec();
 }
 function closeVoiceModal() { stopVoiceRec(); document.getElementById('voiceModal').classList.remove('open'); }
 function startVoiceRec() {
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if (!SR) { alert('こ�Eブラウザは音声入力に対応してぁE��せん、E); return; }
+  if (!SR) { alert('縺薙・繝悶Λ繧ｦ繧ｶ縺ｯ髻ｳ螢ｰ蜈･蜉帙↓蟇ｾ蠢懊＠縺ｦ縺・∪縺帙ｓ縲・); return; }
   voiceRec=new SR(); voiceRec.lang='ja-JP'; voiceRec.continuous=true; voiceRec.interimResults=true;
-  voiceRec.onstart=()=>{ voiceIsRec=true; document.getElementById('voiceFab').classList.add('recording'); document.getElementById('voiceDot').style.display='block'; document.getElementById('voiceStatusText').textContent='録音中… 話し終わったら停止'; };
+  voiceRec.onstart=()=>{ voiceIsRec=true; document.getElementById('voiceFab').classList.add('recording'); document.getElementById('voiceDot').style.display='block'; document.getElementById('voiceStatusText').textContent='骭ｲ髻ｳ荳ｭ窶ｦ 隧ｱ縺礼ｵゅｏ縺｣縺溘ｉ蛛懈ｭ｢'; };
   voiceRec.onresult=e=>{ let interim=''; for (let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript; if(e.results[i].isFinal)voiceFullText+=t;else interim+=t;} document.getElementById('voiceFinal').textContent=voiceFullText; document.getElementById('voiceInter').textContent=interim; document.getElementById('voiceAnalyzeBtn').disabled=voiceFullText.trim().length===0; };
-  voiceRec.onerror=e=>{ if(e.error==='not-allowed') alert('マイクへのアクセスが許可されてぁE��せん、E); stopVoiceRec(); };
+  voiceRec.onerror=e=>{ if(e.error==='not-allowed') alert('繝槭う繧ｯ縺ｸ縺ｮ繧｢繧ｯ繧ｻ繧ｹ縺瑚ｨｱ蜿ｯ縺輔ｌ縺ｦ縺・∪縺帙ｓ縲・); stopVoiceRec(); };
   voiceRec.onend=()=>{ if(voiceIsRec) voiceRec.start(); };
   try { voiceRec.start(); } catch(_) {}
 }
 function stopVoiceRec() {
   voiceIsRec=false; document.getElementById('voiceFab').classList.remove('recording');
   document.getElementById('voiceDot').style.display='none';
-  document.getElementById('voiceStatusText').textContent='録音完亁E;
+  document.getElementById('voiceStatusText').textContent='骭ｲ髻ｳ螳御ｺ・;
   try { voiceRec?.stop(); } catch(_) {} voiceRec=null;
 }
 
-// ══════════════════════════════════════╁E// ECOSYSTEM AI
-// ══════════════════════════════════════╁Econst LS={CLAUDE:'ml_claude',GEMINI:'ml_gemini',OPENAI:'ml_openai',PROXY:'kansei_proxy_url',MODEL:'kansei_model',TRANSFER:'is_transfer'};
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// ECOSYSTEM AI
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・const LS={CLAUDE:'ml_claude',GEMINI:'ml_gemini',OPENAI:'ml_openai',PROXY:'kansei_proxy_url',MODEL:'kansei_model',TRANSFER:'is_transfer'};
 const MODELS={
   claude:{label:'Claude',detail:'claude-sonnet-4-6',endpoint:'https://api.anthropic.com/v1/messages'},
   gemini:{label:'Gemini',detail:'gemini-2.0-flash',endpoint:'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'},
@@ -2309,16 +2309,16 @@ const MODELS={
 let activeModel=localStorage.getItem(LS.MODEL)||'claude';
 let lastAiResult='';
 const AI_PROMPTS={
-  summarize:t=>`以下�EメモめE、E行で簡潔に要紁E��てください。日本語で、En\n${t}`,
-  organize: t=>`以下�Eメモを見�Eしと箁E��書きで整琁E��てください。日本語で、En\n${t}`,
-  expand:   t=>`以下�Eメモを補足・深掘りして、理解の助けになる情報を追加してください。日本語で、En\n${t}`,
-  question: t=>`以下�Eメモの冁E��を深く理解するための学習�E復習用の質問を5つ生�Eしてください。日本語で、En\n${t}`,
+  summarize:t=>`莉･荳九・繝｡繝｢繧・縲・陦後〒邁｡貎斐↓隕∫ｴ・＠縺ｦ縺上□縺輔＞縲よ律譛ｬ隱槭〒縲・n\n${t}`,
+  organize: t=>`莉･荳九・繝｡繝｢繧定ｦ句・縺励→邂・擅譖ｸ縺阪〒謨ｴ逅・＠縺ｦ縺上□縺輔＞縲よ律譛ｬ隱槭〒縲・n\n${t}`,
+  expand:   t=>`莉･荳九・繝｡繝｢繧定｣懆ｶｳ繝ｻ豺ｱ謗倥ｊ縺励※縲∫炊隗｣縺ｮ蜉ｩ縺代↓縺ｪ繧区ュ蝣ｱ繧定ｿｽ蜉縺励※縺上□縺輔＞縲よ律譛ｬ隱槭〒縲・n\n${t}`,
+  question: t=>`莉･荳九・繝｡繝｢縺ｮ蜀・ｮｹ繧呈ｷｱ縺冗炊隗｣縺吶ｋ縺溘ａ縺ｮ蟄ｦ鄙偵・蠕ｩ鄙堤畑縺ｮ雉ｪ蝠上ｒ5縺､逕滓・縺励※縺上□縺輔＞縲よ律譛ｬ隱槭〒縲・n\n${t}`,
 };
 
 async function callAI(userPrompt) {
   const proxyUrl=localStorage.getItem(LS.PROXY)||'', m=MODELS[activeModel];
   const apiKey=localStorage.getItem(LS[activeModel.toUpperCase()])||'';
-  if (!apiKey&&!proxyUrl) throw new Error(`${m.label}のAPIキーが未設定です。⚙�E�設定から�E力してください。`);
+  if (!apiKey&&!proxyUrl) throw new Error(`${m.label}縺ｮAPI繧ｭ繝ｼ縺梧悴險ｭ螳壹〒縺吶や囮・剰ｨｭ螳壹°繧牙・蜉帙＠縺ｦ縺上□縺輔＞縲Ａ);
 
   if (activeModel==='gemini') {
     const res=await fetch(`${m.endpoint}?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:userPrompt}]}]})});
@@ -2338,7 +2338,7 @@ async function callAI(userPrompt) {
 }
 
 async function callStructureAPI(text) {
-  const prompt=`以下�E話し言葉�Eメモを、クイチE��参�Eアプリ用のチE�Eタに整琁E��てください。忁E��JSONのみ返してください:\n{"title":"一言タイトル","tags":["タグ1","タグ2"],"body":"詳細メモ","fields":[{"key":"頁E��吁E,"value":"値"}]}\nルール: title 15字以冁E tags 2、E倁E fields は構造化できるも�EだぁEなければ空配�E)\n既存タグ候裁E ${getAllTagsSorted().slice(0,10).join(',')}\nメモ: ${text}`;
+  const prompt=`莉･荳九・隧ｱ縺苓ｨ闡峨・繝｡繝｢繧偵√け繧､繝・け蜿ら・繧｢繝励Μ逕ｨ縺ｮ繝・・繧ｿ縺ｫ謨ｴ逅・＠縺ｦ縺上□縺輔＞縲ょｿ・★JSON縺ｮ縺ｿ霑斐＠縺ｦ縺上□縺輔＞:\n{"title":"荳險繧ｿ繧､繝医Ν","tags":["繧ｿ繧ｰ1","繧ｿ繧ｰ2"],"body":"隧ｳ邏ｰ繝｡繝｢","fields":[{"key":"鬆・岼蜷・,"value":"蛟､"}]}\n繝ｫ繝ｼ繝ｫ: title 15蟄嶺ｻ･蜀・ tags 2縲・蛟・ fields 縺ｯ讒矩蛹悶〒縺阪ｋ繧ゅ・縺縺・縺ｪ縺代ｌ縺ｰ遨ｺ驟榊・)\n譌｢蟄倥ち繧ｰ蛟呵｣・ ${getAllTagsSorted().slice(0,10).join(',')}\n繝｡繝｢: ${text}`;
   const result=await callAI(prompt).catch(()=>null);
   if (!result) return {title:text.slice(0,30),tags:[],body:text,fields:[]};
   try { return JSON.parse(result.replace(/```json|```/g,'').trim()); } catch(_) { return {title:text.slice(0,30),tags:[],body:text,fields:[]}; }
@@ -2354,11 +2354,11 @@ function loadSettings() {
 function saveSettings() {
   ['Claude','Gemini','OpenAI'].forEach(n=>{ const v=document.getElementById(`s${n}Key`).value.trim(); if(v) localStorage.setItem(LS[n.toUpperCase()],v); else localStorage.removeItem(LS[n.toUpperCase()]); });
   const p=document.getElementById('sProxyUrl').value.trim(); if(p) localStorage.setItem(LS.PROXY,p); else localStorage.removeItem(LS.PROXY);
-  localStorage.setItem(LS.MODEL,activeModel); updateAIBadge(); closeSettingsSheet(); showToast('設定を保存しました');
+  localStorage.setItem(LS.MODEL,activeModel); updateAIBadge(); closeSettingsSheet(); showToast('險ｭ螳壹ｒ菫晏ｭ倥＠縺ｾ縺励◆');
 }
 function renderModelSelect() {
   document.querySelectorAll('.model-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.model===activeModel));
-  const m=MODELS[activeModel]; document.getElementById('modelDetail').textContent=m?`使用モチE��: ${m.detail}`:'';
+  const m=MODELS[activeModel]; document.getElementById('modelDetail').textContent=m?`菴ｿ逕ｨ繝｢繝・Ν: ${m.detail}`:'';
 }
 function updateAIBadge() { const m=MODELS[activeModel],b=document.getElementById('aiModelBadge'); if(b) b.textContent=m?m.label:activeModel; }
 function openSettingsSheet() { loadSettings(); document.getElementById('settingsSheet').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
@@ -2370,7 +2370,7 @@ function getEditorText() { const e=document.getElementById('memoPopupEditor'); r
 
 async function runAIAction(action, customPrompt) {
   const editorText=getEditorText();
-  if (!editorText.trim()&&!customPrompt) { showToast('メモにチE��ストを入力してから実行してください'); return; }
+  if (!editorText.trim()&&!customPrompt) { showToast('繝｡繝｢縺ｫ繝・く繧ｹ繝医ｒ蜈･蜉帙＠縺ｦ縺九ｉ螳溯｡後＠縺ｦ縺上□縺輔＞'); return; }
   const prompt=customPrompt?`${customPrompt}\n\n---\n${editorText}`:AI_PROMPTS[action]?.(editorText)||editorText;
   document.getElementById('aiLoading').style.display='block';
   document.getElementById('aiResult').style.display='none';
@@ -2388,7 +2388,7 @@ function insertAIResult(replace=false) {
   const editor=document.getElementById('memoPopupEditor'); editor.focus();
   if (replace) { editor.innerHTML=lastAiResult.replace(/\n/g,'<br>'); }
   else { const hr=document.createElement('hr'); hr.style.cssText='border:none;border-top:1px solid var(--border);margin:12px 0;'; const div=document.createElement('div'); div.innerHTML=lastAiResult.replace(/\n/g,'<br>'); editor.appendChild(hr); editor.appendChild(div); editor.scrollTop=editor.scrollHeight; }
-  closeAIPanel(); showToast('メモに挿入しました');
+  closeAIPanel(); showToast('繝｡繝｢縺ｫ謖ｿ蜈･縺励∪縺励◆');
 }
 
 // Ecosystem import/export
@@ -2404,16 +2404,16 @@ async function importItemsFromPayload(items,source) {
     item.source=source; await dbPut(item);
     const idx=allItems.findIndex(i=>i.id===item.id); if(idx>=0) allItems[idx]=item; else allItems.push(item); count++;
   }
-  renderTagFilter(); renderAll(); showToast(`${source}から${count}件を受信しました`);
+  renderTagFilter(); renderAll(); showToast(`${source}縺九ｉ${count}莉ｶ繧貞女菫｡縺励∪縺励◆`);
 }
 function sendToEcosystem() {
   try {
     const payload={source:'quick-ref',exportedAt:Date.now(),items:allItems.filter(i=>!i.sensitive)};
-    localStorage.setItem(LS.TRANSFER,JSON.stringify(payload)); showToast(`${payload.items.length}件をis_transferに書き込みました`);
-  } catch(e) { showToast('送信に失敗しました�E�容量趁E��の可能性�E�E); }
+    localStorage.setItem(LS.TRANSFER,JSON.stringify(payload)); showToast(`${payload.items.length}莉ｶ繧段s_transfer縺ｫ譖ｸ縺崎ｾｼ縺ｿ縺ｾ縺励◆`);
+  } catch(e) { showToast('騾∽ｿ｡縺ｫ螟ｱ謨励＠縺ｾ縺励◆・亥ｮｹ驥剰ｶ・℃縺ｮ蜿ｯ閭ｽ諤ｧ・・); }
 }
 function checkIncomingTransfer() {
-  // ms_transfer (music-suite) �̎�����M
+  // ms_transfer (music-suite) の自動受信
   try {
     const msRaw = localStorage.getItem("ms_transfer");
     if (msRaw) {
@@ -2422,29 +2422,29 @@ function checkIncomingTransfer() {
         const now = Date.now();
         const item = {
           id: crypto.randomUUID(),
-          title: ms.title || "music-suite�f��",
-          tags: ["���y", "music-suite"],
+          title: ms.title || "music-suite素材",
+          tags: ["音楽", "music-suite"],
           body: [ms.bpm ? `BPM: ${ms.bpm}` : "", ms.key ? `Key: ${ms.key}` : "", ms.memo || ""].filter(Boolean).join("\n"),
           fields: [
             ms.bpm   ? { key: "BPM", value: String(ms.bpm) }   : null,
             ms.key   ? { key: "Key", value: ms.key }            : null,
-            ms.genre ? { key: "�W������", value: ms.genre }     : null
+            ms.genre ? { key: "ジャンル", value: ms.genre }     : null
           ].filter(Boolean),
           url: "", sensitive: false,
           createdAt: now, updatedAt: now, source: "music-suite"
         };
-        if (confirm(`music-suite����u${item.title}�v����M���܂����Bquick-ref�ɒǉ����܂����H`)) {
-          dbPut(item).then(() => { reload(); showToast("?? music-suite����ǉ����܂���"); });
+        if (confirm(`music-suiteから「${item.title}」を受信しました。quick-refに追加しますか？`)) {
+          dbPut(item).then(() => { reload(); showToast("?? music-suiteから追加しました"); });
         }
         localStorage.removeItem("ms_transfer");
       }
     }
   } catch(_) {}
-  try { const raw=localStorage.getItem(LS.TRANSFER); if (!raw) return; const p=JSON.parse(raw); if (p.source==='quick-ref') return; if (!Array.isArray(p.items)||!p.items.length) return; if (confirm(`${p.source||'他アプリ'}から${p.items.length}件のチE�Eタがあります。インポ�Eトしますか�E�`)) { importItemsFromPayload(p.items,p.source||'transfer'); localStorage.removeItem(LS.TRANSFER); } } catch(_) {}
+  try { const raw=localStorage.getItem(LS.TRANSFER); if (!raw) return; const p=JSON.parse(raw); if (p.source==='quick-ref') return; if (!Array.isArray(p.items)||!p.items.length) return; if (confirm(`${p.source||'莉悶い繝励Μ'}縺九ｉ${p.items.length}莉ｶ縺ｮ繝・・繧ｿ縺後≠繧翫∪縺吶ゅう繝ｳ繝昴・繝医＠縺ｾ縺吶°・歔)) { importItemsFromPayload(p.items,p.source||'transfer'); localStorage.removeItem(LS.TRANSFER); } } catch(_) {}
 }
 
-// ══════════════════════════════════════╁E// RICH EDITOR
-// ══════════════════════════════════════╁Efunction fmtCmd(cmd) { document.getElementById('fBody').focus(); document.execCommand(cmd,false,null); }
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// RICH EDITOR
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function fmtCmd(cmd) { document.getElementById('fBody').focus(); document.execCommand(cmd,false,null); }
 function fmtMark(color) {
   const e=document.getElementById('fBody'); e.focus(); const sel=window.getSelection(); if(!sel||sel.isCollapsed) return;
   const range=sel.getRangeAt(0), span=document.createElement('span'); span.dataset.mark=color;
@@ -2461,37 +2461,37 @@ function popupMark(color) {
 function openMemoPopup() { document.getElementById('memoPopupEditor').innerHTML=document.getElementById('fBody').innerHTML; document.getElementById('memoPopup').classList.add('open'); setTimeout(()=>document.getElementById('memoPopupEditor').focus(),300); }
 function closeMemoPopup() { document.getElementById('fBody').innerHTML=document.getElementById('memoPopupEditor').innerHTML; document.getElementById('memoPopup').classList.remove('open'); }
 
-// ══════════════════════════════════════╁E// TOAST
-// ══════════════════════════════════════╁Elet toastTimer=null;
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// TOAST
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・let toastTimer=null;
 function showToast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2200); }
 
-// ══════════════════════════════════════╁E// RELOAD
-// ══════════════════════════════════════╁Easync function reload() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// RELOAD
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・async function reload() {
   allItems=await dbGetAll(); attachmentMeta=await dbGetAllAttachmentMeta();
   if (sessionKey) await refreshDecryptedCache();
   renderTagFilter(); renderAll(); updateBackupBanner(); syncEcosystemTags(); updateReviewBadge();
 }
 
-// ══════════════════════════════════════╁E// AI VOICE PREVIEW
-// ══════════════════════════════════════╁Efunction renderAIPreview(data) {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// AI VOICE PREVIEW
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function renderAIPreview(data) {
   document.getElementById('aiTitle').value=data.title||'';
   document.getElementById('aiBody').value=data.body||'';
   const tagsRow=document.getElementById('aiTagsRow'); tagsRow.innerHTML='';
   (data.tags||[]).forEach(tag=>{ const chip=document.createElement('span'); chip.className='chip'; chip.style.cursor='pointer'; chip.textContent=`#${tag}`; chip.dataset.tag=tag; tagsRow.appendChild(chip); });
   document.getElementById('aiPreviewArea').style.display='block';
-  document.getElementById('voiceAnalyzeBtn').textContent='✨ AI で整琁E��めE;
+  document.getElementById('voiceAnalyzeBtn').textContent='笨ｨ AI 縺ｧ謨ｴ逅・☆繧・;
   document.getElementById('voiceAnalyzeBtn').disabled=false;
   if (data.fields?.length) { const ab=document.getElementById('aiBody'); const ft=data.fields.map(f=>`${f.key}: ${f.value}`).join('\n'); if (!ab.value.includes(ft)) ab.value=(ab.value+'\n\n'+ft).trim(); }
 }
 
-// ══════════════════════════════════════╁E// EVENT WIRING
-// ══════════════════════════════════════╁Efunction wireEvents() {
-  // ── QUICK INPUT DOCK ──
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// EVENT WIRING
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・function wireEvents() {
+  // 笏笏 QUICK INPUT DOCK 笏笏
   document.getElementById('fabBtn').addEventListener('click', () => { haptic(); openNew(); });
   document.getElementById('voiceFab').addEventListener('click', () => { haptic(); openVoiceModal(); });
   document.getElementById('dockCam').addEventListener('click', () => {
     haptic();
-    // シートが開いてぁE��ければ先に新規作�E
+    // 繧ｷ繝ｼ繝医′髢九＞縺ｦ縺・↑縺代ｌ縺ｰ蜈医↓譁ｰ隕丈ｽ懈・
     if (!document.getElementById('editSheet').classList.contains('open')) openNew();
     setTimeout(() => document.getElementById('imgCameraInput').click(), 200);
   });
@@ -2524,13 +2524,13 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
   document.getElementById('addFieldBtn').addEventListener('click',()=>{ draftFields.push({key:'',value:''}); renderFieldRows(); });
   document.getElementById('sensitiveToggle').addEventListener('change',e=>{ draftSensitive=e.target.checked; });
 
-  // ── 画像�Eタン�E�シート�E�E�E──
+  // 笏笏 逕ｻ蜒上・繧ｿ繝ｳ・医す繝ｼ繝亥・・・笏笏
   document.getElementById('imgPickBtn').addEventListener('click', () => { haptic(); document.getElementById('imgFileInput').click(); });
   document.getElementById('imgCameraBtn').addEventListener('click', () => { haptic(); document.getElementById('imgCameraInput').click(); });
   document.getElementById('imgSelfieBtn').addEventListener('click', () => { haptic(); document.getElementById('imgSelfieInput').click(); });
   document.getElementById('imgIllustBtn').addEventListener('click', tryImportFromIllustStudio);
 
-  // 褁E��ファイル対忁E(multiple属性あり)
+  // 隍・焚繝輔ぃ繧､繝ｫ蟇ｾ蠢・(multiple螻樊ｧ縺ゅｊ)
   const handleImgFiles = async (files) => {
     for (const f of Array.from(files)) {
       const b = await resizeImage(f); addBlobToDraft(b, f.name);
@@ -2540,17 +2540,17 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
   document.getElementById('imgCameraInput').addEventListener('change', async e => { if(e.target.files[0]){ const b=await resizeImage(e.target.files[0]); addBlobToDraft(b,e.target.files[0].name); } e.target.value=''; });
   document.getElementById('imgSelfieInput').addEventListener('change', async e => { if(e.target.files[0]){ const b=await resizeImage(e.target.files[0]); addBlobToDraft(b,e.target.files[0].name); } e.target.value=''; });
 
-  // ── 動画ボタン ──
+  // 笏笏 蜍慕判繝懊ち繝ｳ 笏笏
   document.getElementById('videoCamBtn').addEventListener('click', () => { haptic(); document.getElementById('videoCamInput').click(); });
   document.getElementById('videoPickBtn').addEventListener('click', () => { haptic(); document.getElementById('videoFileInput').click(); });
   document.getElementById('videoCamInput').addEventListener('change', e => { if(e.target.files[0]) addVideoToDraft(e.target.files[0], e.target.files[0].name); e.target.value=''; });
   document.getElementById('videoFileInput').addEventListener('change', e => { Array.from(e.target.files).forEach(f => addVideoToDraft(f, f.name)); e.target.value=''; });
 
-  // ── 画像�Eレビュー ──
+  // 笏笏 逕ｻ蜒上・繝ｬ繝薙Η繝ｼ 笏笏
   document.getElementById('imgPreviewClose').addEventListener('click',()=>{ document.getElementById('imgPreviewOverlay').classList.remove('open'); document.getElementById('imgPreviewImg').src=''; });
   document.getElementById('imgPreviewOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('imgPreviewOverlay')){ document.getElementById('imgPreviewOverlay').classList.remove('open'); document.getElementById('imgPreviewImg').src=''; } });
 
-  // ── ペ�Eスト対応！EheetBodyへのpaste eventで画像をキャチE���E�E──
+  // 笏笏 繝壹・繧ｹ繝亥ｯｾ蠢懶ｼ・heetBody縺ｸ縺ｮpaste event縺ｧ逕ｻ蜒上ｒ繧ｭ繝｣繝・メ・・笏笏
   document.querySelector('.sheet-body').addEventListener('paste', async e => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -2559,13 +2559,13 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
         e.preventDefault();
         const blob = await resizeImageBlob(item.getAsFile());
         addBlobToDraft(blob, `paste-${Date.now()}.jpg`);
-        showToast('画像を貼り付けました');
+        showToast('逕ｻ蜒上ｒ雋ｼ繧贋ｻ倥￠縺ｾ縺励◆');
         return;
       }
     }
   });
 
-  // ── 共有バナ�E ──
+  // 笏笏 蜈ｱ譛峨ヰ繝翫・ 笏笏
   document.getElementById('shareReceivedUse').addEventListener('click', () => { haptic(); useSharedText(); });
   document.getElementById('shareReceivedDismiss').addEventListener('click', () => { document.getElementById('shareReceivedBanner').classList.remove('show'); sharedText=null; });
 
@@ -2575,17 +2575,17 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
       const mimeType=MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'';
       mediaRecorder=mimeType?new MediaRecorder(stream,{mimeType}):new MediaRecorder(stream);
       mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
-      mediaRecorder.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); clearInterval(recTimerInterval); recTimerInterval=null; document.getElementById('recStatus').classList.remove('active'); const blob=new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/mp4'}); const ext=(mediaRecorder.mimeType||'audio/mp4').includes('webm')?'webm':'m4a'; addAudioToDraft(blob,`録音-${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}.${ext}`); mediaRecorder=null; recChunks=[]; };
+      mediaRecorder.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); clearInterval(recTimerInterval); recTimerInterval=null; document.getElementById('recStatus').classList.remove('active'); const blob=new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/mp4'}); const ext=(mediaRecorder.mimeType||'audio/mp4').includes('webm')?'webm':'m4a'; addAudioToDraft(blob,`骭ｲ髻ｳ-${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}.${ext}`); mediaRecorder=null; recChunks=[]; };
       mediaRecorder.start(500); document.getElementById('recStatus').classList.add('active'); document.getElementById('recTimer').textContent='00:00';
       recTimerInterval=setInterval(()=>{ recSeconds++; document.getElementById('recTimer').textContent=formatTime(recSeconds); },1000);
-    } catch(_) { showToast('マイクへのアクセスが許可されてぁE��せん、E); }
+    } catch(_) { showToast('繝槭う繧ｯ縺ｸ縺ｮ繧｢繧ｯ繧ｻ繧ｹ縺瑚ｨｱ蜿ｯ縺輔ｌ縺ｦ縺・∪縺帙ｓ縲・); }
   });
   document.getElementById('recStopBtn').addEventListener('click',()=>{ if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop(); });
   document.getElementById('musicSuiteBtn').addEventListener('click',()=>{
     let data=null;
     if (location.hash.startsWith('#import=')) { try { data=JSON.parse(atob(location.hash.slice(8))); history.replaceState(null,'',location.pathname); } catch(_) {} }
     if (!data) { for (const k of ['ms_transfer','music_transfer','ms_export']) { const r=localStorage.getItem(k); if(r){try{data=JSON.parse(r);localStorage.removeItem(k);break;}catch(_){}} } }
-    if (!data) { alert('music-suiteからの転送データが見つかりません、E); return; }
+    if (!data) { alert('music-suite縺九ｉ縺ｮ霆｢騾√ョ繝ｼ繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・); return; }
     const name=`${data.source||'music-suite'} ${data.key||''}${data.bpm?' '+data.bpm+'BPM':''}`.trim();
     const jsonBlob=new Blob([JSON.stringify(data)],{type:'application/json'});
     draftAudios.push({tempId:makeTempId(),blob:jsonBlob,url:null,name,type:'music-ref',meta:{bpm:data.bpm,key:data.key,source:data.source},isExisting:false}); renderAudioList();
@@ -2600,9 +2600,9 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
   document.getElementById('voiceModal').addEventListener('click',e=>{ if(e.target===document.getElementById('voiceModal')) closeVoiceModal(); });
   document.getElementById('voiceAnalyzeBtn').addEventListener('click',async()=>{
     const text=voiceFullText.trim(); if (!text) return;
-    document.getElementById('voiceAnalyzeBtn').disabled=true; document.getElementById('voiceAnalyzeBtn').textContent='✨ 解析中…'; stopVoiceRec();
+    document.getElementById('voiceAnalyzeBtn').disabled=true; document.getElementById('voiceAnalyzeBtn').textContent='笨ｨ 隗｣譫蝉ｸｭ窶ｦ'; stopVoiceRec();
     try { const r=await callStructureAPI(text); renderAIPreview(r); }
-    catch(e) { alert(`AI解析に失敗しました:\n${e.message}`); document.getElementById('voiceAnalyzeBtn').disabled=false; document.getElementById('voiceAnalyzeBtn').textContent='✨ AI で整琁E��めE; }
+    catch(e) { alert(`AI隗｣譫舌↓螟ｱ謨励＠縺ｾ縺励◆:\n${e.message}`); document.getElementById('voiceAnalyzeBtn').disabled=false; document.getElementById('voiceAnalyzeBtn').textContent='笨ｨ AI 縺ｧ謨ｴ逅・☆繧・; }
   });
   document.getElementById('aiSaveBtn').addEventListener('click',async()=>{
     const title=document.getElementById('aiTitle').value.trim(); if (!title) return;
@@ -2617,21 +2617,21 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
   document.getElementById('pinOverlay').addEventListener('click',()=>closePinModal(false));
   document.getElementById('pinConfirmBtn').addEventListener('click',async()=>{
     const v1=document.getElementById('pinInput1').value, v2=document.getElementById('pinInput2').value;
-    if (!v1){document.getElementById('pinError').textContent='パスコードを入力してください'; document.getElementById('pinError').style.display='block'; return;}
+    if (!v1){document.getElementById('pinError').textContent='繝代せ繧ｳ繝ｼ繝峨ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞'; document.getElementById('pinError').style.display='block'; return;}
     if (pinMode==='setup') {
-      if (v1.length<4){document.getElementById('pinError').textContent='4斁E��以上で入力してください'; document.getElementById('pinError').style.display='block'; return;}
-      if (v1!==v2){document.getElementById('pinError').textContent='確認用と一致しません'; document.getElementById('pinError').style.display='block'; return;}
+      if (v1.length<4){document.getElementById('pinError').textContent='4譁・ｭ嶺ｻ･荳翫〒蜈･蜉帙＠縺ｦ縺上□縺輔＞'; document.getElementById('pinError').style.display='block'; return;}
+      if (v1!==v2){document.getElementById('pinError').textContent='遒ｺ隱咲畑縺ｨ荳閾ｴ縺励∪縺帙ｓ'; document.getElementById('pinError').style.display='block'; return;}
       await setupPin(v1);
-    } else { const ok=await tryUnlockWithPin(v1); if (!ok){document.getElementById('pinError').textContent='パスコードが違いまぁE; document.getElementById('pinError').style.display='block'; return;} }
+    } else { const ok=await tryUnlockWithPin(v1); if (!ok){document.getElementById('pinError').textContent='繝代せ繧ｳ繝ｼ繝峨′驕輔＞縺ｾ縺・; document.getElementById('pinError').style.display='block'; return;} }
     await refreshDecryptedCache(); updateLockButton(); closePinModal(true); renderAll();
   });
   document.getElementById('pinForgotBtn').addEventListener('click',async()=>{
-    if (!confirm('パスコードをリセチE��すると保護された頁E��はすべて削除されます。続行しますか�E�E)) return;
+    if (!confirm('繝代せ繧ｳ繝ｼ繝峨ｒ繝ｪ繧ｻ繝・ヨ縺吶ｋ縺ｨ菫晁ｭｷ縺輔ｌ縺滄・岼縺ｯ縺吶∋縺ｦ蜑企勁縺輔ｌ縺ｾ縺吶らｶ夊｡後＠縺ｾ縺吶°・・)) return;
     const sensitiveItems=allItems.filter(it=>it.sensitive); for (const it of sensitiveItems) await dbDelete(it.id);
-    localStorage.removeItem(PIN_META_KEY); sessionKey=null; decryptedCache.clear(); await reload(); updateLockButton(); closePinModal(false); alert('パスコードと保護された頁E��をリセチE��しました、E);
+    localStorage.removeItem(PIN_META_KEY); sessionKey=null; decryptedCache.clear(); await reload(); updateLockButton(); closePinModal(false); alert('繝代せ繧ｳ繝ｼ繝峨→菫晁ｭｷ縺輔ｌ縺滄・岼繧偵Μ繧ｻ繝・ヨ縺励∪縺励◆縲・);
   });
 
-  // ── iCloud / Shortcuts ──
+  // 笏笏 iCloud / Shortcuts 笏笏
   document.getElementById('icloudSaveBtn').addEventListener('click', () => { haptic(); saveToiCloud(); });
   document.getElementById('icloudAutoToggleBtn').addEventListener('click', () => {
     haptic();
@@ -2666,10 +2666,10 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
   document.getElementById('exportBtn').addEventListener('click',async()=>{ closeMenu(); await doExport(); });
   document.getElementById('importBtn').addEventListener('click',()=>{ closeMenu(); document.getElementById('importFileInput').click(); });
   document.getElementById('importFileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(f){const r=await doImport(f); alert(r.msg);} e.target.value=''; });
-  document.getElementById('tagBridgeBtn').addEventListener('click',()=>{ closeMenu(); syncEcosystemTags(); const tags=getAllTagsSorted(); alert(tags.length>0?`${tags.length}件のタグをlocalStorage(ecosystem_tags)に書き込みました、En\nタグ一覧:\n${tags.map(t=>'・'+t).join('\n')}`:'タグがまだありません、E); });
+  document.getElementById('tagBridgeBtn').addEventListener('click',()=>{ closeMenu(); syncEcosystemTags(); const tags=getAllTagsSorted(); alert(tags.length>0?`${tags.length}莉ｶ縺ｮ繧ｿ繧ｰ繧値ocalStorage(ecosystem_tags)縺ｫ譖ｸ縺崎ｾｼ縺ｿ縺ｾ縺励◆縲・n\n繧ｿ繧ｰ荳隕ｧ:\n${tags.map(t=>'繝ｻ'+t).join('\n')}`:'繧ｿ繧ｰ縺後∪縺縺ゅｊ縺ｾ縺帙ｓ縲・); });
   document.getElementById('kanseiExportBtn').addEventListener('click',()=>{ closeMenu(); sendToKansei(themeTag); });
   document.getElementById('iconGenBtn').addEventListener('click',()=>{ closeMenu(); openIconModal(); });
-  document.getElementById('themeUrlBtn').addEventListener('click',()=>{ closeMenu(); const tags=getAllTagsSorted(); if(!tags.length){alert('タグがまだありません、E);return;} const base=location.origin+location.pathname; alert(`チE�Eマ別URL一覧\n\n${tags.map(t=>`${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`).join('\n\n')}`); });
+  document.getElementById('themeUrlBtn').addEventListener('click',()=>{ closeMenu(); const tags=getAllTagsSorted(); if(!tags.length){alert('繧ｿ繧ｰ縺後∪縺縺ゅｊ縺ｾ縺帙ｓ縲・);return;} const base=location.origin+location.pathname; alert(`繝・・繝槫挨URL荳隕ｧ\n\n${tags.map(t=>`${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`).join('\n\n')}`); });
   document.getElementById('backupBannerBtn').addEventListener('click', doExport);
 
   document.getElementById('iconOverlay').addEventListener('click', closeIconModal);
@@ -2680,13 +2680,13 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
 
   document.getElementById('themeBannerIconBtn').addEventListener('click',()=>{ if(!themeTag) return; const [c1,c2]=getTagColors(themeTag); document.getElementById('iconEmoji').value=getTagEmoji(themeTag); document.getElementById('iconBgColor').value=c1; document.getElementById('iconBgColor2').value=c2; document.getElementById('iconFgColor').value='#FFFFFF'; openIconModal(); });
   document.getElementById('themeBannerKanseiBtn').addEventListener('click',()=>sendToKansei(themeTag));
-  document.getElementById('themeBannerAddBtn').addEventListener('click',()=>{ const tag=themeTag||''; const url=`${location.origin+location.pathname}?tag=${encodeURIComponent(tag)}`; document.getElementById('addGuideUrl').textContent=url; document.getElementById('addGuideTitle').textContent=`📱 、E${tag}」をホ�Eム画面に追加`; document.getElementById('addGuide').classList.add('open'); });
+  document.getElementById('themeBannerAddBtn').addEventListener('click',()=>{ const tag=themeTag||''; const url=`${location.origin+location.pathname}?tag=${encodeURIComponent(tag)}`; document.getElementById('addGuideUrl').textContent=url; document.getElementById('addGuideTitle').textContent=`導 縲・${tag}縲阪ｒ繝帙・繝逕ｻ髱｢縺ｫ霑ｽ蜉`; document.getElementById('addGuide').classList.add('open'); });
   document.getElementById('addGuideClose').addEventListener('click',()=>document.getElementById('addGuide').classList.remove('open'));
   document.getElementById('addGuide').addEventListener('click',e=>{ if(e.target===document.getElementById('addGuide')) document.getElementById('addGuide').classList.remove('open'); });
 }
 
-// ══════════════════════════════════════╁E// INIT
-// ══════════════════════════════════════╁Easync function init() {
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・// INIT
+// 笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊絶武笊・async function init() {
   try {
     await openDB();
     allItems = await dbGetAll();
@@ -2708,7 +2708,7 @@ function showToast(msg) { const el=document.getElementById('toast'); el.textCont
     updateReviewBadge();
   } catch(err) {
     console.error(err);
-    document.getElementById('loadingOverlay').textContent = 'DB起動に失敗しました。リロードしてください、E;
+    document.getElementById('loadingOverlay').textContent = 'DB襍ｷ蜍輔↓螟ｱ謨励＠縺ｾ縺励◆縲ゅΜ繝ｭ繝ｼ繝峨＠縺ｦ縺上□縺輔＞縲・;
     return;
   }
   document.getElementById('loadingOverlay').classList.add('hidden');
