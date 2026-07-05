@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="apple-touch-startup-image" href="icon-512.png">
-<title>クイック参照</title>
+<title>クイチE��参�E</title>
 <style>
 :root {
   --bg: #F7F7F8;
@@ -167,12 +167,12 @@ mark { background: rgba(255,214,0,0.45); border-radius: 2px; padding: 0 1px; }
 }
 
 /* ── iPhone FORM OPTIMIZATIONS ── */
-/* テキスト入力：iOS 自動ズームを防ぎつつ快適に */
+/* チE��スト�E力：iOS 自動ズームを防ぎつつ快適に */
 input[type="text"], input[type="search"], input[type="url"],
 input[type="password"], textarea {
-  font-size: 16px !important; /* 16px未満だとiOSが自動ズームする */
+  font-size: 16px !important; /* 16px未満だとiOSが�E動ズームする */
 }
-/* タグ入力など素早く打てるよう最適化 */
+/* タグ入力など素早く打てるよぁE��適匁E*/
 #tagInput    { autocapitalize: none; }
 #fTitle      { }
 #searchInput { }
@@ -731,63 +731,63 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 
 <header>
   <div class="header-top">
-    <h1>クイック参照</h1>
+    <h1>クイチE��参�E</h1>
     <div class="header-actions">
       <span id="countLabel">0件</span>
-      <button class="review-btn" id="reviewBtn" aria-label="デイリーレビュー">🗓<span class="review-badge" id="reviewBadge" style="display:none;"></span></button>
-      <button class="icon-btn" id="lockToggleBtn" title="ロック">🔑</button>
-      <button class="icon-btn" id="settingsBtn" title="設定">⚙️</button>
+      <button class="review-btn" id="reviewBtn" aria-label="チE��リーレビュー">🗓<span class="review-badge" id="reviewBadge" style="display:none;"></span></button>
+      <button class="icon-btn" id="lockToggleBtn" title="ロチE��">🔑</button>
+      <button class="icon-btn" id="settingsBtn" title="設宁E>⚙︁E/button>
       <button class="icon-btn" id="menuBtn" title="メニュー">⋯</button>
     </div>
   </div>
   <div class="search-row">
     <span class="search-icon">🔍</span>
     <input type="search" id="searchInput" placeholder="タイトル・メモ・タグで検索" autocomplete="off" autocorrect="off">
-    <button class="search-clear" id="searchClear">✕</button>
+    <button class="search-clear" id="searchClear">✁E/button>
   </div>
   <div class="tag-filter-row" id="tagFilterRow">
     <button class="filter-chip active" data-tag="__all__">すべて</button>
-    <button class="filter-chip" id="linkFilterBtn">🔗 リンク集</button>
+    <button class="filter-chip" id="linkFilterBtn">🔗 リンク雁E/button>
   </div>
 </header>
 
 <main>
-  <!-- 共有シートから受け取ったテキストの通知 -->
+  <!-- 共有シートから受け取ったテキスト�E通知 -->
   <div class="share-received-banner" id="shareReceivedBanner">
     <span style="font-size:20px;">📨</span>
     <span class="share-received-text" id="shareReceivedText">共有テキストを受信しました</span>
-    <button class="share-received-use" id="shareReceivedUse">新規作成に使う</button>
-    <button class="share-received-dismiss" id="shareReceivedDismiss">✕</button>
+    <button class="share-received-use" id="shareReceivedUse">新規作�Eに使ぁE/button>
+    <button class="share-received-dismiss" id="shareReceivedDismiss">✁E/button>
   </div>
 
   <div id="themeBanner" style="display:none;" class="theme-banner">
     <span class="theme-banner-icon" id="themeBannerIcon">📋</span>
     <div class="theme-banner-text">
-      <span id="themeBannerLabel">テーマ</span>
+      <span id="themeBannerLabel">チE�EチE/span>
       <div class="theme-banner-sub" id="themeBannerSub">絞り込み中</div>
     </div>
     <div class="theme-banner-actions">
       <button class="theme-banner-btn outline" id="themeBannerIconBtn">🎨 アイコン</button>
       <button class="theme-banner-btn outline" id="themeBannerKanseiBtn">📝 kansei</button>
-      <button class="theme-banner-btn" id="themeBannerAddBtn">+ 追加方法</button>
+      <button class="theme-banner-btn" id="themeBannerAddBtn">+ 追加方況E/button>
     </div>
   </div>
   <div id="backupBanner" style="display:none;" class="backup-banner">
-    <span>⚠️</span>
-    <span class="backup-banner-text" id="backupBannerText">バックアップを取ってください</span>
-    <button class="backup-banner-btn" id="backupBannerBtn">今すぐ</button>
+    <span>⚠�E�E/span>
+    <span class="backup-banner-text" id="backupBannerText">バックアチE�Eを取ってください</span>
+    <button class="backup-banner-btn" id="backupBannerBtn">今すぁE/button>
   </div>
-  <div class="empty" id="emptyState" style="display:none;">まだ何もありません。<br>右下の＋から追加してください。</div>
+  <div class="empty" id="emptyState" style="display:none;">まだ何もありません、Ebr>右下�E�E�から追加してください、E/div>
   <div id="cardList"></div>
 </main>
 
 <!-- QUICK INPUT DOCK -->
 <div class="quick-dock" id="quickDock">
-  <button class="dock-btn dock-mic"   id="voiceFab"  aria-label="音声入力">🎤<span class="dock-label">音声</span></button>
+  <button class="dock-btn dock-mic"   id="voiceFab"  aria-label="音声入劁E>🎤<span class="dock-label">音声</span></button>
   <button class="dock-btn dock-cam"   id="dockCam"   aria-label="カメラ">📷<span class="dock-label">カメラ</span></button>
   <button class="dock-btn dock-photo" id="dockPhoto"  aria-label="写真">🖼<span class="dock-label">写真</span></button>
   <button class="dock-btn dock-video" id="dockVideo"  aria-label="動画">🎬<span class="dock-label">動画</span></button>
-  <button class="dock-btn dock-add"   id="fabBtn"    aria-label="追加">＋<span class="dock-label">追加</span></button>
+  <button class="dock-btn dock-add"   id="fabBtn"    aria-label="追加">�E�Espan class="dock-label">追加</span></button>
 </div>
 
 <!-- hidden file inputs -->
@@ -808,18 +808,18 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     </div>
     <div class="voice-actions">
       <button class="voice-stop-btn" id="voiceStopBtn">⏹ 停止</button>
-      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>✨ AI で整理する</button>
+      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>✨ AI で整琁E��めE/button>
     </div>
     <div id="aiPreviewArea" style="display:none;">
       <div class="ai-preview">
-        <div class="ai-preview-header">🤖 AI が整理した内容</div>
+        <div class="ai-preview-header">🤁EAI が整琁E��た�E容</div>
         <div class="ai-preview-body">
           <div class="ai-field"><div class="ai-field-label">タイトル</div><div class="ai-field-value"><input type="text" id="aiTitle"></div></div>
           <div class="ai-field"><div class="ai-field-label">タグ</div><div class="ai-field-value ai-tags-row" id="aiTagsRow"></div></div>
           <div class="ai-field"><div class="ai-field-label">メモ</div><div class="ai-field-value"><textarea id="aiBody"></textarea></div></div>
         </div>
       </div>
-      <button class="voice-save-btn" id="aiSaveBtn">💾 この内容で保存</button>
+      <button class="voice-save-btn" id="aiSaveBtn">💾 こ�E冁E��で保孁E/button>
     </div>
     <button class="voice-cancel-btn" id="voiceCancelBtn">キャンセル</button>
   </div>
@@ -832,17 +832,17 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
   <div class="sheet-header">
     <button id="cancelBtn">キャンセル</button>
     <h2 id="sheetTitle">新規追加</h2>
-    <button class="save" id="saveBtn">保存</button>
+    <button class="save" id="saveBtn">保孁E/button>
   </div>
   <div class="sheet-body">
     <label class="field-label">タイトル</label>
-    <input type="text" id="fTitle" placeholder="タイトルを入力" maxlength="100"
+    <input type="text" id="fTitle" placeholder="タイトルを�E劁E maxlength="100"
       autocapitalize="sentences" autocorrect="on" spellcheck="true"
       enterkeyhint="next" inputmode="text">
 
     <label class="field-label">タグ</label>
     <div class="tag-input-row">
-      <input type="text" id="tagInput" placeholder="タグを入力" maxlength="30"
+      <input type="text" id="tagInput" placeholder="タグを�E劁E maxlength="30"
         autocapitalize="none" autocorrect="off" spellcheck="false"
         enterkeyhint="done" inputmode="text">
       <button id="tagAddBtn">追加</button>
@@ -852,8 +852,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 
     <div class="toggle-row" style="margin-top:16px;">
       <div class="toggle-row-text">
-        <span class="toggle-row-title">個人情報として保護</span>
-        <span class="toggle-row-desc">メモ・構造化項目を暗号化します(タイトル・タグは保護されません)</span>
+        <span class="toggle-row-title">個人惁E��として保護</span>
+        <span class="toggle-row-desc">メモ・構造化頁E��を暗号化しまぁEタイトル・タグは保護されません)</span>
       </div>
       <label class="switch">
         <input type="checkbox" id="sensitiveToggle">
@@ -861,10 +861,10 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
       </label>
     </div>
 
-    <label class="field-label">URL（リンク集用・任意）</label>
+    <label class="field-label">URL�E�リンク雁E��・任意！E/label>
     <div class="url-field-row">
       <input type="text" id="inputUrl" placeholder="https://...">
-      <button type="button" class="open-link-btn" id="previewUrlBtn">↗</button>
+      <button type="button" class="open-link-btn" id="previewUrlBtn">ↁE/button>
     </div>
 
     <label class="field-label">メモ</label>
@@ -879,14 +879,14 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
         <button type="button" onclick="fmtMark('pink')"   style="font-size:16px;">🔴</button>
         <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
       </div>
-      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="内容を入力"
+      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="冁E��を�E劁E
         autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
       <button type="button" class="expand-btn" id="expandMemoBtn">⛶ 全画面</button>
     </div>
 
-    <label class="field-label">構造化項目（任意）</label>
+    <label class="field-label">構造化頁E���E�任意！E/label>
     <div id="fieldRows"></div>
-    <button class="add-field-btn" id="addFieldBtn" type="button">+ 項目を追加</button>
+    <button class="add-field-btn" id="addFieldBtn" type="button">+ 頁E��を追加</button>
 
     <label class="field-label">📷 写真・動画</label>
     <div class="media-section">
@@ -900,8 +900,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
         <button type="button" class="img-add-btn" id="videoPickBtn" style="color:#FF9500;border-color:#FF9500;">📂 動画ライブラリ</button>
         <button type="button" class="img-add-btn bridge" id="imgIllustBtn">🎨 illust-studio</button>
       </div>
-      <!-- iOSペーストヒント -->
-      <p class="paste-hint">💡 長押し → ペーストでクリップボードから貼り付けも可能</p>
+      <!-- iOSペ�EストヒンチE-->
+      <p class="paste-hint">💡 長押ぁEↁEペ�EストでクリチE�Eボ�Eドから貼り付けも可能</p>
       <input type="file" id="imgSelfieInput" accept="image/*" capture="user" style="display:none">
       <div class="img-thumbs" id="imgThumbs"></div>
       <div id="videoList"></div>
@@ -910,7 +910,7 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <label class="field-label">🎙 音声・録音</label>
     <div class="media-section">
       <div class="audio-add-row">
-        <button type="button" class="audio-add-btn" id="recStartBtn">🎙 録音開始</button>
+        <button type="button" class="audio-add-btn" id="recStartBtn">🎙 録音開姁E/button>
         <button type="button" class="audio-add-btn music" id="musicSuiteBtn">🎵 music-suite</button>
       </div>
       <div class="rec-status" id="recStatus">
@@ -921,44 +921,44 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
       <div id="audioList"></div>
     </div>
 
-    <label class="field-label">🔗 関連項目</label>
+    <label class="field-label">🔗 関連頁E��</label>
     <div id="relatedSection"></div>
-    <button type="button" class="ai-related-btn" id="aiRelatedBtn">✨ AIでさらに探す</button>
+    <button type="button" class="ai-related-btn" id="aiRelatedBtn">✨ AIでさらに探ぁE/button>
 
     <div class="danger-zone" id="dangerZone" style="display:none;">
-      <button class="delete-btn" id="deleteBtn">この項目を削除</button>
+      <button class="delete-btn" id="deleteBtn">こ�E頁E��を削除</button>
     </div>
   </div>
 </div>
 
 <div class="img-preview-overlay" id="imgPreviewOverlay">
-  <button class="img-preview-close" id="imgPreviewClose">✕</button>
+  <button class="img-preview-close" id="imgPreviewClose">✁E/button>
   <img id="imgPreviewImg" src="" alt="">
 </div>
 
 <div class="overlay" id="pinOverlay" style="z-index:40;"></div>
 <div class="pin-modal" id="pinModal">
-  <h3 id="pinModalTitle">パスコードを設定</h3>
-  <p class="pin-desc" id="pinModalDesc">個人情報として保護する項目のパスコードです。</p>
-  <input type="password" id="pinInput1" placeholder="パスコード" autocomplete="off">
-  <input type="password" id="pinInput2" placeholder="確認のため再入力" autocomplete="off" style="display:none;">
+  <h3 id="pinModalTitle">パスコードを設宁E/h3>
+  <p class="pin-desc" id="pinModalDesc">個人惁E��として保護する頁E��のパスコードです、E/p>
+  <input type="password" id="pinInput1" placeholder="パスコーチE autocomplete="off">
+  <input type="password" id="pinInput2" placeholder="確認�Eため再�E劁E autocomplete="off" style="display:none;">
   <p class="pin-error" id="pinError" style="display:none;"></p>
   <div class="pin-actions">
     <button type="button" id="pinCancelBtn">キャンセル</button>
-    <button type="button" id="pinConfirmBtn" class="primary">設定する</button>
+    <button type="button" id="pinConfirmBtn" class="primary">設定すめE/button>
   </div>
-  <button type="button" id="pinForgotBtn" class="pin-forgot" style="display:none;">パスコードを忘れた場合</button>
+  <button type="button" id="pinForgotBtn" class="pin-forgot" style="display:none;">パスコードを忘れた場吁E/button>
 </div>
 
 <div class="sheet" id="settingsSheet" style="z-index:35;">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <button id="settingsCancelBtn">閉じる</button>
-    <h2>設定 / AI連携</h2>
-    <button class="save" id="settingsSaveBtn">保存</button>
+    <button id="settingsCancelBtn">閉じめE/button>
+    <h2>設宁E/ AI連携</h2>
+    <button class="save" id="settingsSaveBtn">保孁E/button>
   </div>
   <div class="sheet-body">
-    <label class="field-label">🤖 AIモデル選択</label>
+    <label class="field-label">🤁EAIモチE��選抁E/label>
     <div id="modelSelect" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
       <button class="model-btn" data-model="claude">Claude</button>
       <button class="model-btn" data-model="gemini">Gemini</button>
@@ -971,33 +971,33 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <input type="password" id="sGeminiKey" placeholder="AIza..." autocomplete="off">
     <label class="field-label">OpenAI APIキー</label>
     <input type="password" id="sOpenAIKey" placeholder="sk-..." autocomplete="off">
-    <label class="field-label">Proxyサーバー URL</label>
+    <label class="field-label">Proxyサーバ�E URL</label>
     <input type="url" id="sProxyUrl" placeholder="https://your-worker.workers.dev" autocomplete="off">
-    <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">空欄の場合は各APIに直接リクエスト</p>
-    <label class="field-label" style="margin-top:24px;">☁️ iCloud Drive 連携</label>
+    <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">空欁E�E場合�E各APIに直接リクエスチE/p>
+    <label class="field-label" style="margin-top:24px;">☁E��EiCloud Drive 連携</label>
     <div style="background:rgba(0,122,255,0.06);border:1px solid rgba(0,122,255,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
-      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;">自動バックアップ先</p>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">iCloud Drive → ファイルアプリ に自動保存します。MacBookでもFinderからアクセス可能になります。</p>
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;">自動バチE��アチE�E允E/p>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">iCloud Drive ↁEファイルアプリ に自動保存します、EacBookでめEinderからアクセス可能になります、E/p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="icloudSaveBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">☁️ 今すぐiCloudに保存</button>
-        <button id="icloudAutoToggleBtn" style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;" id="icloudAutoBtn">⏰ 自動保存設定</button>
+        <button id="icloudSaveBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">☁E��E今すぐiCloudに保孁E/button>
+        <button id="icloudAutoToggleBtn" style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;" id="icloudAutoBtn">⏰ 自動保存設宁E/button>
       </div>
       <div id="icloudStatus" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
     </div>
 
     <div style="background:rgba(52,199,89,0.06);border:1px solid rgba(52,199,89,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
-      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">📱 ホーム画面ショートカット（Siri連携）</p>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">「Hey Siri、クイック参照に追加」で音声登録できます。ホーム画面アイコンの長押しでも起動可能。</p>
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">📱 ホ�Eム画面ショートカチE���E�Eiri連携�E�E/p>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;">「Hey Siri、クイチE��参�Eに追加」で音声登録できます。�Eーム画面アイコンの長押しでも起動可能、E/p>
       <button id="siriShortcutBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;">🔗 Shortcuts設定ガイドを表示</button>
     </div>
 
     <div style="background:rgba(175,82,222,0.06);border:1px solid rgba(175,82,222,0.2);border-radius:12px;padding:14px;margin-bottom:8px;">
-      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">🖥 MacBook到着後（秋〜）</p>
-      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">同じSafariでURLを開くだけで即同期。iCloud DriveのJSONをFinderから開いてインポートも可能。Universal Clipboardでコピペも繋がります。</p>
+      <p style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:6px;">🖥 MacBook到着後（秋〜！E/p>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">同じSafariでURLを開くだけで即同期。iCloud DriveのJSONをFinderから開いてインポ�Eトも可能。Universal Clipboardでコピ�Eも繋がります、E/p>
     </div>
 
-    <label class="field-label" style="margin-top:16px;">📤 エコシステム連携</label>
-    <button id="sendToEcoBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:15px;color:var(--accent);font-weight:600;cursor:pointer;">全データを他アプリへ送信 (is_transfer)</button>
+    <label class="field-label" style="margin-top:16px;">📤 エコシスチE��連携</label>
+    <button id="sendToEcoBtn" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:15px;color:var(--accent);font-weight:600;cursor:pointer;">全チE�Eタを他アプリへ送信 (is_transfer)</button>
     <p style="font-size:12px;color:var(--text-secondary);margin-top:6px;">music-suite / kansei / illust-studio と共有する場合に使用</p>
   </div>
 </div>
@@ -1007,30 +1007,30 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <span style="font-size:13px;font-weight:700;">AI</span>
     <span id="aiModelBadge" style="font-size:11px;background:rgba(0,122,255,0.12);color:var(--accent);border-radius:100px;padding:2px 10px;font-weight:700;"></span>
     <div style="flex:1;"></div>
-    <button id="aiPanelClose" style="background:none;border:none;font-size:18px;color:var(--text-secondary);padding:4px;cursor:pointer;">✕</button>
+    <button id="aiPanelClose" style="background:none;border:none;font-size:18px;color:var(--text-secondary);padding:4px;cursor:pointer;">✁E/button>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-    <button class="ai-action-btn" data-action="summarize">📝 要約</button>
-    <button class="ai-action-btn" data-action="organize">🗂 整理</button>
+    <button class="ai-action-btn" data-action="summarize">📝 要紁E/button>
+    <button class="ai-action-btn" data-action="organize">🗂 整琁E/button>
     <button class="ai-action-btn" data-action="expand">✨ 補足</button>
-    <button class="ai-action-btn" data-action="question">❓ 質問生成</button>
+    <button class="ai-action-btn" data-action="question">❁E質問生戁E/button>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:10px;">
-    <input type="text" id="aiCustomPrompt" placeholder="カスタム指示を入力…" style="flex:1;font-size:15px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-family:inherit;color:var(--text);">
+    <input type="text" id="aiCustomPrompt" placeholder="カスタム持E��を�E力…" style="flex:1;font-size:15px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-family:inherit;color:var(--text);">
     <button id="aiCustomSend" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;">送信</button>
   </div>
   <div id="aiResult" style="display:none;background:var(--bg);border-radius:10px;padding:12px;font-size:14px;line-height:1.7;max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
   <div id="aiResultActions" style="display:none;gap:8px;margin-top:8px;flex-wrap:wrap;">
     <button id="aiInsertBtn" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;">↩ メモに挿入</button>
-    <button id="aiReplaceBtn" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);">置換</button>
+    <button id="aiReplaceBtn" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);">置揁E/button>
   </div>
-  <div id="aiLoading" style="display:none;text-align:center;padding:16px;color:var(--text-secondary);font-size:14px;">⏳ 生成中</div>
+  <div id="aiLoading" style="display:none;text-align:center;padding:16px;color:var(--text-secondary);font-size:14px;">⏳ 生�E中</div>
 </div>
 
 <div class="memo-popup" id="memoPopup">
   <div class="memo-popup-header">
-    <button id="memoPopupClose">完了</button>
-    <h2>メモ編集</h2>
+    <button id="memoPopupClose">完亁E/button>
+    <h2>メモ編雁E/h2>
     <div style="display:flex;gap:8px;align-items:center;">
       <button id="memoAiBtn" style="background:rgba(0,122,255,0.1);border:none;border-radius:8px;padding:6px 12px;font-size:13px;color:var(--accent);font-weight:700;cursor:pointer;">✦ AI</button>
       <button id="memoPopupClear" style="color:var(--text-secondary);font-size:13px;background:none;border:none;cursor:pointer;">書式クリア</button>
@@ -1047,7 +1047,7 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
     <span class="sep"></span>
     <button type="button" onclick="popupFmt('insertUnorderedList')" style="font-size:16px;">≡</button>
   </div>
-  <div class="memo-popup-editor" id="memoPopupEditor" contenteditable="true" data-placeholder="内容を入力…"
+  <div class="memo-popup-editor" id="memoPopupEditor" contenteditable="true" data-placeholder="冁E��を�E力…"
     autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 </div>
 
@@ -1055,8 +1055,8 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
   <div class="review-sheet">
     <div class="review-header">
       <div class="review-header-top">
-        <span class="review-title">🗓 デイリーレビュー</span>
-        <button class="review-close-btn" id="reviewCloseBtn">✕</button>
+        <span class="review-title">🗓 チE��リーレビュー</span>
+        <button class="review-close-btn" id="reviewCloseBtn">✁E/button>
       </div>
       <div class="review-progress-track"><div class="review-progress-fill" id="reviewProgressFill" style="width:0%"></div></div>
       <div class="review-counter"><span id="reviewCounterText">0 / 0</span><span id="reviewStreakLabel"></span></div>
@@ -1068,81 +1068,81 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 <div class="overlay" id="menuOverlay"></div>
 <div class="action-sheet" id="menuSheet">
   <div class="action-sheet-handle"></div>
-  <h3>データ管理</h3>
+  <h3>チE�Eタ管琁E/h3>
   <button type="button" class="action-btn" id="icloudMenuBtn">
-    <span class="action-icon">☁️</span>
-    <span class="action-btn-inner"><span class="action-label">iCloud Driveに保存</span><span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バックアップ</span></span>
+    <span class="action-icon">☁E��E/span>
+    <span class="action-btn-inner"><span class="action-label">iCloud Driveに保孁E/span><span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バチE��アチE�E</span></span>
   </button>
   <button type="button" class="action-btn" id="exportBtn">
     <span class="action-icon">📤</span>
-    <span class="action-btn-inner"><span class="action-label">JSONエクスポート</span><span class="action-desc">全データをファイルに書き出し</span></span>
+    <span class="action-btn-inner"><span class="action-label">JSONエクスポ�EチE/span><span class="action-desc">全チE�Eタをファイルに書き�EぁE/span></span>
   </button>
   <button type="button" class="action-btn" id="importBtn">
     <span class="action-icon">📥</span>
-    <span class="action-btn-inner"><span class="action-label">JSONインポート</span><span class="action-desc">バックアップから復元・マージ</span></span>
+    <span class="action-btn-inner"><span class="action-label">JSONインポ�EチE/span><span class="action-desc">バックアチE�Eから復允E�Eマ�Eジ</span></span>
   </button>
   <button type="button" class="action-btn" id="tagBridgeBtn">
     <span class="action-icon">🔗</span>
-    <span class="action-btn-inner"><span class="action-label">タグを他アプリと共有</span><span class="action-desc">illust-studio / music-suite などに同期</span></span>
+    <span class="action-btn-inner"><span class="action-label">タグを他アプリと共朁E/span><span class="action-desc">illust-studio / music-suite などに同期</span></span>
   </button>
   <button type="button" class="action-btn" id="kanseiExportBtn">
     <span class="action-icon">📝</span>
-    <span class="action-btn-inner"><span class="action-label">素材を kansei に送る</span><span class="action-desc">表示中の項目を旅行記原稿生成ツールへ</span></span>
+    <span class="action-btn-inner"><span class="action-label">素材を kansei に送る</span><span class="action-desc">表示中の頁E��を旅行記原稿生�EチE�Eルへ</span></span>
   </button>
   <button type="button" class="action-btn" id="iconGenBtn">
     <span class="action-icon">🎨</span>
-    <span class="action-btn-inner"><span class="action-label">アイコンを生成・ダウンロード</span><span class="action-desc">ホーム画面用 icon-192.png / icon-512.png</span></span>
+    <span class="action-btn-inner"><span class="action-label">アイコンを生成�EダウンローチE/span><span class="action-desc">ホ�Eム画面用 icon-192.png / icon-512.png</span></span>
   </button>
   <button type="button" class="action-btn" id="themeUrlBtn">
     <span class="action-icon">📱</span>
-    <span class="action-btn-inner"><span class="action-label">テーマ別URL一覧を表示</span><span class="action-desc">タグごとのホーム画面追加用URL</span></span>
+    <span class="action-btn-inner"><span class="action-label">チE�Eマ別URL一覧を表示</span><span class="action-desc">タグごとのホ�Eム画面追加用URL</span></span>
   </button>
 </div>
 
 <div class="add-guide" id="addGuide">
   <div class="add-guide-sheet">
-    <h3 id="addGuideTitle">📱 ホーム画面に追加する方法</h3>
+    <h3 id="addGuideTitle">📱 ホ�Eム画面に追加する方況E/h3>
     <div class="add-guide-url" id="addGuideUrl"></div>
-    <div class="add-guide-step"><div class="add-guide-num">1</div><p>上のURLをSafariで開く</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">2</div><p>Safari下部の<strong>共有ボタン(□↑)</strong>をタップ</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">3</div><p><strong>「ホーム画面に追加」</strong>を選択</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">4</div><p>名前を確認して<strong>「追加」</strong>をタップ</p></div>
-    <button type="button" class="add-guide-close" id="addGuideClose">閉じる</button>
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>上�EURLをSafariで開く</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>Safari下部の<strong>共有�Eタン(□ↁE</strong>をタチE�E</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p><strong>「�Eーム画面に追加、E/strong>を選抁E/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p>名前を確認して<strong>「追加、E/strong>をタチE�E</p></div>
+    <button type="button" class="add-guide-close" id="addGuideClose">閉じめE/button>
   </div>
 </div>
 
 <div class="overlay" id="iconOverlay" style="z-index:40;"></div>
 <div class="icon-modal" id="iconModal">
-  <h3>🎨 アイコンを生成</h3>
+  <h3>🎨 アイコンを生戁E/h3>
   <div class="icon-preview-row">
-    <div class="icon-preview-wrap"><canvas id="iconCanvas192" width="192" height="192" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">192×192</div></div>
-    <div class="icon-preview-wrap"><canvas id="iconCanvas512" width="512" height="512" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">512×512</div></div>
+    <div class="icon-preview-wrap"><canvas id="iconCanvas192" width="192" height="192" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">192ÁE92</div></div>
+    <div class="icon-preview-wrap"><canvas id="iconCanvas512" width="512" height="512" style="width:96px;height:96px;"></canvas><div class="icon-preview-label">512ÁE12</div></div>
   </div>
   <div class="icon-controls">
-    <div class="icon-control-row"><label>絵文字/文字</label><input type="text" id="iconEmoji" value="参" maxlength="4" placeholder="参"></div>
-    <div class="icon-control-row"><label>背景色</label><input type="color" id="iconBgColor" value="#007AFF"><input type="color" id="iconBgColor2" value="#005ECB" title="グラデーション終端色"><span style="font-size:12px;color:var(--text-secondary);">グラデ</span></div>
-    <div class="icon-control-row"><label>文字色</label><input type="color" id="iconFgColor" value="#FFFFFF"></div>
-    <div class="icon-control-row"><label>文字サイズ</label><input type="range" id="iconFontSize" min="20" max="90" value="55"></div>
+    <div class="icon-control-row"><label>絵斁E��E斁E��E/label><input type="text" id="iconEmoji" value="叁E maxlength="4" placeholder="叁E></div>
+    <div class="icon-control-row"><label>背景色</label><input type="color" id="iconBgColor" value="#007AFF"><input type="color" id="iconBgColor2" value="#005ECB" title="グラチE�Eション終端色"><span style="font-size:12px;color:var(--text-secondary);">グラチE/span></div>
+    <div class="icon-control-row"><label>斁E��色</label><input type="color" id="iconFgColor" value="#FFFFFF"></div>
+    <div class="icon-control-row"><label>斁E��サイズ</label><input type="range" id="iconFontSize" min="20" max="90" value="55"></div>
   </div>
   <div class="icon-dl-row">
-    <button type="button" class="icon-dl-btn" id="iconDl192">↓ 192px</button>
-    <button type="button" class="icon-dl-btn" id="iconDl512">↓ 512px</button>
+    <button type="button" class="icon-dl-btn" id="iconDl192">ↁE192px</button>
+    <button type="button" class="icon-dl-btn" id="iconDl512">ↁE512px</button>
   </div>
-  <button type="button" class="icon-modal-close" id="iconModalClose">閉じる</button>
+  <button type="button" class="icon-modal-close" id="iconModalClose">閉じめE/button>
 </div>
 
 <!-- iCLOUD GUIDE MODAL -->
 <div class="add-guide" id="icloudGuide">
   <div class="add-guide-sheet">
-    <h3>☁️ iCloud Drive に保存する方法</h3>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">ダウンロードされたファイルを「ファイル」アプリでiCloud Driveに移動してください。MacBookからもFinderでアクセスできます。</p>
+    <h3>☁E��EiCloud Drive に保存する方況E/h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">ダウンロードされたファイルを「ファイル」アプリでiCloud Driveに移動してください、EacBookからめEinderでアクセスできます、E/p>
     <div class="add-guide-url" id="icloudGuideFilename" style="font-size:13px;word-break:break-all;"></div>
-    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ダウンロードフォルダに保存されます</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">2</div><p>「<strong>ファイル</strong>」アプリを開く → 「最近使った項目」</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ファイルを長押し → <strong>「移動」</strong> をタップ</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">4</div><p><strong>iCloud Drive</strong> → 任意のフォルダを選択して移動</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">5</div><p>MacBook到着後は Finder → iCloud Drive から即アクセス可能</p></div>
-    <button type="button" class="add-guide-close" id="icloudGuideClose">閉じる</button>
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ダウンロードフォルダに保存されまぁE/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>、Estrong>ファイル</strong>」アプリを開ぁEↁE「最近使った頁E��、E/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ファイルを長押ぁEↁE<strong>「移動、E/strong> をタチE�E</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p><strong>iCloud Drive</strong> ↁE任意�Eフォルダを選択して移勁E/p></div>
+    <div class="add-guide-step"><div class="add-guide-num">5</div><p>MacBook到着後�E Finder ↁEiCloud Drive から即アクセス可能</p></div>
+    <button type="button" class="add-guide-close" id="icloudGuideClose">閉じめE/button>
   </div>
 </div>
 
@@ -1150,13 +1150,22 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus,
 
 <div class="toast" id="toast"></div>
 
+<script src="./shared/sync-common.js"></script>
+<script src="./shared/cloud-sync.js"></script>
+<script src="./shared/quickref-receiver.js"></script>
+<script src="./shared/pull-from-worker.js"></script>
+<script src="./shared/init-sync-ui.js"></script>
+<script src="./shared/senders/app-bridge.js"></script>
 <script>
 'use strict';
-// ═══════════════════════════════════════
-// DB LAYER (attachments対応)
-// ═══════════════════════════════════════
-const DB_NAME = 'quickRefDB';
+// ══════════════════════════════════════╁E// DB LAYER (attachments対忁E
+// ══════════════════════════════════════╁Econst DB_NAME = 'quickRefDB';
 const DB_VERSION = 2;
+
+window.norinoriInitSyncUi?.({
+  endpoint: window.NORINORI_SYNC_ENDPOINT || '/sync',
+  token: window.NORINORI_SYNC_TOKEN || ''
+});
 const STORE = 'items';
 const ATT_STORE = 'attachments';
 let dbPromise = null;
@@ -1251,10 +1260,8 @@ async function dbGetAllAttachmentMeta() {
   });
 }
 
-// ═══════════════════════════════════════
-// CRYPTO (PIN保護)
-// ═══════════════════════════════════════
-const PIN_META_KEY = 'qr_pin_meta';
+// ══════════════════════════════════════╁E// CRYPTO (PIN保護)
+// ══════════════════════════════════════╁Econst PIN_META_KEY = 'qr_pin_meta';
 function bytesToBase64(bytes) {
   let b = ''; bytes.forEach(x => b += String.fromCharCode(x)); return btoa(b);
 }
@@ -1323,9 +1330,9 @@ function ensureUnlocked() {
 }
 function updateLockButton() {
   const btn = document.getElementById('lockToggleBtn');
-  if (!hasPinSetup()) { btn.textContent = '🔑'; btn.title = 'パスコード未設定'; }
-  else if (sessionKey) { btn.textContent = '🔓'; btn.title = 'タップでロック'; }
-  else { btn.textContent = '🔒'; btn.title = 'タップでロック解除'; }
+  if (!hasPinSetup()) { btn.textContent = '🔑'; btn.title = 'パスコード未設宁E; }
+  else if (sessionKey) { btn.textContent = '🔓'; btn.title = 'タチE�EでロチE��'; }
+  else { btn.textContent = '🔒'; btn.title = 'タチE�EでロチE��解除'; }
 }
 function openPinModal() {
   pinMode = hasPinSetup() ? 'unlock' : 'setup';
@@ -1333,14 +1340,14 @@ function openPinModal() {
   document.getElementById('pinInput1').value = '';
   document.getElementById('pinInput2').value = '';
   if (pinMode === 'setup') {
-    document.getElementById('pinModalTitle').textContent = 'パスコードを設定';
-    document.getElementById('pinModalDesc').textContent = '個人情報として保護する項目用のパスコードです。忘れると内容は復元できません。';
+    document.getElementById('pinModalTitle').textContent = 'パスコードを設宁E;
+    document.getElementById('pinModalDesc').textContent = '個人惁E��として保護する頁E��用のパスコードです。忘れると冁E��は復允E��きません、E;
     document.getElementById('pinInput2').style.display = 'block';
-    document.getElementById('pinConfirmBtn').textContent = '設定する';
+    document.getElementById('pinConfirmBtn').textContent = '設定すめE;
     document.getElementById('pinForgotBtn').style.display = 'none';
   } else {
-    document.getElementById('pinModalTitle').textContent = 'パスコードを入力';
-    document.getElementById('pinModalDesc').textContent = '保護された項目を見るにはパスコードが必要です。';
+    document.getElementById('pinModalTitle').textContent = 'パスコードを入劁E;
+    document.getElementById('pinModalDesc').textContent = '保護された頁E��を見るにはパスコードが忁E��です、E;
     document.getElementById('pinInput2').style.display = 'none';
     document.getElementById('pinConfirmBtn').textContent = '開く';
     document.getElementById('pinForgotBtn').style.display = 'block';
@@ -1355,10 +1362,8 @@ function closePinModal(success) {
   if (unlockResolver) { const r = unlockResolver; unlockResolver = null; r(success); }
 }
 
-// ═══════════════════════════════════════
-// SEARCH
-// ═══════════════════════════════════════
-function escapeHtml(str) {
+// ══════════════════════════════════════╁E// SEARCH
+// ══════════════════════════════════════╁Efunction escapeHtml(str) {
   return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function bigrams(str) {
@@ -1398,10 +1403,8 @@ function highlightText(text, query) {
   return escaped.replace(re, m => `<mark>${m}</mark>`);
 }
 
-// ═══════════════════════════════════════
-// APP STATE
-// ═══════════════════════════════════════
-let allItems = [];
+// ══════════════════════════════════════╁E// APP STATE
+// ══════════════════════════════════════╁Elet allItems = [];
 let attachmentMeta = [];
 let filterTag = '__all__';
 let linkFilterActive = false;
@@ -1419,15 +1422,12 @@ let draftAudios = [];
 let draftVideos = [];
 let objURLs = [];
 let mediaRecorder = null, recChunks = [], recTimerInterval = null, recSeconds = 0;
-let sharedText = null; // Share Targetで受け取ったテキスト
-
-// 触覚フィードバック (iOSはvibration API非対応だが念のため)
+let sharedText = null; // Share Targetで受け取ったテキスチE
+// 触覚フィードバチE�� (iOSはvibration API非対応だが念のため)
 function haptic(ms=10) { try { navigator.vibrate?.(ms); } catch(_){} }
 
-// ═══════════════════════════════════════
-// IMAGE PROCESSING
-// ═══════════════════════════════════════
-const IMG_MAX_PX = 800, IMG_QUALITY = 0.75;
+// ══════════════════════════════════════╁E// IMAGE PROCESSING
+// ══════════════════════════════════════╁Econst IMG_MAX_PX = 800, IMG_QUALITY = 0.75;
 function resizeImage(file) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -1448,10 +1448,8 @@ function resizeImage(file) {
 function makeTempId() { return 'tmp_'+Date.now()+'_'+Math.random().toString(36).slice(2); }
 function revokeAllObjURLs() { objURLs.forEach(u=>URL.revokeObjectURL(u)); objURLs=[]; }
 
-// ═══════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════
-function getAllTagsSorted() {
+// ══════════════════════════════════════╁E// RENDER
+// ══════════════════════════════════════╁Efunction getAllTagsSorted() {
   const freq = {};
   allItems.forEach(it=>(it.tags||[]).forEach(t=>{ freq[t]=(freq[t]||0)+1; }));
   return Object.keys(freq).sort((a,b)=>freq[b]-freq[a]||a.localeCompare(b,'ja'));
@@ -1471,7 +1469,7 @@ function renderAll() {
   empty.style.display='none';
 
   list.innerHTML = items.map(item => {
-    const titleHtml = highlightText(item.title||'無題', searchQuery);
+    const titleHtml = highlightText(item.title||'無顁E, searchQuery);
     let bodyHtml = '';
     if (item.sensitive) {
       const c = decryptedCache.get(item.id);
@@ -1516,7 +1514,7 @@ function renderTagFilter() {
     const active = filterTag===tag ? 'active' : '';
     return `<button class="filter-chip ${active}" data-tag="${escapeHtml(tag)}">${escapeHtml(label)}</button>`;
   });
-  row.innerHTML = chips.join('') + `<button class="filter-chip${linkFilterActive?' active':''}" id="linkFilterBtn">🔗 リンク集</button>`;
+  row.innerHTML = chips.join('') + `<button class="filter-chip${linkFilterActive?' active':''}" id="linkFilterBtn">🔗 リンク雁E/button>`;
   row.querySelectorAll('.filter-chip[data-tag]').forEach(btn=>{
     btn.addEventListener('click',()=>{ filterTag=btn.dataset.tag; renderTagFilter(); renderAll(); });
   });
@@ -1525,10 +1523,8 @@ function renderTagFilter() {
   });
 }
 
-// ═══════════════════════════════════════
-// EDIT SHEET
-// ═══════════════════════════════════════
-function openNew() {
+// ══════════════════════════════════════╁E// EDIT SHEET
+// ══════════════════════════════════════╁Efunction openNew() {
   editingId=null; draftTags=[]; draftFields=[]; draftSensitive=false;
   revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[];
   document.getElementById('sheetTitle').textContent='新規追加';
@@ -1566,7 +1562,7 @@ async function openEdit(id) {
   document.getElementById('tagInput').value='';
   document.getElementById('inputUrl').value=item.url||'';
   document.getElementById('sensitiveToggle').checked=draftSensitive;
-  document.getElementById('sheetTitle').textContent='編集';
+  document.getElementById('sheetTitle').textContent='編雁E;
   document.getElementById('dangerZone').style.display='';
   renderTagChips(); renderTagSuggestions(); renderFieldRows();
   document.getElementById('imgThumbs').innerHTML='';
@@ -1591,7 +1587,7 @@ function closeSheet() {
 
 async function saveItem() {
   const title = document.getElementById('fTitle').value.trim();
-  if (!title) { showToast('タイトルを入力してください'); return; }
+  if (!title) { showToast('タイトルを�E力してください'); return; }
   if (document.getElementById('tagInput').value.trim()) commitTagInput();
 
   const wantsSensitive = document.getElementById('sensitiveToggle').checked;
@@ -1627,7 +1623,7 @@ async function saveItem() {
 
 async function deleteItem() {
   if (!editingId) return;
-  if (!confirm('この項目を削除しますか？')) return;
+  if (!confirm('こ�E頁E��を削除しますか�E�E)) return;
   await dbDeleteAttachmentsByItemId(editingId);
   await dbDelete(editingId);
   await reload(); syncEcosystemTags(); closeSheet();
@@ -1637,7 +1633,7 @@ async function deleteItem() {
 // ── TAG CHIPS ──
 function renderTagChips() {
   document.getElementById('tagChips').innerHTML = draftTags.map((t,i)=>
-    `<span class="tag-chip">${escapeHtml(t)}<button onclick="removeTag(${i})">✕</button></span>`
+    `<span class="tag-chip">${escapeHtml(t)}<button onclick="removeTag(${i})">✁E/button></span>`
   ).join('');
 }
 function removeTag(i) { draftTags.splice(i,1); renderTagChips(); renderTagSuggestions(); }
@@ -1659,9 +1655,9 @@ function addTagDirect(tag) { if (!draftTags.includes(tag)) draftTags.push(tag); 
 function renderFieldRows() {
   document.getElementById('fieldRows').innerHTML = draftFields.map((f,i)=>`
     <div class="field-row">
-      <input class="fkey" type="text" placeholder="項目名" value="${escapeHtml(f.key)}" oninput="draftFields[${i}].key=this.value">
+      <input class="fkey" type="text" placeholder="頁E��吁E value="${escapeHtml(f.key)}" oninput="draftFields[${i}].key=this.value">
       <input type="text" placeholder="値" value="${escapeHtml(f.value)}" oninput="draftFields[${i}].value=this.value">
-      <button class="remove-field" onclick="removeField(${i})">×</button>
+      <button class="remove-field" onclick="removeField(${i})">ÁE/button>
     </div>`).join('');
 }
 function removeField(i) { draftFields.splice(i,1); renderFieldRows(); }
@@ -1673,7 +1669,7 @@ function renderImageThumbs() {
     const wrap=document.createElement('div'); wrap.className='img-thumb-wrap';
     const thumb=document.createElement('img'); thumb.className='img-thumb'; thumb.src=img.url;
     thumb.addEventListener('click',()=>openImgPreview(img.url));
-    const del=document.createElement('button'); del.type='button'; del.className='img-thumb-del'; del.textContent='×';
+    const del=document.createElement('button'); del.type='button'; del.className='img-thumb-del'; del.textContent='ÁE;
     del.addEventListener('click',async()=>{
       if (img.isExisting&&img.attId) await dbDeleteAttachment(img.attId);
       URL.revokeObjectURL(img.url); draftImages.splice(i,1); renderImageThumbs();
@@ -1682,7 +1678,7 @@ function renderImageThumbs() {
   });
 }
 function addBlobToDraft(blob,name) {
-  if (blob.size>5*1024*1024) { showToast('画像サイズが大きすぎます(上限5MB)'); return; }
+  if (blob.size>5*1024*1024) { showToast('画像サイズが大きすぎまぁE上限5MB)'); return; }
   const url=URL.createObjectURL(blob); objURLs.push(url);
   draftImages.push({tempId:makeTempId(),blob,url,name:name||'image.jpg',isExisting:false});
   renderImageThumbs();
@@ -1701,11 +1697,11 @@ async function saveImageAttachments(itemId) {
 }
 function tryImportFromIllustStudio() {
   try {
-    const raw=localStorage.getItem('is_transfer'); if (!raw) { alert('illust-studioからの転送データが見つかりません。'); return; }
+    const raw=localStorage.getItem('is_transfer'); if (!raw) { alert('illust-studioからの転送データが見つかりません、E); return; }
     const data=JSON.parse(raw);
-    const src=data.image||data.dataUrl||data.src||null; if (!src) { alert('画像データが取得できませんでした。'); return; }
+    const src=data.image||data.dataUrl||data.src||null; if (!src) { alert('画像データが取得できませんでした、E); return; }
     fetch(src).then(r=>r.blob()).then(blob=>{ addBlobToDraft(blob,data.title?`${data.title}.png`:'illust-studio.png'); localStorage.removeItem('is_transfer'); });
-  } catch(e) { alert('is_transfer読み込み失敗: '+e.message); }
+  } catch(e) { alert('is_transfer読み込み失敁E '+e.message); }
 }
 function openImgPreview(url) {
   document.getElementById('imgPreviewImg').src=url;
@@ -1743,10 +1739,10 @@ function renderAudioList() {
     const div=document.createElement('div');
     if (aud.type==='music-ref') {
       div.className='music-ref-item';
-      div.innerHTML=`<span class="music-ref-icon">🎵</span><div class="music-ref-info"><div class="music-ref-title">${escapeHtml(aud.name)}</div><div class="music-ref-meta">${[aud.meta.bpm?`BPM ${aud.meta.bpm}`:'',aud.meta.key?`Key: ${aud.meta.key}`:''].filter(Boolean).join(' / ')}</div></div><button type="button" class="music-ref-del" data-i="${i}">×</button>`;
+      div.innerHTML=`<span class="music-ref-icon">🎵</span><div class="music-ref-info"><div class="music-ref-title">${escapeHtml(aud.name)}</div><div class="music-ref-meta">${[aud.meta.bpm?`BPM ${aud.meta.bpm}`:'',aud.meta.key?`Key: ${aud.meta.key}`:''].filter(Boolean).join(' / ')}</div></div><button type="button" class="music-ref-del" data-i="${i}">ÁE/button>`;
     } else {
       div.className='audio-item';
-      div.innerHTML=`<span class="audio-item-label">${escapeHtml(aud.name)}</span><audio src="${aud.url}" controls preload="metadata"></audio><button type="button" class="audio-item-del" data-i="${i}">×</button>`;
+      div.innerHTML=`<span class="audio-item-label">${escapeHtml(aud.name)}</span><audio src="${aud.url}" controls preload="metadata"></audio><button type="button" class="audio-item-del" data-i="${i}">ÁE/button>`;
     }
     div.querySelector('[data-i]').addEventListener('click',async()=>{
       if (aud.isExisting&&aud.attId) await dbDeleteAttachment(aud.attId);
@@ -1758,7 +1754,7 @@ function renderAudioList() {
 
 // ── VIDEO ATTACHMENTS ──
 function addVideoToDraft(blob, name) {
-  if (blob.size > 200 * 1024 * 1024) { showToast('動画が大きすぎます(上限200MB)'); return; }
+  if (blob.size > 200 * 1024 * 1024) { showToast('動画が大きすぎまぁE上限200MB)'); return; }
   const url = URL.createObjectURL(blob); objURLs.push(url);
   draftVideos.push({ tempId: makeTempId(), blob, url, name: name||'video.mp4', isExisting: false });
   renderVideoList();
@@ -1782,7 +1778,7 @@ function renderVideoList() {
     wrap.innerHTML = `
       <video src="${v.url}" controls playsinline preload="metadata" style="width:100%;max-height:220px;border-radius:10px 10px 0 0;background:#000;"></video>
       <div class="video-item-label">🎬 ${escapeHtml(v.name)}</div>
-      <button type="button" class="video-item-del" data-i="${i}">✕</button>`;
+      <button type="button" class="video-item-del" data-i="${i}">✁E/button>`;
     wrap.querySelector('[data-i]').addEventListener('click', async () => {
       if (v.isExisting && v.attId) await dbDeleteAttachment(v.attId);
       URL.revokeObjectURL(v.url); draftVideos.splice(i, 1); renderVideoList();
@@ -1791,7 +1787,7 @@ function renderVideoList() {
   });
 }
 
-// カード上の動画バッジカウント (attachmentMetaにvideoを追加)
+// カード上�E動画バッジカウンチE(attachmentMetaにvideoを追加)
 function getVideoCnt(itemId) {
   return attachmentMeta.filter(a => a.itemId === itemId && a.type === 'video').length;
 }
@@ -1806,7 +1802,7 @@ async function tryPasteFromClipboard() {
           const blob = await item.getType(type);
           const resized = await resizeImageBlob(blob);
           addBlobToDraft(resized, `paste-${Date.now()}.jpg`);
-          showToast('クリップボードから画像を貼り付けました');
+          showToast('クリチE�Eボ�Eドから画像を貼り付けました');
           return;
         }
         if (type === 'text/plain') {
@@ -1814,15 +1810,15 @@ async function tryPasteFromClipboard() {
           const text = await blob.text();
           if (text.trim()) {
             const ed = document.getElementById('fBody');
-            if (ed) { ed.focus(); document.execCommand('insertText', false, text); showToast('テキストを貼り付けました'); }
+            if (ed) { ed.focus(); document.execCommand('insertText', false, text); showToast('チE��ストを貼り付けました'); }
             return;
           }
         }
       }
     }
-    showToast('クリップボードに画像・テキストがありません');
+    showToast('クリチE�Eボ�Eドに画像�EチE��ストがありません');
   } catch(_) {
-    showToast('クリップボードへのアクセスが許可されていません');
+    showToast('クリチE�Eボ�Eドへのアクセスが許可されてぁE��せん');
   }
 }
 
@@ -1855,24 +1851,21 @@ function checkShareTarget() {
   // バナー表示
   const banner = document.getElementById('shareReceivedBanner');
   const label  = document.getElementById('shareReceivedText');
-  label.textContent = `📨 共有テキスト: ${combined.slice(0,40)}${combined.length>40?'…':''}`;
+  label.textContent = `📨 共有テキスチE ${combined.slice(0,40)}${combined.length>40?'…':''}`;
   banner.classList.add('show');
 }
 function useSharedText() {
   if (!sharedText) return;
   openNew();
-  // タイトルに1行目、メモに全文
-  const lines = sharedText.split('\n');
+  // タイトルに1行目、メモに全斁E  const lines = sharedText.split('\n');
   document.getElementById('fTitle').value = lines[0].slice(0, 60);
   document.getElementById('fBody').innerHTML = escapeHtml(sharedText).replace(/\n/g,'<br>');
   document.getElementById('shareReceivedBanner').classList.remove('show');
   sharedText = null;
 }
 
-// ═══════════════════════════════════════
-// EXPORT / IMPORT
-// ═══════════════════════════════════════
-const BACKUP_KEY='qr_last_backup';
+// ══════════════════════════════════════╁E// EXPORT / IMPORT
+// ══════════════════════════════════════╁Econst BACKUP_KEY='qr_last_backup';
 const ECOSYSTEM_TAGS_KEY='ecosystem_tags';
 function encFieldToJSON(ef) { if (!ef) return null; return {iv:bytesToBase64(ef.iv),data:bytesToBase64(ef.data)}; }
 function encFieldFromJSON(o) { if (!o) return null; return {iv:base64ToBytes(o.iv),data:base64ToBytes(o.data)}; }
@@ -1884,8 +1877,8 @@ function recordBackupNow() { localStorage.setItem(BACKUP_KEY,String(Date.now()))
 function updateBackupBanner() {
   const days=getLastBackupDays();
   const el=document.getElementById('backupBanner');
-  if (days===null) { el.style.display='flex'; document.getElementById('backupBannerText').textContent='まだバックアップがありません。エクスポートで保存してください。'; }
-  else if (days>=7) { el.style.display='flex'; document.getElementById('backupBannerText').textContent=`最終バックアップから ${days} 日経過しています。`; }
+  if (days===null) { el.style.display='flex'; document.getElementById('backupBannerText').textContent='まだバックアチE�Eがありません。エクスポ�Eトで保存してください、E; }
+  else if (days>=7) { el.style.display='flex'; document.getElementById('backupBannerText').textContent=`最終バチE��アチE�Eから ${days} 日経過してぁE��す。`; }
   else { el.style.display='none'; }
 }
 function syncEcosystemTags() {
@@ -1915,7 +1908,7 @@ async function doImport(file) {
       try {
         const payload=JSON.parse(e.target.result);
         const items=payload.items||payload; if (!Array.isArray(items)) throw new Error('Invalid format');
-        const choice=confirm(`${items.length}件のデータが見つかりました。\nOK=マージ / キャンセル=全て上書き`);
+        const choice=confirm(`${items.length}件のチE�Eタが見つかりました、EnOK=マ�Eジ / キャンセル=全て上書き`);
         if (!choice) {
           const db=await openDB();
           await new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).clear(); tx.oncomplete=res; tx.onerror=rej; });
@@ -1927,18 +1920,16 @@ async function doImport(file) {
           else { item.body=raw.body||''; item.fields=raw.fields||[]; }
           await dbPut(item); count++;
         }
-        if (payload.pinMeta&&!getPinMeta()) { if (confirm('パスコード設定をインポートしますか？')) setPinMeta(payload.pinMeta); }
-        await reload(); resolve({ok:true,msg:`${count}件をインポートしました。`});
+        if (payload.pinMeta&&!getPinMeta()) { if (confirm('パスコード設定をインポ�Eトしますか�E�E)) setPinMeta(payload.pinMeta); }
+        await reload(); resolve({ok:true,msg:`${count}件をインポ�Eトしました。`});
       } catch(e) { resolve({ok:false,msg:`エラー: ${e.message}`}); }
     };
     r.readAsText(file);
   });
 }
 
-// ═══════════════════════════════════════
-// iCLOUD DRIVE 連携
-// ═══════════════════════════════════════
-const ICLOUD_BACKUP_KEY = 'qr_icloud_last_save';
+// ══════════════════════════════════════╁E// iCLOUD DRIVE 連携
+// ══════════════════════════════════════╁Econst ICLOUD_BACKUP_KEY = 'qr_icloud_last_save';
 const ICLOUD_AUTO_KEY   = 'qr_icloud_auto';
 
 function getiCloudLastSave() {
@@ -1948,12 +1939,9 @@ function getiCloudLastSave() {
   return d.toLocaleDateString('ja-JP') + ' ' + d.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
 }
 
-// iCloud Drive = iOS の「ファイル」アプリ内への保存
-// Webからは直接書き込みできないため「ダウンロード→ファイルアプリで移動」の
-// UXを最大限スムーズにするガイド付きエクスポートを提供する
-async function saveToiCloud() {
-  // エクスポートデータ生成（doExportと同じ形式）
-  const exportItems = allItems.map(item => {
+// iCloud Drive = iOS の「ファイル」アプリ冁E��の保孁E// Webからは直接書き込みできなぁE��め「ダウンロード�Eファイルアプリで移動」�E
+// UXを最大限スムーズにするガイド付きエクスポ�Eトを提供すめEasync function saveToiCloud() {
+  // エクスポ�Eトデータ生�E�E�EoExportと同じ形式！E  const exportItems = allItems.map(item => {
     const out = {id:item.id,title:item.title,tags:item.tags,url:item.url||'',sensitive:item.sensitive,createdAt:item.createdAt,updatedAt:item.updatedAt};
     if (item.sensitive) { out.encBody=encFieldToJSON(item.encBody); out.encFields=encFieldToJSON(item.encFields); }
     else { out.body=item.body; out.fields=item.fields; }
@@ -1967,8 +1955,7 @@ async function saveToiCloud() {
   const json = JSON.stringify(payload, null, 2);
   const filename = `quick-ref-${new Date().toISOString().slice(0,10)}.json`;
 
-  // iOS Safari: ダウンロード → ファイルアプリ → iCloud Drive に移動
-  const blob = new Blob([json], {type: 'application/json'});
+  // iOS Safari: ダウンローチEↁEファイルアプリ ↁEiCloud Drive に移勁E  const blob = new Blob([json], {type: 'application/json'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = filename;
@@ -1979,13 +1966,11 @@ async function saveToiCloud() {
   recordBackupNow();
   updateiCloudStatus();
 
-  // iCloudガイドを表示（iOS）
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  // iCloudガイドを表示�E�EOS�E�E  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
   if (isIOS) { showICloudGuide(filename); }
-  else { showToast('☁️ ' + filename + ' をダウンロードしました'); }
+  else { showToast('☁E��E' + filename + ' をダウンロードしました'); }
 
-  // Background Sync 登録（オンライン復帰時にSWへ通知）
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  // Background Sync 登録�E�オンライン復帰時にSWへ通知�E�E  if ('serviceWorker' in navigator && 'SyncManager' in window) {
     const reg = await navigator.serviceWorker.ready;
     await reg.sync.register('icloud-backup').catch(() => {});
   }
@@ -1994,9 +1979,9 @@ async function saveToiCloud() {
 function updateiCloudStatus() {
   const last = getiCloudLastSave();
   const el   = document.getElementById('icloudStatus');
-  if (el) el.textContent = last ? '最終保存: ' + last : '未保存';
+  if (el) el.textContent = last ? '最終保孁E ' + last : '未保孁E;
   const desc = document.getElementById('icloudMenuDesc');
-  if (desc) desc.textContent = last ? '最終: ' + last : 'ファイルアプリ経由で自動バックアップ';
+  if (desc) desc.textContent = last ? '最絁E ' + last : 'ファイルアプリ経由で自動バチE��アチE�E';
 }
 
 function showICloudGuide(filename) {
@@ -2005,18 +1990,17 @@ function showICloudGuide(filename) {
   guide.classList.add('open');
 }
 
-// 自動保存: Periodic Background Sync 登録
+// 自動保孁E Periodic Background Sync 登録
 async function setupPeriodicSync() {
   if (!('serviceWorker' in navigator) || !('PeriodicSyncManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
     await reg.periodicSync.register('daily-backup-reminder', { minInterval: 24 * 60 * 60 * 1000 });
     localStorage.setItem(ICLOUD_AUTO_KEY, '1');
-    showToast('✅ 毎日バックアップリマインダーを設定しました');
+    showToast('✁E毎日バックアチE�Eリマインダーを設定しました');
     updateAutoToggleBtn();
   } catch (e) {
-    // フォールバック: ローカル通知を促すガイド
-    alert('Periodic Syncはこのブラウザで未対応です。\n手動でメニュー→iCloud保存をお使いください。');
+    // フォールバック: ローカル通知を俁E��ガイチE    alert('Periodic Syncはこ�Eブラウザで未対応です、En手動でメニュー→iCloud保存をお使ぁE��ださい、E);
   }
 }
 async function cancelPeriodicSync() {
@@ -2026,54 +2010,47 @@ async function cancelPeriodicSync() {
     await reg.periodicSync.unregister('daily-backup-reminder');
   } catch(_) {}
   localStorage.removeItem(ICLOUD_AUTO_KEY);
-  showToast('自動バックアップを解除しました');
+  showToast('自動バチE��アチE�Eを解除しました');
   updateAutoToggleBtn();
 }
 function updateAutoToggleBtn() {
   const btn = document.getElementById('icloudAutoToggleBtn');
   if (!btn) return;
   const on = !!localStorage.getItem(ICLOUD_AUTO_KEY);
-  btn.textContent = on ? '✅ 自動保存ON' : '⏰ 自動保存設定';
+  btn.textContent = on ? '✁E自動保存ON' : '⏰ 自動保存設宁E;
   btn.style.background = on ? 'rgba(52,199,89,0.12)' : '';
   btn.style.color       = on ? '#1A8C3A' : '';
   btn.style.borderColor = on ? 'rgba(52,199,89,0.3)' : '';
 }
 
-// ═══════════════════════════════════════
-// Siri Shortcuts ガイド
-// ═══════════════════════════════════════
-function showSiriShortcutGuide() {
+// ══════════════════════════════════════╁E// Siri Shortcuts ガイチE// ══════════════════════════════════════╁Efunction showSiriShortcutGuide() {
   const base = location.origin + location.pathname;
   const msg = [
-    '【Siri Shortcuts 設定手順】',
+    '【Siri Shortcuts 設定手頁E��E,
     '',
-    '① ショートカットアプリを開く',
-    '② 右上「＋」→「アクションを追加」',
+    '① ショートカチE��アプリを開ぁE,
+    '② 右上「＋」�E「アクションを追加、E,
     '③「URLを開く」を追加',
-    '④ 以下のURLを入力:',
+    '④ 以下�EURLを�E劁E',
     '',
     '  音声追加: ' + base + '?shortcut=voice',
     '  カメラ追加: ' + base + '?shortcut=camera',
     '  新規追加: ' + base + '?shortcut=new',
     '  レビュー: ' + base + '?shortcut=review',
     '',
-    '⑤ Siriフレーズを設定（例:「参照に追加」）',
+    '⑤ Siriフレーズを設定（侁E「参照に追加」！E,
     '',
-    '設定後「Hey Siri、参照に追加」で即起動します。',
+    '設定後「Hey Siri、参照に追加」で即起動します、E,
   ].join('\n');
   alert(msg);
 }
 
-// ═══════════════════════════════════════
-// Shortcut URL パラメータ処理
-// ═══════════════════════════════════════
-function checkShortcutParam() {
+// ══════════════════════════════════════╁E// Shortcut URL パラメータ処琁E// ══════════════════════════════════════╁Efunction checkShortcutParam() {
   const params = new URLSearchParams(location.search);
   const sc = params.get('shortcut');
   if (!sc) return;
   history.replaceState(null, '', location.pathname + (location.hash || ''));
-  // 少し遅らせてUIが準備できてから起動
-  setTimeout(() => {
+  // 少し遁E��せてUIが準備できてから起勁E  setTimeout(() => {
     if (sc === 'voice')  { openVoiceModal(); }
     if (sc === 'camera') { openNew(); setTimeout(() => document.getElementById('imgCameraInput').click(), 300); }
     if (sc === 'new')    { openNew(); }
@@ -2082,10 +2059,8 @@ function checkShortcutParam() {
   }, 600);
 }
 
-// ═══════════════════════════════════════
-// Service Worker メッセージ受信
-// ═══════════════════════════════════════
-function setupSWMessages() {
+// ══════════════════════════════════════╁E// Service Worker メチE��ージ受信
+// ══════════════════════════════════════╁Efunction setupSWMessages() {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'SW_SYNC_ICLOUD')    { saveToiCloud(); }
@@ -2093,18 +2068,14 @@ function setupSWMessages() {
   });
 }
 
-// ═══════════════════════════════════════
-// MENU
-// ═══════════════════════════════════════
-function openMenu() { document.getElementById('menuOverlay').classList.add('open'); document.getElementById('menuSheet').classList.add('open'); }
+// ══════════════════════════════════════╁E// MENU
+// ══════════════════════════════════════╁Efunction openMenu() { document.getElementById('menuOverlay').classList.add('open'); document.getElementById('menuSheet').classList.add('open'); }
 function closeMenu() { document.getElementById('menuOverlay').classList.remove('open'); document.getElementById('menuSheet').classList.remove('open'); }
 
-// ═══════════════════════════════════════
-// ICON GENERATOR
-// ═══════════════════════════════════════
-function drawIcon(canvas) {
+// ══════════════════════════════════════╁E// ICON GENERATOR
+// ══════════════════════════════════════╁Efunction drawIcon(canvas) {
   const size=canvas.width, ctx=canvas.getContext('2d'), r=size*0.22;
-  const text=document.getElementById('iconEmoji').value||'参';
+  const text=document.getElementById('iconEmoji').value||'叁E;
   const fontSize=Math.round(size*Number(document.getElementById('iconFontSize').value)/100);
   ctx.clearRect(0,0,size,size);
   ctx.beginPath(); ctx.moveTo(r,0); ctx.lineTo(size-r,0); ctx.arcTo(size,0,size,r,r);
@@ -2133,11 +2104,9 @@ function downloadIcon(canvasId,filename) {
 function openIconModal() { document.getElementById('iconOverlay').classList.add('open'); document.getElementById('iconModal').classList.add('open'); setTimeout(refreshIconPreviews,50); }
 function closeIconModal() { document.getElementById('iconOverlay').classList.remove('open'); document.getElementById('iconModal').classList.remove('open'); }
 
-// ═══════════════════════════════════════
-// THEME MODE
-// ═══════════════════════════════════════
-const TAG_EMOJI_MAP={'音楽':'🎵','music':'🎵','セキュリティ':'🔐','security':'🔐','占い':'☯','コマンド':'💻','command':'💻','イラスト':'🎨','illust':'🎨','仕事':'📋','work':'📋','個人':'🔑','レシピ':'🍳','旅行':'✈️','メモ':'📝'};
-const TAG_COLOR_MAP={'音楽':['#FF2D55','#C41230'],'music':['#FF2D55','#C41230'],'セキュリティ':['#34C759','#1A6E2E'],'コマンド':['#1C1C1E','#3A3A3C'],'イラスト':['#FF9500','#C45E00'],'仕事':['#007AFF','#004ECC']};
+// ══════════════════════════════════════╁E// THEME MODE
+// ══════════════════════════════════════╁Econst TAG_EMOJI_MAP={'音楽':'🎵','music':'🎵','セキュリチE��':'🔐','security':'🔐','占ぁE:'☯','コマンチE:'💻','command':'💻','イラスチE:'🎨','illust':'🎨','仕亁E:'📋','work':'📋','個人':'🔑','レシチE:'🍳','旁E��E:'✈︁E,'メモ':'📝'};
+const TAG_COLOR_MAP={'音楽':['#FF2D55','#C41230'],'music':['#FF2D55','#C41230'],'セキュリチE��':['#34C759','#1A6E2E'],'コマンチE:['#1C1C1E','#3A3A3C'],'イラスチE:['#FF9500','#C45E00'],'仕亁E:['#007AFF','#004ECC']};
 function getTagEmoji(tag) { return TAG_EMOJI_MAP[tag]||TAG_EMOJI_MAP[tag.toLowerCase()]||'📌'; }
 function getTagColors(tag) { return TAG_COLOR_MAP[tag]||TAG_COLOR_MAP[tag.toLowerCase()]||['#007AFF','#005ECB']; }
 const urlTag=new URLSearchParams(location.search).get('tag');
@@ -2148,23 +2117,21 @@ function initThemeMode() {
   const emoji=getTagEmoji(themeTag);
   document.getElementById('themeBannerIcon').textContent=emoji;
   document.getElementById('themeBannerLabel').textContent=`#${themeTag}`;
-  document.getElementById('themeBannerSub').textContent='テーマモードで起動中';
+  document.getElementById('themeBannerSub').textContent='チE�Eマモードで起動中';
   document.getElementById('themeBanner').style.display='flex';
-  document.title=`${emoji} ${themeTag} — クイック参照`;
-  document.getElementById('searchInput').placeholder=`#${themeTag} 内を検索`;
+  document.title=`${emoji} ${themeTag}  EクイチE��参�E`;
+  document.getElementById('searchInput').placeholder=`#${themeTag} 冁E��検索`;
 }
 function sendToKansei(targetTag) {
   const filtered=allItems.filter(item=>targetTag?(item.tags||[]).includes(targetTag):true).filter(i=>!i.sensitive);
   const materials=filtered.map(item=>({title:item.title,tags:item.tags,body:item.body||'',fields:item.fields||[],updatedAt:item.updatedAt}));
-  if (!materials.length) { alert('送れる素材がありません。'); return; }
+  if (!materials.length) { alert('送れる素材がありません、E); return; }
   localStorage.setItem('kansei_materials',JSON.stringify({source:'quick-ref',tag:targetTag||null,materials,exportedAt:Date.now()}));
-  if (confirm(`${materials.length}件の素材をkanseiに送りました。kanseiを開きますか？`)) location.href=location.origin+'/kansei/draft.html';
+  if (confirm(`${materials.length}件の素材をkanseiに送りました。kanseiを開きますか�E�`)) location.href=location.origin+'/kansei/draft.html';
 }
 
-// ═══════════════════════════════════════
-// DAILY REVIEW
-// ═══════════════════════════════════════
-const REVIEW_LOG_KEY='qr_review_log', REVIEW_STREAK_KEY='qr_review_streak', REVIEW_SESSION_KEY='qr_review_session';
+// ══════════════════════════════════════╁E// DAILY REVIEW
+// ══════════════════════════════════════╁Econst REVIEW_LOG_KEY='qr_review_log', REVIEW_STREAK_KEY='qr_review_streak', REVIEW_SESSION_KEY='qr_review_session';
 let reviewQueue=[], reviewIndex=0;
 function getReviewLog() { try { return JSON.parse(localStorage.getItem(REVIEW_LOG_KEY)||'{}'); } catch(_) { return {}; } }
 function markReviewed(id) { const l=getReviewLog(); l[id]={reviewedAt:Date.now(),count:(l[id]?.count||0)+1}; localStorage.setItem(REVIEW_LOG_KEY,JSON.stringify(l)); }
@@ -2203,23 +2170,23 @@ function reviewCardHTML(entry) {
   const bodyPreview=truncated?body.slice(0,150)+'…':body;
   return `<div class="review-card">
     <div class="review-card-meta"><span class="review-days-badge ${badgeClass}">${daysLabel}</span></div>
-    <p class="review-card-title">${escapeHtml(item.title||'(無題)')}</p>
+    <p class="review-card-title">${escapeHtml(item.title||'(無顁E')}</p>
     ${body?`<div class="review-card-body" id="reviewCardBody">${bodyPreview}</div>${truncated?`<button class="review-expand-btn" id="expandBtn">▼ 全部表示</button>`:''}`:''}
     ${fields.length?`<div class="review-card-fields">${fields.map(f=>`<div class="review-field-row"><span class="review-field-key">${escapeHtml(f.key)}</span>: ${escapeHtml(f.value)}</div>`).join('')}</div>`:''}
     ${tagsHtml?`<div class="review-tags">${tagsHtml}</div>`:''}
     <div class="review-actions">
-      <button class="review-action-btn done" id="reviewDoneBtn">✅ 確認済み</button>
-      <button class="review-action-btn" id="reviewEditBtn">✏️ 編集する</button>
-      <button class="review-action-btn" id="reviewSkipBtn">→ スキップ</button>
+      <button class="review-action-btn done" id="reviewDoneBtn">✁E確認済み</button>
+      <button class="review-action-btn" id="reviewEditBtn">✏︁E編雁E��めE/button>
+      <button class="review-action-btn" id="reviewSkipBtn">ↁEスキチE�E</button>
     </div>
   </div>`;
 }
 function showReviewCard(index) {
   const body=document.getElementById('reviewBody'), fill=document.getElementById('reviewProgressFill'), counter=document.getElementById('reviewCounterText'), total=reviewQueue.length;
-  fill.style.width=`${total?Math.round(index/total*100):100}%`; counter.textContent=`${index} / ${total} 完了`;
+  fill.style.width=`${total?Math.round(index/total*100):100}%`; counter.textContent=`${index} / ${total} 完亁E;
   if (index>=total) {
     const s=updateStreak();
-    body.innerHTML=`<div class="review-complete"><div class="review-complete-icon">🎉</div><p class="review-complete-title">レビュー完了!</p><p class="review-complete-sub">続けることが力になります。</p><div class="streak-count">🔥 ${s.count}</div><div class="streak-label">日連続</div><p class="review-complete-sub" style="margin-top:12px;">今日は${reviewQueue.length}件を見直しました。</p><button class="review-done-btn" id="reviewDoneClose">閉じる</button></div>`;
+    body.innerHTML=`<div class="review-complete"><div class="review-complete-icon">🎉</div><p class="review-complete-title">レビュー完亁E</p><p class="review-complete-sub">続けることが力になります、E/p><div class="streak-count">🔥 ${s.count}</div><div class="streak-label">日連綁E/div><p class="review-complete-sub" style="margin-top:12px;">今日は${reviewQueue.length}件を見直しました、E/p><button class="review-done-btn" id="reviewDoneClose">閉じめE/button></div>`;
     document.getElementById('reviewDoneClose').addEventListener('click',closeReview); return;
   }
   const entry=reviewQueue[index]; body.innerHTML=reviewCardHTML(entry);
@@ -2232,17 +2199,15 @@ function openReview() {
   reviewQueue=selectReviewItems(7); reviewIndex=0;
   const s=getStreak(); document.getElementById('reviewStreakLabel').textContent=s.count>0?`🔥 ${s.count}日連続`:'';
   if (reviewQueue.length===0) {
-    document.getElementById('reviewBody').innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:12px;">✨</div><p style="font-size:16px;font-weight:700;margin:0 0 8px;">今日はすべて最新です</p><p style="font-size:14px;line-height:1.7;">3日以上経った項目が出てきたらここに表示されます。</p></div>`;
+    document.getElementById('reviewBody').innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:12px;">✨</div><p style="font-size:16px;font-weight:700;margin:0 0 8px;">今日はすべて最新でぁE/p><p style="font-size:14px;line-height:1.7;">3日以上経った頁E��が�Eてきたらここに表示されます、E/p></div>`;
     document.getElementById('reviewProgressFill').style.width='100%'; document.getElementById('reviewCounterText').textContent='0 / 0';
   } else { showReviewCard(0); }
   document.getElementById('reviewOverlay').classList.add('open');
 }
 function closeReview() { document.getElementById('reviewOverlay').classList.remove('open'); updateReviewBadge(); renderAll(); }
 
-// ═══════════════════════════════════════
-// RELATED ITEMS
-// ═══════════════════════════════════════
-const LINKS_KEY='qr_links';
+// ══════════════════════════════════════╁E// RELATED ITEMS
+// ══════════════════════════════════════╁Econst LINKS_KEY='qr_links';
 function getLinks() { try { return JSON.parse(localStorage.getItem(LINKS_KEY)||'{}'); } catch(_) { return {}; } }
 function addLink(fromId,toId) { const l=getLinks(); [fromId,toId].forEach(a=>{ const b=a===fromId?toId:fromId; if (!l[a]) l[a]=[]; if (!l[a].includes(b)) l[a].push(b); }); localStorage.setItem(LINKS_KEY,JSON.stringify(l)); }
 function removeLink(fromId,toId) { const l=getLinks(); l[fromId]=(l[fromId]||[]).filter(i=>i!==toId); l[toId]=(l[toId]||[]).filter(i=>i!==fromId); localStorage.setItem(LINKS_KEY,JSON.stringify(l)); }
@@ -2261,54 +2226,52 @@ function renderRelatedItems(item) {
   const el=document.getElementById('relatedSection'); if (!el) return;
   const confirmed=getLinkedItems(item.id), cIds=new Set(confirmed.map(c=>c.id));
   const auto=findRelated(item,6).filter(r=>!cIds.has(r.item.id));
-  if (!confirmed.length&&!auto.length) { el.innerHTML='<p class="related-empty">関連する項目が自動検出されませんでした。</p>'; setupAiRelatedBtn(item); return; }
+  if (!confirmed.length&&!auto.length) { el.innerHTML='<p class="related-empty">関連する頁E��が�E動検�Eされませんでした、E/p>'; setupAiRelatedBtn(item); return; }
   const mkCard=(relItem,score,isConf)=>{
     const cached=decryptedCache.get(relItem.id);
     const snippet=relItem.sensitive?'🔒 保護中':((cached?cached.body:relItem.body||'').replace(/<[^>]+>/g,'').slice(0,45));
     const tagsHtml=(relItem.tags||[]).map(t=>`<span class="related-tag">#${escapeHtml(t)}</span>`).join('');
     return `<div class="related-card${isConf?' confirmed':''}" data-id="${relItem.id}">
       <div class="related-main">
-        <div class="related-header"><span class="related-icon">${isConf?'🔗':'∼'}</span><span class="related-title">${escapeHtml(relItem.title||'(無題)')}</span>${score!=null?`<span class="related-score">${score}%</span>`:''}</div>
+        <div class="related-header"><span class="related-icon">${isConf?'🔗':'∼'}</span><span class="related-title">${escapeHtml(relItem.title||'(無顁E')}</span>${score!=null?`<span class="related-score">${score}%</span>`:''}</div>
         ${snippet?`<div class="related-snippet">${escapeHtml(snippet)}</div>`:''}
         ${tagsHtml?`<div class="related-tags">${tagsHtml}</div>`:''}
       </div>
       <div class="related-actions">
-        <button class="related-open-btn" data-id="${relItem.id}">→</button>
-        ${isConf?`<button class="related-unlink-btn" data-id="${relItem.id}">×</button>`:`<button class="related-link-btn" data-id="${relItem.id}">🔗</button>`}
+        <button class="related-open-btn" data-id="${relItem.id}">ↁE/button>
+        ${isConf?`<button class="related-unlink-btn" data-id="${relItem.id}">ÁE/button>`:`<button class="related-link-btn" data-id="${relItem.id}">🔗</button>`}
       </div>
     </div>`;
   };
   el.innerHTML=confirmed.map(it=>mkCard(it,null,true)).join('')+auto.map(r=>mkCard(r.item,r.score,false)).join('');
   el.querySelectorAll('.related-open-btn').forEach(btn=>btn.addEventListener('click',async()=>{ closeSheet(); await openEdit(btn.dataset.id); }));
   el.querySelectorAll('.related-link-btn').forEach(btn=>btn.addEventListener('click',()=>{ addLink(item.id,btn.dataset.id); renderRelatedItems(item); renderAll(); }));
-  el.querySelectorAll('.related-unlink-btn').forEach(btn=>btn.addEventListener('click',()=>{ if (!confirm('このリンクを削除しますか？')) return; removeLink(item.id,btn.dataset.id); renderRelatedItems(item); renderAll(); }));
+  el.querySelectorAll('.related-unlink-btn').forEach(btn=>btn.addEventListener('click',()=>{ if (!confirm('こ�Eリンクを削除しますか�E�E)) return; removeLink(item.id,btn.dataset.id); renderRelatedItems(item); renderAll(); }));
   setupAiRelatedBtn(item);
 }
 function setupAiRelatedBtn(item) {
   const btn=document.getElementById('aiRelatedBtn'); if (!btn) return;
   btn.onclick=async()=>{
     const geminiKey=localStorage.getItem('ml_gemini'), claudeKey=localStorage.getItem('ml_claude'), proxyUrl=localStorage.getItem('kansei_proxy_url');
-    if (!geminiKey&&!claudeKey&&!proxyUrl&&!localStorage.getItem('ml_openai')) { alert('APIキーが設定されていません。⚙️設定から入力してください。'); return; }
+    if (!geminiKey&&!claudeKey&&!proxyUrl&&!localStorage.getItem('ml_openai')) { alert('APIキーが設定されてぁE��せん。⚙�E�設定から�E力してください、E); return; }
     btn.disabled=true; btn.textContent='✨ 検索中…';
     try {
       const candidates=allItems.filter(it=>it.id!==item.id&&!it.sensitive).slice(0,60).map(it=>`${it.id.slice(0,8)}: ${it.title} [${(it.tags||[]).join(',')}]`).join('\n');
-      const prompt=`以下の「対象項目」と意味的に関連する項目を「候補一覧」から選んでください。\n対象: タイトル: ${item.title} タグ: ${(item.tags||[]).join(', ')}\n候補:\n${candidates}\n\nIDプレフィックス(8文字)を最大5つ、JSON配列のみ返してください:\n["xxxxxxxx"]`;
+      const prompt=`以下�E「対象頁E��」と意味皁E��関連する頁E��を「候補一覧」から選んでください、En対象: タイトル: ${item.title} タグ: ${(item.tags||[]).join(', ')}\n候裁E\n${candidates}\n\nIDプレフィチE��ス(8斁E��Eを最大5つ、JSON配�Eのみ返してください:\n["xxxxxxxx"]`;
       let raw='';
       if (geminiKey) { const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})}); const d=await res.json(); raw=d.candidates?.[0]?.content?.parts?.[0]?.text||'[]'; }
       else { const ep=proxyUrl||'https://api.anthropic.com/v1/messages',headers={'Content-Type':'application/json'}; if (!proxyUrl&&claudeKey){headers['x-api-key']=claudeKey;headers['anthropic-version']='2023-06-01';} const res=await fetch(ep,{method:'POST',headers,body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:256,messages:[{role:'user',content:prompt}]})}); const d=await res.json(); raw=d.content?.[0]?.text||'[]'; }
       const ids=JSON.parse(raw.replace(/```json|```/g,'').trim()); let added=0;
       ids.forEach(sid=>{ const found=allItems.find(it=>it.id.startsWith(sid)&&it.id!==item.id); if (found&&!(getLinks()[item.id]||[]).includes(found.id)){ addLink(item.id,found.id); added++; } });
       renderRelatedItems(item); renderAll();
-      btn.textContent=added>0?`✨ ${added}件のつながりを発見`:'✨ 新たなつながりなし';
-    } catch(e) { alert(`AI検索失敗: ${e.message}`); btn.textContent='✨ AIでさらに探す'; }
+      btn.textContent=added>0?`✨ ${added}件のつながりを発見`:'✨ 新たなつながりなぁE;
+    } catch(e) { alert(`AI検索失敁E ${e.message}`); btn.textContent='✨ AIでさらに探ぁE; }
     finally { btn.disabled=false; }
   };
 }
 
-// ═══════════════════════════════════════
-// VOICE → AI
-// ═══════════════════════════════════════
-let voiceRec=null, voiceIsRec=false, voiceFullText='';
+// ══════════════════════════════════════╁E// VOICE ↁEAI
+// ══════════════════════════════════════╁Elet voiceRec=null, voiceIsRec=false, voiceFullText='';
 function openVoiceModal() {
   document.getElementById('voiceModal').classList.add('open');
   document.getElementById('voiceFinal').textContent=''; document.getElementById('voiceInter').textContent='';
@@ -2321,25 +2284,23 @@ function openVoiceModal() {
 function closeVoiceModal() { stopVoiceRec(); document.getElementById('voiceModal').classList.remove('open'); }
 function startVoiceRec() {
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if (!SR) { alert('このブラウザは音声入力に対応していません。'); return; }
+  if (!SR) { alert('こ�Eブラウザは音声入力に対応してぁE��せん、E); return; }
   voiceRec=new SR(); voiceRec.lang='ja-JP'; voiceRec.continuous=true; voiceRec.interimResults=true;
   voiceRec.onstart=()=>{ voiceIsRec=true; document.getElementById('voiceFab').classList.add('recording'); document.getElementById('voiceDot').style.display='block'; document.getElementById('voiceStatusText').textContent='録音中… 話し終わったら停止'; };
   voiceRec.onresult=e=>{ let interim=''; for (let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript; if(e.results[i].isFinal)voiceFullText+=t;else interim+=t;} document.getElementById('voiceFinal').textContent=voiceFullText; document.getElementById('voiceInter').textContent=interim; document.getElementById('voiceAnalyzeBtn').disabled=voiceFullText.trim().length===0; };
-  voiceRec.onerror=e=>{ if(e.error==='not-allowed') alert('マイクへのアクセスが許可されていません。'); stopVoiceRec(); };
+  voiceRec.onerror=e=>{ if(e.error==='not-allowed') alert('マイクへのアクセスが許可されてぁE��せん、E); stopVoiceRec(); };
   voiceRec.onend=()=>{ if(voiceIsRec) voiceRec.start(); };
   try { voiceRec.start(); } catch(_) {}
 }
 function stopVoiceRec() {
   voiceIsRec=false; document.getElementById('voiceFab').classList.remove('recording');
   document.getElementById('voiceDot').style.display='none';
-  document.getElementById('voiceStatusText').textContent='録音完了';
+  document.getElementById('voiceStatusText').textContent='録音完亁E;
   try { voiceRec?.stop(); } catch(_) {} voiceRec=null;
 }
 
-// ═══════════════════════════════════════
-// ECOSYSTEM AI
-// ═══════════════════════════════════════
-const LS={CLAUDE:'ml_claude',GEMINI:'ml_gemini',OPENAI:'ml_openai',PROXY:'kansei_proxy_url',MODEL:'kansei_model',TRANSFER:'is_transfer'};
+// ══════════════════════════════════════╁E// ECOSYSTEM AI
+// ══════════════════════════════════════╁Econst LS={CLAUDE:'ml_claude',GEMINI:'ml_gemini',OPENAI:'ml_openai',PROXY:'kansei_proxy_url',MODEL:'kansei_model',TRANSFER:'is_transfer'};
 const MODELS={
   claude:{label:'Claude',detail:'claude-sonnet-4-6',endpoint:'https://api.anthropic.com/v1/messages'},
   gemini:{label:'Gemini',detail:'gemini-2.0-flash',endpoint:'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'},
@@ -2348,16 +2309,16 @@ const MODELS={
 let activeModel=localStorage.getItem(LS.MODEL)||'claude';
 let lastAiResult='';
 const AI_PROMPTS={
-  summarize:t=>`以下のメモを3〜5行で簡潔に要約してください。日本語で。\n\n${t}`,
-  organize: t=>`以下のメモを見出しと箇条書きで整理してください。日本語で。\n\n${t}`,
-  expand:   t=>`以下のメモを補足・深掘りして、理解の助けになる情報を追加してください。日本語で。\n\n${t}`,
-  question: t=>`以下のメモの内容を深く理解するための学習・復習用の質問を5つ生成してください。日本語で。\n\n${t}`,
+  summarize:t=>`以下�EメモめE、E行で簡潔に要紁E��てください。日本語で、En\n${t}`,
+  organize: t=>`以下�Eメモを見�Eしと箁E��書きで整琁E��てください。日本語で、En\n${t}`,
+  expand:   t=>`以下�Eメモを補足・深掘りして、理解の助けになる情報を追加してください。日本語で、En\n${t}`,
+  question: t=>`以下�Eメモの冁E��を深く理解するための学習�E復習用の質問を5つ生�Eしてください。日本語で、En\n${t}`,
 };
 
 async function callAI(userPrompt) {
   const proxyUrl=localStorage.getItem(LS.PROXY)||'', m=MODELS[activeModel];
   const apiKey=localStorage.getItem(LS[activeModel.toUpperCase()])||'';
-  if (!apiKey&&!proxyUrl) throw new Error(`${m.label}のAPIキーが未設定です。⚙️設定から入力してください。`);
+  if (!apiKey&&!proxyUrl) throw new Error(`${m.label}のAPIキーが未設定です。⚙�E�設定から�E力してください。`);
 
   if (activeModel==='gemini') {
     const res=await fetch(`${m.endpoint}?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:userPrompt}]}]})});
@@ -2377,7 +2338,7 @@ async function callAI(userPrompt) {
 }
 
 async function callStructureAPI(text) {
-  const prompt=`以下の話し言葉のメモを、クイック参照アプリ用のデータに整理してください。必ずJSONのみ返してください:\n{"title":"一言タイトル","tags":["タグ1","タグ2"],"body":"詳細メモ","fields":[{"key":"項目名","value":"値"}]}\nルール: title 15字以内, tags 2〜4個, fields は構造化できるものだけ(なければ空配列)\n既存タグ候補: ${getAllTagsSorted().slice(0,10).join(',')}\nメモ: ${text}`;
+  const prompt=`以下�E話し言葉�Eメモを、クイチE��参�Eアプリ用のチE�Eタに整琁E��てください。忁E��JSONのみ返してください:\n{"title":"一言タイトル","tags":["タグ1","タグ2"],"body":"詳細メモ","fields":[{"key":"頁E��吁E,"value":"値"}]}\nルール: title 15字以冁E tags 2、E倁E fields は構造化できるも�EだぁEなければ空配�E)\n既存タグ候裁E ${getAllTagsSorted().slice(0,10).join(',')}\nメモ: ${text}`;
   const result=await callAI(prompt).catch(()=>null);
   if (!result) return {title:text.slice(0,30),tags:[],body:text,fields:[]};
   try { return JSON.parse(result.replace(/```json|```/g,'').trim()); } catch(_) { return {title:text.slice(0,30),tags:[],body:text,fields:[]}; }
@@ -2397,7 +2358,7 @@ function saveSettings() {
 }
 function renderModelSelect() {
   document.querySelectorAll('.model-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.model===activeModel));
-  const m=MODELS[activeModel]; document.getElementById('modelDetail').textContent=m?`使用モデル: ${m.detail}`:'';
+  const m=MODELS[activeModel]; document.getElementById('modelDetail').textContent=m?`使用モチE��: ${m.detail}`:'';
 }
 function updateAIBadge() { const m=MODELS[activeModel],b=document.getElementById('aiModelBadge'); if(b) b.textContent=m?m.label:activeModel; }
 function openSettingsSheet() { loadSettings(); document.getElementById('settingsSheet').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
@@ -2409,7 +2370,7 @@ function getEditorText() { const e=document.getElementById('memoPopupEditor'); r
 
 async function runAIAction(action, customPrompt) {
   const editorText=getEditorText();
-  if (!editorText.trim()&&!customPrompt) { showToast('メモにテキストを入力してから実行してください'); return; }
+  if (!editorText.trim()&&!customPrompt) { showToast('メモにチE��ストを入力してから実行してください'); return; }
   const prompt=customPrompt?`${customPrompt}\n\n---\n${editorText}`:AI_PROMPTS[action]?.(editorText)||editorText;
   document.getElementById('aiLoading').style.display='block';
   document.getElementById('aiResult').style.display='none';
@@ -2449,16 +2410,41 @@ function sendToEcosystem() {
   try {
     const payload={source:'quick-ref',exportedAt:Date.now(),items:allItems.filter(i=>!i.sensitive)};
     localStorage.setItem(LS.TRANSFER,JSON.stringify(payload)); showToast(`${payload.items.length}件をis_transferに書き込みました`);
-  } catch(e) { showToast('送信に失敗しました（容量超過の可能性）'); }
+  } catch(e) { showToast('送信に失敗しました�E�容量趁E��の可能性�E�E); }
 }
 function checkIncomingTransfer() {
-  try { const raw=localStorage.getItem(LS.TRANSFER); if (!raw) return; const p=JSON.parse(raw); if (p.source==='quick-ref') return; if (!Array.isArray(p.items)||!p.items.length) return; if (confirm(`${p.source||'他アプリ'}から${p.items.length}件のデータがあります。インポートしますか？`)) { importItemsFromPayload(p.items,p.source||'transfer'); localStorage.removeItem(LS.TRANSFER); } } catch(_) {}
+  // ms_transfer (music-suite) �̎�����M
+  try {
+    const msRaw = localStorage.getItem("ms_transfer");
+    if (msRaw) {
+      const ms = JSON.parse(msRaw);
+      if (ms.source === "music-suite" && ms.title) {
+        const now = Date.now();
+        const item = {
+          id: crypto.randomUUID(),
+          title: ms.title || "music-suite�f��",
+          tags: ["���y", "music-suite"],
+          body: [ms.bpm ? `BPM: ${ms.bpm}` : "", ms.key ? `Key: ${ms.key}` : "", ms.memo || ""].filter(Boolean).join("\n"),
+          fields: [
+            ms.bpm   ? { key: "BPM", value: String(ms.bpm) }   : null,
+            ms.key   ? { key: "Key", value: ms.key }            : null,
+            ms.genre ? { key: "�W������", value: ms.genre }     : null
+          ].filter(Boolean),
+          url: "", sensitive: false,
+          createdAt: now, updatedAt: now, source: "music-suite"
+        };
+        if (confirm(`music-suite����u${item.title}�v����M���܂����Bquick-ref�ɒǉ����܂����H`)) {
+          dbPut(item).then(() => { reload(); showToast("?? music-suite����ǉ����܂���"); });
+        }
+        localStorage.removeItem("ms_transfer");
+      }
+    }
+  } catch(_) {}
+  try { const raw=localStorage.getItem(LS.TRANSFER); if (!raw) return; const p=JSON.parse(raw); if (p.source==='quick-ref') return; if (!Array.isArray(p.items)||!p.items.length) return; if (confirm(`${p.source||'他アプリ'}から${p.items.length}件のチE�Eタがあります。インポ�Eトしますか�E�`)) { importItemsFromPayload(p.items,p.source||'transfer'); localStorage.removeItem(LS.TRANSFER); } } catch(_) {}
 }
 
-// ═══════════════════════════════════════
-// RICH EDITOR
-// ═══════════════════════════════════════
-function fmtCmd(cmd) { document.getElementById('fBody').focus(); document.execCommand(cmd,false,null); }
+// ══════════════════════════════════════╁E// RICH EDITOR
+// ══════════════════════════════════════╁Efunction fmtCmd(cmd) { document.getElementById('fBody').focus(); document.execCommand(cmd,false,null); }
 function fmtMark(color) {
   const e=document.getElementById('fBody'); e.focus(); const sel=window.getSelection(); if(!sel||sel.isCollapsed) return;
   const range=sel.getRangeAt(0), span=document.createElement('span'); span.dataset.mark=color;
@@ -2475,45 +2461,37 @@ function popupMark(color) {
 function openMemoPopup() { document.getElementById('memoPopupEditor').innerHTML=document.getElementById('fBody').innerHTML; document.getElementById('memoPopup').classList.add('open'); setTimeout(()=>document.getElementById('memoPopupEditor').focus(),300); }
 function closeMemoPopup() { document.getElementById('fBody').innerHTML=document.getElementById('memoPopupEditor').innerHTML; document.getElementById('memoPopup').classList.remove('open'); }
 
-// ═══════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════
-let toastTimer=null;
+// ══════════════════════════════════════╁E// TOAST
+// ══════════════════════════════════════╁Elet toastTimer=null;
 function showToast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2200); }
 
-// ═══════════════════════════════════════
-// RELOAD
-// ═══════════════════════════════════════
-async function reload() {
+// ══════════════════════════════════════╁E// RELOAD
+// ══════════════════════════════════════╁Easync function reload() {
   allItems=await dbGetAll(); attachmentMeta=await dbGetAllAttachmentMeta();
   if (sessionKey) await refreshDecryptedCache();
   renderTagFilter(); renderAll(); updateBackupBanner(); syncEcosystemTags(); updateReviewBadge();
 }
 
-// ═══════════════════════════════════════
-// AI VOICE PREVIEW
-// ═══════════════════════════════════════
-function renderAIPreview(data) {
+// ══════════════════════════════════════╁E// AI VOICE PREVIEW
+// ══════════════════════════════════════╁Efunction renderAIPreview(data) {
   document.getElementById('aiTitle').value=data.title||'';
   document.getElementById('aiBody').value=data.body||'';
   const tagsRow=document.getElementById('aiTagsRow'); tagsRow.innerHTML='';
   (data.tags||[]).forEach(tag=>{ const chip=document.createElement('span'); chip.className='chip'; chip.style.cursor='pointer'; chip.textContent=`#${tag}`; chip.dataset.tag=tag; tagsRow.appendChild(chip); });
   document.getElementById('aiPreviewArea').style.display='block';
-  document.getElementById('voiceAnalyzeBtn').textContent='✨ AI で整理する';
+  document.getElementById('voiceAnalyzeBtn').textContent='✨ AI で整琁E��めE;
   document.getElementById('voiceAnalyzeBtn').disabled=false;
   if (data.fields?.length) { const ab=document.getElementById('aiBody'); const ft=data.fields.map(f=>`${f.key}: ${f.value}`).join('\n'); if (!ab.value.includes(ft)) ab.value=(ab.value+'\n\n'+ft).trim(); }
 }
 
-// ═══════════════════════════════════════
-// EVENT WIRING
-// ═══════════════════════════════════════
-function wireEvents() {
+// ══════════════════════════════════════╁E// EVENT WIRING
+// ══════════════════════════════════════╁Efunction wireEvents() {
   // ── QUICK INPUT DOCK ──
   document.getElementById('fabBtn').addEventListener('click', () => { haptic(); openNew(); });
   document.getElementById('voiceFab').addEventListener('click', () => { haptic(); openVoiceModal(); });
   document.getElementById('dockCam').addEventListener('click', () => {
     haptic();
-    // シートが開いていなければ先に新規作成
+    // シートが開いてぁE��ければ先に新規作�E
     if (!document.getElementById('editSheet').classList.contains('open')) openNew();
     setTimeout(() => document.getElementById('imgCameraInput').click(), 200);
   });
@@ -2546,13 +2524,13 @@ function wireEvents() {
   document.getElementById('addFieldBtn').addEventListener('click',()=>{ draftFields.push({key:'',value:''}); renderFieldRows(); });
   document.getElementById('sensitiveToggle').addEventListener('change',e=>{ draftSensitive=e.target.checked; });
 
-  // ── 画像ボタン（シート内） ──
+  // ── 画像�Eタン�E�シート�E�E�E──
   document.getElementById('imgPickBtn').addEventListener('click', () => { haptic(); document.getElementById('imgFileInput').click(); });
   document.getElementById('imgCameraBtn').addEventListener('click', () => { haptic(); document.getElementById('imgCameraInput').click(); });
   document.getElementById('imgSelfieBtn').addEventListener('click', () => { haptic(); document.getElementById('imgSelfieInput').click(); });
   document.getElementById('imgIllustBtn').addEventListener('click', tryImportFromIllustStudio);
 
-  // 複数ファイル対応 (multiple属性あり)
+  // 褁E��ファイル対忁E(multiple属性あり)
   const handleImgFiles = async (files) => {
     for (const f of Array.from(files)) {
       const b = await resizeImage(f); addBlobToDraft(b, f.name);
@@ -2568,11 +2546,11 @@ function wireEvents() {
   document.getElementById('videoCamInput').addEventListener('change', e => { if(e.target.files[0]) addVideoToDraft(e.target.files[0], e.target.files[0].name); e.target.value=''; });
   document.getElementById('videoFileInput').addEventListener('change', e => { Array.from(e.target.files).forEach(f => addVideoToDraft(f, f.name)); e.target.value=''; });
 
-  // ── 画像プレビュー ──
+  // ── 画像�Eレビュー ──
   document.getElementById('imgPreviewClose').addEventListener('click',()=>{ document.getElementById('imgPreviewOverlay').classList.remove('open'); document.getElementById('imgPreviewImg').src=''; });
   document.getElementById('imgPreviewOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('imgPreviewOverlay')){ document.getElementById('imgPreviewOverlay').classList.remove('open'); document.getElementById('imgPreviewImg').src=''; } });
 
-  // ── ペースト対応（sheetBodyへのpaste eventで画像をキャッチ） ──
+  // ── ペ�Eスト対応！EheetBodyへのpaste eventで画像をキャチE���E�E──
   document.querySelector('.sheet-body').addEventListener('paste', async e => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -2587,7 +2565,7 @@ function wireEvents() {
     }
   });
 
-  // ── 共有バナー ──
+  // ── 共有バナ�E ──
   document.getElementById('shareReceivedUse').addEventListener('click', () => { haptic(); useSharedText(); });
   document.getElementById('shareReceivedDismiss').addEventListener('click', () => { document.getElementById('shareReceivedBanner').classList.remove('show'); sharedText=null; });
 
@@ -2600,14 +2578,14 @@ function wireEvents() {
       mediaRecorder.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); clearInterval(recTimerInterval); recTimerInterval=null; document.getElementById('recStatus').classList.remove('active'); const blob=new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/mp4'}); const ext=(mediaRecorder.mimeType||'audio/mp4').includes('webm')?'webm':'m4a'; addAudioToDraft(blob,`録音-${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}.${ext}`); mediaRecorder=null; recChunks=[]; };
       mediaRecorder.start(500); document.getElementById('recStatus').classList.add('active'); document.getElementById('recTimer').textContent='00:00';
       recTimerInterval=setInterval(()=>{ recSeconds++; document.getElementById('recTimer').textContent=formatTime(recSeconds); },1000);
-    } catch(_) { showToast('マイクへのアクセスが許可されていません。'); }
+    } catch(_) { showToast('マイクへのアクセスが許可されてぁE��せん、E); }
   });
   document.getElementById('recStopBtn').addEventListener('click',()=>{ if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop(); });
   document.getElementById('musicSuiteBtn').addEventListener('click',()=>{
     let data=null;
     if (location.hash.startsWith('#import=')) { try { data=JSON.parse(atob(location.hash.slice(8))); history.replaceState(null,'',location.pathname); } catch(_) {} }
     if (!data) { for (const k of ['ms_transfer','music_transfer','ms_export']) { const r=localStorage.getItem(k); if(r){try{data=JSON.parse(r);localStorage.removeItem(k);break;}catch(_){}} } }
-    if (!data) { alert('music-suiteからの転送データが見つかりません。'); return; }
+    if (!data) { alert('music-suiteからの転送データが見つかりません、E); return; }
     const name=`${data.source||'music-suite'} ${data.key||''}${data.bpm?' '+data.bpm+'BPM':''}`.trim();
     const jsonBlob=new Blob([JSON.stringify(data)],{type:'application/json'});
     draftAudios.push({tempId:makeTempId(),blob:jsonBlob,url:null,name,type:'music-ref',meta:{bpm:data.bpm,key:data.key,source:data.source},isExisting:false}); renderAudioList();
@@ -2624,7 +2602,7 @@ function wireEvents() {
     const text=voiceFullText.trim(); if (!text) return;
     document.getElementById('voiceAnalyzeBtn').disabled=true; document.getElementById('voiceAnalyzeBtn').textContent='✨ 解析中…'; stopVoiceRec();
     try { const r=await callStructureAPI(text); renderAIPreview(r); }
-    catch(e) { alert(`AI解析に失敗しました:\n${e.message}`); document.getElementById('voiceAnalyzeBtn').disabled=false; document.getElementById('voiceAnalyzeBtn').textContent='✨ AI で整理する'; }
+    catch(e) { alert(`AI解析に失敗しました:\n${e.message}`); document.getElementById('voiceAnalyzeBtn').disabled=false; document.getElementById('voiceAnalyzeBtn').textContent='✨ AI で整琁E��めE; }
   });
   document.getElementById('aiSaveBtn').addEventListener('click',async()=>{
     const title=document.getElementById('aiTitle').value.trim(); if (!title) return;
@@ -2641,16 +2619,16 @@ function wireEvents() {
     const v1=document.getElementById('pinInput1').value, v2=document.getElementById('pinInput2').value;
     if (!v1){document.getElementById('pinError').textContent='パスコードを入力してください'; document.getElementById('pinError').style.display='block'; return;}
     if (pinMode==='setup') {
-      if (v1.length<4){document.getElementById('pinError').textContent='4文字以上で入力してください'; document.getElementById('pinError').style.display='block'; return;}
+      if (v1.length<4){document.getElementById('pinError').textContent='4斁E��以上で入力してください'; document.getElementById('pinError').style.display='block'; return;}
       if (v1!==v2){document.getElementById('pinError').textContent='確認用と一致しません'; document.getElementById('pinError').style.display='block'; return;}
       await setupPin(v1);
-    } else { const ok=await tryUnlockWithPin(v1); if (!ok){document.getElementById('pinError').textContent='パスコードが違います'; document.getElementById('pinError').style.display='block'; return;} }
+    } else { const ok=await tryUnlockWithPin(v1); if (!ok){document.getElementById('pinError').textContent='パスコードが違いまぁE; document.getElementById('pinError').style.display='block'; return;} }
     await refreshDecryptedCache(); updateLockButton(); closePinModal(true); renderAll();
   });
   document.getElementById('pinForgotBtn').addEventListener('click',async()=>{
-    if (!confirm('パスコードをリセットすると保護された項目はすべて削除されます。続行しますか？')) return;
+    if (!confirm('パスコードをリセチE��すると保護された頁E��はすべて削除されます。続行しますか�E�E)) return;
     const sensitiveItems=allItems.filter(it=>it.sensitive); for (const it of sensitiveItems) await dbDelete(it.id);
-    localStorage.removeItem(PIN_META_KEY); sessionKey=null; decryptedCache.clear(); await reload(); updateLockButton(); closePinModal(false); alert('パスコードと保護された項目をリセットしました。');
+    localStorage.removeItem(PIN_META_KEY); sessionKey=null; decryptedCache.clear(); await reload(); updateLockButton(); closePinModal(false); alert('パスコードと保護された頁E��をリセチE��しました、E);
   });
 
   // ── iCloud / Shortcuts ──
@@ -2688,10 +2666,10 @@ function wireEvents() {
   document.getElementById('exportBtn').addEventListener('click',async()=>{ closeMenu(); await doExport(); });
   document.getElementById('importBtn').addEventListener('click',()=>{ closeMenu(); document.getElementById('importFileInput').click(); });
   document.getElementById('importFileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(f){const r=await doImport(f); alert(r.msg);} e.target.value=''; });
-  document.getElementById('tagBridgeBtn').addEventListener('click',()=>{ closeMenu(); syncEcosystemTags(); const tags=getAllTagsSorted(); alert(tags.length>0?`${tags.length}件のタグをlocalStorage(ecosystem_tags)に書き込みました。\n\nタグ一覧:\n${tags.map(t=>'・'+t).join('\n')}`:'タグがまだありません。'); });
+  document.getElementById('tagBridgeBtn').addEventListener('click',()=>{ closeMenu(); syncEcosystemTags(); const tags=getAllTagsSorted(); alert(tags.length>0?`${tags.length}件のタグをlocalStorage(ecosystem_tags)に書き込みました、En\nタグ一覧:\n${tags.map(t=>'・'+t).join('\n')}`:'タグがまだありません、E); });
   document.getElementById('kanseiExportBtn').addEventListener('click',()=>{ closeMenu(); sendToKansei(themeTag); });
   document.getElementById('iconGenBtn').addEventListener('click',()=>{ closeMenu(); openIconModal(); });
-  document.getElementById('themeUrlBtn').addEventListener('click',()=>{ closeMenu(); const tags=getAllTagsSorted(); if(!tags.length){alert('タグがまだありません。');return;} const base=location.origin+location.pathname; alert(`テーマ別URL一覧\n\n${tags.map(t=>`${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`).join('\n\n')}`); });
+  document.getElementById('themeUrlBtn').addEventListener('click',()=>{ closeMenu(); const tags=getAllTagsSorted(); if(!tags.length){alert('タグがまだありません、E);return;} const base=location.origin+location.pathname; alert(`チE�Eマ別URL一覧\n\n${tags.map(t=>`${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`).join('\n\n')}`); });
   document.getElementById('backupBannerBtn').addEventListener('click', doExport);
 
   document.getElementById('iconOverlay').addEventListener('click', closeIconModal);
@@ -2702,15 +2680,13 @@ function wireEvents() {
 
   document.getElementById('themeBannerIconBtn').addEventListener('click',()=>{ if(!themeTag) return; const [c1,c2]=getTagColors(themeTag); document.getElementById('iconEmoji').value=getTagEmoji(themeTag); document.getElementById('iconBgColor').value=c1; document.getElementById('iconBgColor2').value=c2; document.getElementById('iconFgColor').value='#FFFFFF'; openIconModal(); });
   document.getElementById('themeBannerKanseiBtn').addEventListener('click',()=>sendToKansei(themeTag));
-  document.getElementById('themeBannerAddBtn').addEventListener('click',()=>{ const tag=themeTag||''; const url=`${location.origin+location.pathname}?tag=${encodeURIComponent(tag)}`; document.getElementById('addGuideUrl').textContent=url; document.getElementById('addGuideTitle').textContent=`📱 「#${tag}」をホーム画面に追加`; document.getElementById('addGuide').classList.add('open'); });
+  document.getElementById('themeBannerAddBtn').addEventListener('click',()=>{ const tag=themeTag||''; const url=`${location.origin+location.pathname}?tag=${encodeURIComponent(tag)}`; document.getElementById('addGuideUrl').textContent=url; document.getElementById('addGuideTitle').textContent=`📱 、E${tag}」をホ�Eム画面に追加`; document.getElementById('addGuide').classList.add('open'); });
   document.getElementById('addGuideClose').addEventListener('click',()=>document.getElementById('addGuide').classList.remove('open'));
   document.getElementById('addGuide').addEventListener('click',e=>{ if(e.target===document.getElementById('addGuide')) document.getElementById('addGuide').classList.remove('open'); });
 }
 
-// ═══════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════
-async function init() {
+// ══════════════════════════════════════╁E// INIT
+// ══════════════════════════════════════╁Easync function init() {
   try {
     await openDB();
     allItems = await dbGetAll();
@@ -2732,7 +2708,7 @@ async function init() {
     updateReviewBadge();
   } catch(err) {
     console.error(err);
-    document.getElementById('loadingOverlay').textContent = 'DB起動に失敗しました。リロードしてください。';
+    document.getElementById('loadingOverlay').textContent = 'DB起動に失敗しました。リロードしてください、E;
     return;
   }
   document.getElementById('loadingOverlay').classList.add('hidden');
@@ -2748,3 +2724,7 @@ init();
 </script>
 </body>
 </html>
+<script src="./shared/senders/flow-mind.js"></script>
+<script src="./shared/senders/flowchart-lab.js"></script>
+<script src="./shared/senders/creative-apps.js"></script>
+<script src="./shared/senders/security-apps.js"></script>
