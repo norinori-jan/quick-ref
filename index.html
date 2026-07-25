@@ -1,5 +1,4 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -1354,6 +1353,7 @@ let draftSensitive = false;
 let draftImages = [];
 let draftAudios = [];
 let draftVideos = [];
+let pendingDeleteAttIds = []; // キャンセル可能にするため、添付削除は保存確定まで保留する
 let objURLs = [];
 let mediaRecorder = null, recChunks = [], recTimerInterval = null, recSeconds = 0;
 let sharedText = null; // Share Targetで受け取ったテキスト
@@ -1466,7 +1466,7 @@ function renderTagFilter() {
 // ─────────────────────────────
 function openNew() {
   editingId=null; draftTags=[]; draftFields=[]; draftSensitive=false;
-  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[];
+  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[]; pendingDeleteAttIds=[];
   document.getElementById('sheetTitle').textContent='新規追加';
   document.getElementById('fTitle').value='';
   document.getElementById('fBody').innerHTML='';
@@ -1496,7 +1496,7 @@ async function openEdit(id) {
   }
 
   editingId=id; draftTags=[...(item.tags||[])]; draftFields=[...plainFields]; draftSensitive=!!item.sensitive;
-  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[]; stopRecordingIfActive();
+  revokeAllObjURLs(); draftImages=[]; draftAudios=[]; draftVideos=[]; pendingDeleteAttIds=[]; stopRecordingIfActive();
   document.getElementById('fTitle').value=item.title||'';
   document.getElementById('fBody').innerHTML=plainBody;
   document.getElementById('tagInput').value='';
@@ -1532,6 +1532,7 @@ function openSheet() {
 }
 function closeSheet() {
   stopRecordingIfActive(); revokeAllObjURLs();
+  pendingDeleteAttIds=[]; // キャンセル時は削除保留分を破棄(DBはそのまま)
   document.getElementById('editSheet').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
 }
@@ -1563,6 +1564,9 @@ async function saveItem() {
   }
 
   await dbPut(item);
+  // 保留していた添付削除をここで確定実行(保存時のみ実際に消す)
+  for (const attId of pendingDeleteAttIds) await dbDeleteAttachment(attId);
+  pendingDeleteAttIds=[];
   // flow-mind連携: 保存のたびに感情推定 → is_emotion_transfer に自動送信
   window.QuickRefBridge?.onItemSaved(item);
   await saveImageAttachments(item.id);
@@ -1623,8 +1627,8 @@ function renderImageThumbs() {
     const thumb=document.createElement('img'); thumb.className='img-thumb'; thumb.src=img.url;
     thumb.addEventListener('click',()=>openImgPreview(img.url));
     const del=document.createElement('button'); del.type='button'; del.className='img-thumb-del'; del.textContent='×';
-    del.addEventListener('click',async()=>{
-      if (img.isExisting&&img.attId) await dbDeleteAttachment(img.attId);
+    del.addEventListener('click',()=>{
+      if (img.isExisting&&img.attId) pendingDeleteAttIds.push(img.attId);
       URL.revokeObjectURL(img.url); draftImages.splice(i,1); renderImageThumbs();
     });
     wrap.appendChild(thumb); wrap.appendChild(del); document.getElementById('imgThumbs').appendChild(wrap);
@@ -1697,8 +1701,8 @@ function renderAudioList() {
       div.className='audio-item';
       div.innerHTML=`<span class="audio-item-label">${escapeHtml(aud.name)}</span><audio src="${aud.url}" controls preload="metadata"></audio><button type="button" class="audio-item-del" data-i="${i}">×</button>`;
     }
-    div.querySelector('[data-i]').addEventListener('click',async()=>{
-      if (aud.isExisting&&aud.attId) await dbDeleteAttachment(aud.attId);
+    div.querySelector('[data-i]').addEventListener('click',()=>{
+      if (aud.isExisting&&aud.attId) pendingDeleteAttIds.push(aud.attId);
       if (aud.url) URL.revokeObjectURL(aud.url); draftAudios.splice(i,1); renderAudioList();
     });
     el.appendChild(div);
@@ -1732,8 +1736,8 @@ function renderVideoList() {
       <video src="${v.url}" controls playsinline preload="metadata" style="width:100%;max-height:220px;border-radius:10px 10px 0 0;background:#000;"></video>
       <div class="video-item-label">🎬 ${escapeHtml(v.name)}</div>
       <button type="button" class="video-item-del" data-i="${i}">✕</button>`;
-    wrap.querySelector('[data-i]').addEventListener('click', async () => {
-      if (v.isExisting && v.attId) await dbDeleteAttachment(v.attId);
+    wrap.querySelector('[data-i]').addEventListener('click', () => {
+      if (v.isExisting && v.attId) pendingDeleteAttIds.push(v.attId);
       URL.revokeObjectURL(v.url); draftVideos.splice(i, 1); renderVideoList();
     });
     el.appendChild(wrap);
@@ -1992,6 +1996,7 @@ function showSiriShortcutGuide() {
     '③「URLを開く」を追加',
     '④ 以下のURLを入力：',
     '',
+    '  ⚡ 即保存(推奨): ' + base + '?shortcut=quicksave&text=[ここに「テキストを入力」変数を挿入]',
     '  音声追加: ' + base + '?shortcut=voice',
     '  カメラ追加: ' + base + '?shortcut=camera',
     '  新規追加: ' + base + '?shortcut=new',
@@ -2000,6 +2005,10 @@ function showSiriShortcutGuide() {
     '⑤ Siriフレーズを設定（例：「参照に追加」）',
     '',
     '設定後「Hey Siri、参照に追加」で即起動します。',
+    '',
+    '【⚡即保存の作り方】',
+    'ショートカット手順を「テキストを入力」→「URLエンコード」',
+    '→「URLを開く」の順に組むと、確認画面なしで一発保存できます。',
   ].join('\n');
   alert(msg);
 }
@@ -2011,7 +2020,12 @@ function checkShortcutParam() {
   const params = new URLSearchParams(location.search);
   const sc = params.get('shortcut');
   if (!sc) return;
+  const quickText = params.get('text') || '';
   history.replaceState(null, '', location.pathname + (location.hash || ''));
+
+  // quicksave: UIを一切開かず即保存(Google Keepウィジェット相当の速さを狙う)
+  if (sc === 'quicksave') { quickSaveText(quickText); return; }
+
   setTimeout(() => {
     if (sc === 'voice')  { openVoiceModal(); }
     if (sc === 'camera') { openNew(); setTimeout(() => document.getElementById('imgCameraInput').click(), 300); }
@@ -2019,6 +2033,32 @@ function checkShortcutParam() {
     if (sc === 'review') { openReview(); }
     if (sc === 'export') { saveToiCloud(); }
   }, 600);
+}
+
+// Siriショートカットから「一言→即保存」するための最速経路。
+// 確認画面を挟まず保存するので、内容は1行目をタイトル・全文をメモにそのまま入れる。
+// タグ付けやAI整理が必要な項目は、あとで通常の編集画面から直せばよい。
+async function quickSaveText(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) { showToast('保存する内容が空です'); return; }
+  const lines = trimmed.split('\n');
+  const now = Date.now();
+  const item = {
+    id: crypto.randomUUID(),
+    title: (lines[0] || '無題').slice(0, 60),
+    tags: [],
+    body: escapeHtml(trimmed).replace(/\n/g, '<br>'),
+    fields: [],
+    url: '',
+    sensitive: false,
+    createdAt: now,
+    updatedAt: now
+  };
+  await dbPut(item);
+  window.QuickRefBridge?.onItemSaved(item);
+  await reload();
+  syncEcosystemTags();
+  showToast('⚡ 保存しました: ' + item.title);
 }
 
 // ─────────────────────────────
