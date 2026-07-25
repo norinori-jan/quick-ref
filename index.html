@@ -2734,28 +2734,62 @@ async function init() {
     setupSWMessages();
     updateBackupBanner();
     updateReviewBadge();
-    // flow-mind連携: 現在のattractor状態インジケーターをヘッダーに常設
+
+    // flow-mind連携
     const indicator = window.QuickRefBridge?.createAttractorIndicator();
     if (indicator) document.querySelector('.header-actions').prepend(indicator);
+
   } catch(err) {
     console.error(err);
-    document.getElementById('loadingOverlay').textContent = 'DB起動に失敗しました。リロードしてください。';
+    document.getElementById('loadingOverlay').textContent =
+      'DB起動に失敗しました。リロードしてください。';
     return;
   }
+
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
 
+// Service Worker 登録
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () =>
-    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e))
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(e => console.warn('SW:', e))
   );
 }
 
+// ⭐ Push購読コード（ここが今回追加する部分）
+const vapidPublicKey = "あなたのVAPID公開鍵";
+
+async function subscribe() {
+  const registration = await navigator.serviceWorker.ready;
+
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: vapidPublicKey
+  });
+
+  await fetch("https://quick-ref-push-worker.arielfortuneoffice.workers.dev/push/subscribe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer quick-ref-secret-2026-nori-xyz"
+    },
+    body: JSON.stringify({
+      appName: "quick-ref",
+      subscription
+    })
+  });
+}
+
+// ⭐ ページ起動後に購読を実行
 init();
+subscribe();
 </script>
+
 <script src="./shared/senders/flow-mind.js"></script>
 <script src="./shared/senders/flowchart-lab.js"></script>
 <script src="./shared/senders/creative-apps.js"></script>
 <script src="./shared/senders/security-apps.js"></script>
+
 </body>
 </html>

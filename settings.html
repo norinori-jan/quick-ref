@@ -1,0 +1,58 @@
+<h2>通知サーバー設定</h2>
+
+<label>Push Worker Endpoint:</label>
+<input id="push-endpoint" type="text" placeholder="https://quick-ref-push-worker.arielfortuneoffice.workers.dev">
+
+<label>AUTH_TOKEN:</label>
+<input id="push-token" type="text" placeholder="quick-ref-secret-2026-nori-xyz">
+
+<button id="push-save">保存</button>
+<button id="push-subscribe">購読登録</button>
+<button id="push-unsubscribe">購読解除</button>
+
+<p id="push-status"></p>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(() => console.log('Service Worker registered'))
+      .catch(err => console.error('SW registration failed:', err));
+  }
+</script>
+
+
+<script src="./shared/push-client.js"></script>
+<script>
+  const pc = window.PushClient;
+
+  document.getElementById('push-save').onclick = () => {
+    const endpoint = document.getElementById('push-endpoint').value;
+    const token = document.getElementById('push-token').value;
+    pc.setConfig(endpoint, token);
+    alert('保存しました');
+  };
+
+  document.getElementById('push-subscribe').onclick = async () => {
+    try {
+      await pc.subscribe('quick-ref');
+      alert('購読登録が完了しました');
+    } catch (e) {
+      alert('エラー: ' + e.message);
+    }
+  };
+
+  document.getElementById('push-unsubscribe').onclick = async () => {
+    try {
+      await pc.unsubscribe();
+      alert('購読解除しました');
+    } catch (e) {
+      alert('エラー: ' + e.message);
+    }
+  };
+
+  async function updateStatus() {
+    const status = await pc.getStatus();
+    document.getElementById('push-status').textContent = '状態: ' + status;
+  }
+
+  updateStatus();
+</script>
