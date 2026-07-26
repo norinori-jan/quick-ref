@@ -1,181 +1,197 @@
-// quick-ref Service Worker v2
-// - オフラインキャッシュ
-// - Background Sync (iCloud Drive 保存キュー)
-// - Periodic Background Sync (定期バックアップ通知)
-// - Push通知
-// - 通知クリックでアプリを開く
+/* ─────────────────────────────
+   quick-ref / Service Worker (統合版)
+   - オフラインキャッシュ
+   - バージョン管理
+   - iCloudバックアップトリガー
+   - Share Target / Shortcut連携補助
+───────────────────────────── */
 
-const CACHE_NAME = 'quick-ref-cache-v2';
-const APP_SHELL = ['./', './index.html', './manifest.json'];
+const CACHE_VERSION = 'qr-cache-v4';
+const APP_SHELL = [
+  '/',
+  '/index.html',
+  '/sw.js',
+  '/shared/senders/flow-mind.js',
+  '/shared/senders/flowchart-lab.js',
+  '/shared/senders/creative-apps.js',
+  '/shared/senders/security-apps.js',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
+];
 
-/* ------------------------------
-   Install
------------------------------- */
-self.addEventListener('install', (event) => {
+const STATIC_ASSETS = [
+  '/styles.css',
+  '/manifest.json'
+];
+
+const CACHE_WHITELIST = [CACHE_VERSION];
+
+/* ─────────────────────────────
+   インストール
+───────────────────────────── */
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      await cache.addAll([...APP_SHELL, ...STATIC_ASSETS].filter(Boolean));
+      self.skipWaiting();
+    })()
   );
 });
 
-/* ------------------------------
-   Activate
------------------------------- */
-self.addEventListener('activate', (event) => {
+/* ─────────────────────────────
+   アクティベート
+───────────────────────────── */
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-      )
-      .then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter(k => !CACHE_WHITELIST.includes(k))
+          .map(k => caches.delete(k))
+      );
+      self.clients.claim();
+    })()
   );
 });
 
-/* ------------------------------
-   Fetch
------------------------------- */
-self.addEventListener('fetch', (event) => {
+/* ─────────────────────────────
+   fetch: オフライン対応
+───────────────────────────── */
+self.addEventListener('fetch', event => {
   const req = event.request;
+
+  // POST / PUT / DELETE はそのままネットへ
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // 外部リソースはスキップ
-  if (url.origin !== self.location.origin) return;
-
-  // navigate は network-first
-  if (req.mode === 'navigate') {
+  // API系はネット優先
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+      (async () => {
+        try {
+          const res = await fetch(req);
           return res;
-        })
-        .catch(() => caches.match('./index.html'))
+        } catch (_) {
+          return new Response(
+            JSON.stringify({ error: 'offline', message: 'APIはオフラインです' }),
+            { status: 503, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      })()
     );
     return;
   }
 
-  // assets は cache-first
+  // App Shell / 静的ファイルは cache-first
   event.respondWith(
-    caches.match(req).then((cached) => {
+    (async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      const cached = await cache.match(req);
       if (cached) return cached;
 
-      return fetch(req).then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-        return res;
-      });
-    })
-  );
-});
-
-/* ------------------------------
-   Background Sync (iCloud Drive)
------------------------------- */
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'icloud-backup') {
-    event.waitUntil(syncToICloud());
-  }
-});
-
-async function syncToICloud() {
-  const clients = await self.clients.matchAll({
-    type: 'window',
-    includeUncontrolled: true,
-  });
-  clients.forEach((client) =>
-    client.postMessage({ type: 'SW_SYNC_ICLOUD' })
-  );
-}
-
-/* ------------------------------
-   Periodic Background Sync
------------------------------- */
-self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'daily-backup-reminder') {
-    event.waitUntil(showBackupReminder());
-  }
-});
-
-async function showBackupReminder() {
-  if (Notification.permission !== 'granted') return;
-
-  await self.registration.showNotification('クイック参照 バックアップ', {
-    body: '📦 今日のデータをiCloud Driveにバックアップしますか？',
-    icon: './icon-192.png',
-    badge: './icon-192.png',
-    tag: 'backup-reminder',
-    actions: [
-      { action: 'backup', title: '今すぐバックアップ' },
-      { action: 'dismiss', title: '後で' },
-    ],
-    data: { action: 'backup' },
-  });
-}
-
-/* ------------------------------
-   Push通知
------------------------------- */
-self.addEventListener('push', (event) => {
-  let data = { title: '通知', body: '' };
-
-  try {
-    if (event.data) data = event.data.json();
-  } catch (e) {
-    console.warn('[sw] push payload parse error:', e);
-  }
-
-  const options = {
-    body: data.body || '',
-    icon: './icon-192.png',
-    badge: './icon-192.png',
-    data: { url: data.url || './' },
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'クイック参照', options)
-  );
-});
-
-/* ------------------------------
-   通知クリック（Push通知用）
------------------------------- */
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const targetUrl = event.notification.data?.url || './';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(location.origin) && 'focus' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
+      try {
+        const res = await fetch(req);
+        if (
+          res.ok &&
+          (req.url.startsWith(self.location.origin) ||
+            req.url.endsWith('.js') ||
+            req.url.endsWith('.css') ||
+            req.url.endsWith('.html'))
+        ) {
+          cache.put(req, res.clone());
         }
+        return res;
+      } catch (_) {
+        // オフライン時の簡易フォールバック
+        if (url.pathname === '/' || url.pathname === '/index.html') {
+          const shell = await cache.match('/index.html');
+          if (shell) return shell;
+        }
+        return new Response('オフラインです。キャッシュがありません。', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
       }
-      if (clients.openWindow) return clients.openWindow(targetUrl);
-    })
+    })()
   );
 });
 
-/* ------------------------------
-   通知クリック（バックアップ通知用）
------------------------------- */
-self.addEventListener('notificationclick', (event) => {
-  if (event.action !== 'backup' && event.notification.data?.action !== 'backup') return;
+/* ─────────────────────────────
+   メッセージ: iCloudバックアップなど
+───────────────────────────── */
+self.addEventListener('message', event => {
+  const data = event.data || {};
+  if (!data.type) return;
 
-  event.notification.close();
+  // ページ側からの明示的トリガー
+  if (data.type === 'REQUEST_ICLOUD_EXPORT') {
+    broadcast({ type: 'TRIGGER_ICLOUD_EXPORT' });
+  }
 
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      if (clients.length > 0) {
-        clients[0].focus();
-        clients[0].postMessage({ type: 'TRIGGER_ICLOUD_EXPORT' });
-      } else {
-        self.clients.openWindow('./index.html?shortcut=export');
+  // 定期バックアップ予約（例: periodic sync の代替）
+  if (data.type === 'SCHEDULE_ICLOUD_SYNC') {
+    // ここでは簡易的に即時通知だけ
+    broadcast({ type: 'SW_SYNC_ICLOUD' });
+  }
+});
+
+/* ─────────────────────────────
+   Push / Periodic Sync の拡張余地
+───────────────────────────── */
+// ここでは実装しないが、必要なら:
+// self.addEventListener('periodicsync', ...);
+// self.addEventListener('push', ...);
+
+/* ─────────────────────────────
+   クライアント一斉通知
+───────────────────────────── */
+async function broadcast(message) {
+  const clients = await self.clients.matchAll({ includeUncontrolled: true });
+  for (const client of clients) {
+    client.postMessage(message);
+  }
+}
+
+/* ─────────────────────────────
+   Share Target (Android Chrome 用)
+   ※ manifest.json 側で設定している前提
+───────────────────────────── */
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'POST') return;
+
+  const url = new URL(req.url);
+  if (url.pathname !== '/share-target') return;
+
+  event.respondWith(
+    (async () => {
+      try {
+        const formData = await req.formData();
+        const text = formData.get('text') || '';
+        const title = formData.get('title') || '';
+        const urlShared = formData.get('url') || '';
+
+        const clients = await self.clients.matchAll({ type: 'window' });
+        const target =
+          clients.find(c => c.url.includes('/index.html')) || clients[0];
+
+        if (target) {
+          target.postMessage({
+            type: 'SHARE_TARGET',
+            text,
+            title,
+            url: urlShared
+          });
+          await target.focus();
+        }
+
+        return Response.redirect('/index.html', 303);
+      } catch (e) {
+        return new Response('Share Target error', { status: 500 });
       }
-    })
+    })()
   );
 });
