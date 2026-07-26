@@ -38,5 +38,8 @@ async function handleFlowMindSend() {
   }
 }
 
-// 送信ボタンにイベントを紐づける
-document.querySelector("#sendBtn").addEventListener("click", handleFlowMindSend);
+// 送信ボタンにイベントを紐づける（安全版）
+const btn = document.querySelector("#sendBtn");
+if (btn) {
+  btn.addEventListener("click", handleFlowMindSend);
+}
