@@ -347,3 +347,4 @@ fortune-project との連携。
 | `learn_rate` | string | TTS速度 | learn | learn |
 | `learn_voice` | string | TTS音声URI | learn | learn |
 
+# Trigger rebuild
