@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -9,7 +9,182 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#007AFF">
 
-<link rel="stylesheet" href="/style.css">
+<style>
+:root {
+  --bg: #F7F7F8;
+  --text: #1C1C1E;
+  --text-secondary: #6C6C70;
+  --border: #E5E5EA;
+  --card-bg: #FFFFFF;
+  --accent: #007AFF;
+  --accent-press: #005ECB;
+  --danger: #FF3B30;
+  --radius: 14px;
+}
+
+/* 基本レイアウト */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  z-index: 100;
+  transition: opacity .25s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+/* ヘッダー */
+header {
+  padding: env(safe-area-inset-top) 16px 12px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn, .review-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.review-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #FF3B30;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 10px;
+}
+
+/* 検索 */
+.search-row {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.search-row input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  padding: 6px;
+}
+
+.search-clear {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: none;
+}
+.search-clear.visible { display: block; }
+
+/* タグフィルタ */
+.tag-filter-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  font-size: 13px;
+  cursor: pointer;
+}
+.filter-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* カード一覧 */
+#cardList {
+  padding: 16px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.card-snippet {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.card-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+</style>
 </head>
 <body>
 
@@ -28,190 +203,2884 @@
   </div>
 
   <div class="search-row">
-    <input id="searchInput" placeholder="検索…" autocomplete="off">
-    <button id="searchClear">✕</button>
+    <span class="search-icon">🔍</span>
+    <input type="search" id="searchInput" placeholder="タイトル・メモ・タグで検索">
+    <button class="search-clear" id="searchClear">✕</button>
   </div>
 
   <div class="tag-filter-row" id="tagFilterRow"></div>
 </header>
+<!-- 共有テキストバナー -->
+<div id="shareReceivedBanner" class="share-banner">
+  <span id="shareReceivedText"></span>
+  <div class="share-banner-actions">
+    <button id="shareReceivedUse">追加する</button>
+    <button id="shareReceivedDismiss">閉じる</button>
+  </div>
+</div>
 
-<div id="emptyState" style="display:none;padding:20px;color:#666;">項目がありません</div>
+<!-- 空状態 -->
+<div class="empty" id="emptyState" style="display:none;">
+  まだ何もありません。<br>右下の＋から追加してください。
+</div>
+
+<!-- カード一覧 -->
 <div id="cardList"></div>
 
+<!-- Quick Dock -->
+<div class="quick-dock" id="quickDock">
+  <button class="dock-btn dock-mic" id="voiceFab">🎙<span class="dock-label">音声</span></button>
+  <button class="dock-btn dock-cam" id="dockCam">📷<span class="dock-label">カメラ</span></button>
+  <button class="dock-btn dock-photo" id="dockPhoto">🖼<span class="dock-label">写真</span></button>
+  <button class="dock-btn dock-video" id="dockVideo">🎬<span class="dock-label">動画</span></button>
+  <button class="dock-btn dock-add" id="fabBtn">＋<span class="dock-label">追加</span></button>
+</div>
+
+<!-- ファイル入力 -->
+<input type="file" id="imgFileInput" accept="image/*" multiple style="display:none">
+<input type="file" id="imgCameraInput" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="imgSelfieInput" accept="image/*" capture="user" style="display:none">
+<input type="file" id="videoFileInput" accept="video/*" multiple style="display:none">
+<input type="file" id="videoCamInput" accept="video/*" capture="environment" style="display:none">
+
+<!-- 音声モーダル -->
+<div class="voice-modal" id="voiceModal">
+  <div class="voice-sheet">
+    <div class="voice-sheet-handle"></div>
+    <div class="voice-status" id="voiceStatus">
+      <span class="voice-dot" id="voiceDot" style="display:none;"></span>
+      <span id="voiceStatusText">マイクで話してください</span>
+    </div>
+
+    <div class="voice-transcript" id="voiceTranscript">
+      <span id="voiceFinal"></span>
+      <span class="voice-interim" id="voiceInter"></span>
+    </div>
+
+    <div class="voice-actions">
+      <button class="voice-stop-btn" id="voiceStopBtn">⏹ 停止</button>
+      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>✨ AI で整理する</button>
+    </div>
+
+    <!-- AI Preview -->
+    <div id="aiPreviewArea" style="display:none;">
+      <div class="ai-preview">
+        <div class="ai-preview-header">🤖 AI が整理した内容</div>
+        <div class="ai-preview-body">
+          <div class="ai-field">
+            <div class="ai-field-label">タイトル</div>
+            <div class="ai-field-value"><input type="text" id="aiTitle"></div>
+          </div>
+
+          <div class="ai-field">
+            <div class="ai-field-label">タグ</div>
+            <div class="ai-field-value ai-tags-row" id="aiTagsRow"></div>
+          </div>
+
+          <div class="ai-field">
+            <div class="ai-field-label">メモ</div>
+            <div class="ai-field-value"><textarea id="aiBody"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <button class="voice-save-btn" id="aiSaveBtn">💾 この内容で保存</button>
+    </div>
+
+    <button class="voice-cancel-btn" id="voiceCancelBtn">キャンセル</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
 <!-- 編集シート -->
-<div id="overlay"></div>
-<div id="editSheet">
+<div class="sheet" id="editSheet">
+  <div class="sheet-handle"></div>
+
   <div class="sheet-header">
-    <span id="sheetTitle">新規追加</span>
     <button id="cancelBtn">キャンセル</button>
-    <button id="saveBtn">保存</button>
+    <h2 id="sheetTitle">新規追加</h2>
+    <button class="save" id="saveBtn">保存</button>
   </div>
 
   <div class="sheet-body">
-    <input id="fTitle" placeholder="タイトル">
-    <div id="fBody" contenteditable="true" class="memo-editor"></div>
+    <label class="field-label">タイトル</label>
+    <input type="text" id="fTitle" placeholder="タイトルを入力" maxlength="100"
+      autocapitalize="sentences" autocorrect="on" spellcheck="true">
 
-    <div class="section">
-      <label>タグ</label>
-      <div id="tagChips"></div>
-      <input id="tagInput" placeholder="タグ追加">
+    <label class="field-label">タグ</label>
+    <div class="tag-input-row">
+      <input type="text" id="tagInput" placeholder="タグを入力" maxlength="30"
+        autocapitalize="none" autocorrect="off" spellcheck="false">
       <button id="tagAddBtn">追加</button>
-      <div id="tagSuggestions"></div>
+    </div>
+    <div class="tag-chips" id="tagChips"></div>
+    <div class="tag-suggestions" id="tagSuggestions"></div>
+
+    <div class="toggle-row" style="margin-top:16px;">
+      <div class="toggle-row-text">
+        <span class="toggle-row-title">個人情報として保護</span>
+        <span class="toggle-row-desc">メモ・構造化項目を暗号化します（タイトル・タグは保護されません）</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="sensitiveToggle">
+        <span class="switch-track"></span>
+      </label>
     </div>
 
-    <div class="section">
-      <label>URL</label>
-      <input id="inputUrl" placeholder="https://">
-      <button id="previewUrlBtn">開く</button>
+    <label class="field-label">URL（任意）</label>
+    <div class="url-field-row">
+      <input type="text" id="inputUrl" placeholder="https://...">
+      <button type="button" class="open-link-btn" id="previewUrlBtn">→</button>
     </div>
 
-    <div class="section">
-      <label>構造化項目</label>
-      <div id="fieldRows"></div>
-      <button id="addFieldBtn">＋項目追加</button>
-    </div>
+    <label class="field-label">メモ</label>
+    <div class="rich-editor-wrap">
+      <div class="rich-toolbar">
+        <button type="button" onclick="fmtCmd('bold')"><strong>B</strong></button>
+        <button type="button" onclick="fmtCmd('italic')"><em>I</em></button>
+        <button type="button" onclick="fmtCmd('underline')"><u>U</u></button>
+        <span class="sep"></span>
+        <button type="button" onclick="fmtMark('yellow')">🟡</button>
+        <button type="button" onclick="fmtMark('green')">🟢</button>
+        <button type="button" onclick="fmtMark('pink')">🩷</button>
+        <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
+      </div>
 
-    <div class="section">
-      <label>画像</label>
-      <div id="imgThumbs"></div>
-      <button id="imgPickBtn">写真を選択</button>
-      <button id="imgCameraBtn">カメラ</button>
-      <button id="imgSelfieBtn">自撮り</button>
-      <button id="imgIllustBtn">IllustStudio</button>
-      <input type="file" id="imgFileInput" accept="image/*" hidden>
-      <input type="file" id="imgCameraInput" accept="image/*" capture="environment" hidden>
-      <input type="file" id="imgSelfieInput" accept="image/*" capture="user" hidden>
-    </div>
+      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="内容を入力"
+        autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 
-    <div class="section">
-      <label>音声</label>
-      <div id="audioList"></div>
-      <button id="recStartBtn">録音開始</button>
-      <button id="recStopBtn">停止</button>
-      <div id="recStatus"><span id="recTimer">00:00</span></div>
+      <button type="button" class="expand-btn" id="expandMemoBtn">⛶ 全画面</button>
     </div>
+    <!-- 構造化フィールド -->
+    <label class="field-label" style="margin-top:18px;">構造化項目</label>
+    <div id="fieldRows"></div>
+    <button type="button" id="addFieldBtn" class="add-field-btn">＋ 項目を追加</button>
 
-    <div class="section">
-      <label>動画</label>
-      <div id="videoList"></div>
-      <button id="videoCamBtn">動画撮影</button>
-      <button id="videoPickBtn">動画選択</button>
-      <input type="file" id="videoCamInput" accept="video/*" capture="environment" hidden>
-      <input type="file" id="videoFileInput" accept="video/*" hidden>
+    <!-- 画像添付 -->
+    <label class="field-label" style="margin-top:18px;">画像</label>
+    <div class="img-btn-row">
+      <button type="button" id="imgPickBtn">📁 選択</button>
+      <button type="button" id="imgCameraBtn">📷 カメラ</button>
+      <button type="button" id="imgSelfieBtn">🤳 自撮り</button>
+      <button type="button" id="imgIllustBtn">🎨 illust-studio</button>
     </div>
+    <div id="imgThumbs" class="img-thumbs"></div>
 
-    <div class="section">
-      <label>保護</label>
-      <input type="checkbox" id="sensitiveToggle"> パスコードで保護
+    <!-- 音声添付 -->
+    <label class="field-label" style="margin-top:18px;">音声</label>
+    <div class="audio-btn-row">
+      <button type="button" id="recStartBtn">🎙 録音開始</button>
+      <button type="button" id="recStopBtn">⏹ 停止</button>
+      <button type="button" id="musicSuiteBtn">🎼 music-suite</button>
     </div>
-
-    <div id="dangerZone">
-      <button id="deleteBtn" class="danger">削除</button>
+    <div id="recStatus" class="rec-status">
+      <span id="recTimer">00:00</span>
     </div>
+    <div id="audioList" class="audio-list"></div>
 
-    <div id="relatedSection"></div>
+    <!-- 動画添付 -->
+    <label class="field-label" style="margin-top:18px;">動画</label>
+    <div class="video-btn-row">
+      <button type="button" id="videoCamBtn">📹 カメラ</button>
+      <button type="button" id="videoPickBtn">📁 選択</button>
+    </div>
+    <div id="videoList" class="video-list"></div>
+
+    <!-- 関連項目 -->
+    <label class="field-label" style="margin-top:18px;">関連項目</label>
+    <div id="relatedSection" class="related-section"></div>
+    <button id="aiRelatedBtn" class="ai-related-btn">✨ AIでさらに探す</button>
+
+    <!-- 危険ゾーン -->
+    <div id="dangerZone" class="danger-zone" style="display:none;">
+      <button id="deleteBtn" class="danger-btn">🗑 削除する</button>
+    </div>
   </div>
 </div>
 
-<!-- メモ全画面 -->
-<div id="memoPopup">
-  <div id="memoPopupHeader">
-    <button id="memoPopupClose">閉じる</button>
-    <button id="memoPopupClear">クリア</button>
-    <button id="memoAiBtn">AI</button>
-  </div>
-  <div id="memoPopupEditor" contenteditable="true"></div>
+<!-- 画像プレビュー -->
+<div id="imgPreviewOverlay" class="img-preview-overlay">
+  <img id="imgPreviewImg" class="img-preview-img">
+  <button id="imgPreviewClose" class="img-preview-close">✕</button>
 </div>
 
-<!-- AIパネル -->
-<div id="aiPanel">
-  <div id="aiPanelHeader">
-    <span>AIアクション</span>
-    <button id="aiPanelClose">✕</button>
+<!-- メモ全画面編集 -->
+<div class="memo-popup" id="memoPopup">
+  <div class="memo-popup-header">
+    <button id="memoPopupClose">完了</button>
+    <h2>メモ編集</h2>
+    <div class="memo-popup-actions">
+      <button id="memoAiBtn">✦ AI</button>
+      <button id="memoPopupClear">書式クリア</button>
+    </div>
   </div>
 
-  <div id="aiActions">
-    <button class="ai-action-btn" data-action="summarize">要約</button>
-    <button class="ai-action-btn" data-action="organize">整理</button>
-    <button class="ai-action-btn" data-action="expand">補足</button>
-    <button class="ai-action-btn" data-action="question">質問生成</button>
+  <div class="memo-popup-toolbar">
+    <button type="button" onclick="popupFmt('bold')"><strong>B</strong></button>
+    <button type="button" onclick="popupFmt('italic')"><em>I</em></button>
+    <button type="button" onclick="popupFmt('underline')"><u>U</u></button>
+    <span class="sep"></span>
+    <button type="button" onclick="popupMark('yellow')">🟡</button>
+    <button type="button" onclick="popupMark('green')">🟢</button>
+    <button type="button" onclick="popupMark('pink')">🩷</button>
+    <span class="sep"></span>
+    <button type="button" onclick="popupFmt('insertUnorderedList')">☰</button>
   </div>
 
-  <textarea id="aiCustomPrompt" placeholder="カスタムプロンプト"></textarea>
-  <button id="aiCustomSend">送信</button>
-
-  <div id="aiLoading">AI処理中…</div>
-  <pre id="aiResult"></pre>
-
-  <div id="aiResultActions">
-    <button id="aiInsertBtn">挿入</button>
-    <button id="aiReplaceBtn">置換</button>
-  </div>
+  <div class="memo-popup-editor" id="memoPopupEditor"
+    contenteditable="true" data-placeholder="内容を入力…"
+    autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 </div>
 
-<!-- 音声モーダル -->
-<div id="voiceModal">
-  <div id="voiceHeader">
-    <span>音声入力</span>
-    <button id="voiceCancelBtn">✕</button>
+<!-- デイリーレビュー -->
+<div class="review-overlay" id="reviewOverlay">
+  <div class="review-sheet">
+    <div class="review-header">
+      <div class="review-header-top">
+        <span class="review-title">📋 デイリーレビュー</span>
+        <button class="review-close-btn" id="reviewCloseBtn">✕</button>
+      </div>
+      <div class="review-progress-track">
+        <div class="review-progress-fill" id="reviewProgressFill"></div>
+      </div>
+      <div class="review-counter">
+        <span id="reviewCounterText">0 / 0</span>
+        <span id="reviewStreakLabel"></span>
+      </div>
+    </div>
+    <div class="review-body" id="reviewBody"></div>
   </div>
-  <div id="voiceContent">
-    <div id="voiceText"></div>
-    <button id="voiceAnalyzeBtn">✨ AI で整理する</button>
-    <button id="voiceStopBtn">停止</button>
-  </div>
-</div>
-
-<!-- アイコン生成 -->
-<div id="iconOverlay"></div>
-<div id="iconModal">
-  <button id="iconModalClose">✕</button>
-  <canvas id="iconCanvas192" width="192" height="192"></canvas>
-  <canvas id="iconCanvas512" width="512" height="512"></canvas>
-
-  <input id="iconEmoji" placeholder="絵文字">
-  <input id="iconBgColor" type="color">
-  <input id="iconBgColor2" type="color">
-  <input id="iconFgColor" type="color">
-  <input id="iconFontSize" type="number">
-
-  <button id="iconDl192">192px 保存</button>
-  <button id="iconDl512">512px 保存</button>
 </div>
 
 <!-- メニュー -->
-<div id="menuOverlay"></div>
-<div id="menuSheet">
-  <button id="exportBtn">エクスポート</button>
-  <button id="importBtn">インポート</button>
-  <button id="tagBridgeBtn">タグ同期</button>
-  <button id="kanseiExportBtn">感性へ送信</button>
-  <button id="iconGenBtn">アイコン生成</button>
-  <button id="themeUrlBtn">テーマURL一覧</button>
+<div class="overlay" id="menuOverlay"></div>
+<div class="action-sheet" id="menuSheet">
+  <div class="action-sheet-handle"></div>
+  <h3>データ管理</h3>
+
+  <button type="button" class="action-btn" id="icloudMenuBtn">
+    <span class="action-icon">☁️</span>
+    <span class="action-btn-inner">
+      <span class="action-label">iCloud Driveに保存</span>
+      <span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バックアップ</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="exportBtn">
+    <span class="action-icon">📤</span>
+    <span class="action-btn-inner">
+      <span class="action-label">JSONエクスポート</span>
+      <span class="action-desc">全データをファイルに書き出す</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="importBtn">
+    <span class="action-icon">📥</span>
+    <span class="action-btn-inner">
+      <span class="action-label">JSONインポート</span>
+      <span class="action-desc">バックアップから復元・マージ</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="tagBridgeBtn">
+    <span class="action-icon">🔗</span>
+    <span class="action-btn-inner">
+      <span class="action-label">タグを他アプリと共有</span>
+      <span class="action-desc">illust-studio / music-suite などに同期</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="kanseiExportBtn">
+    <span class="action-icon">📝</span>
+    <span class="action-btn-inner">
+      <span class="action-label">素材を kansei に送る</span>
+      <span class="action-desc">表示中の項目を執筆支援生成ツールへ</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="iconGenBtn">
+    <span class="action-icon">🎨</span>
+    <span class="action-btn-inner">
+      <span class="action-label">アイコンを生成・ダウンロード</span>
+      <span class="action-desc">ホーム画面用 icon-192.png / icon-512.png</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="themeUrlBtn">
+    <span class="action-icon">🌐</span>
+    <span class="action-btn-inner">
+      <span class="action-label">テーマ別URL一覧を表示</span>
+      <span class="action-desc">タグごとのホーム画面追加用URL</span>
+    </span>
+  </button>
 </div>
+<!-- アイコン生成モーダル -->
+<div id="iconOverlay" class="icon-overlay"></div>
+<div id="iconModal" class="icon-modal">
+  <div class="icon-modal-header">
+    <h3>アイコン生成</h3>
+    <button id="iconModalClose">✕</button>
+  </div>
 
-<input type="file" id="importFileInput" hidden>
+  <div class="icon-config">
+    <label>絵文字 / 文字</label>
+    <input type="text" id="iconEmoji" maxlength="2" value="参">
 
-<!-- 追加ガイド -->
-<div id="addGuide">
-  <div id="addGuideContent">
-    <h2 id="addGuideTitle"></h2>
-    <p id="addGuideUrl"></p>
-    <button id="addGuideClose">閉じる</button>
+    <label>背景色（上）</label>
+    <input type="color" id="iconBgColor" value="#007AFF">
+
+    <label>背景色（下）</label>
+    <input type="color" id="iconBgColor2" value="#005ECB">
+
+    <label>文字色</label>
+    <input type="color" id="iconFgColor" value="#FFFFFF">
+
+    <label>文字サイズ（%）</label>
+    <input type="range" id="iconFontSize" min="40" max="90" value="70">
+  </div>
+
+  <div class="icon-preview-wrap">
+    <canvas id="iconCanvas192" width="192" height="192"></canvas>
+    <canvas id="iconCanvas512" width="512" height="512"></canvas>
+  </div>
+
+  <div class="icon-download-row">
+    <button id="iconDl192">⬇️ 192px</button>
+    <button id="iconDl512">⬇️ 512px</button>
   </div>
 </div>
 
-<!-- Quick Dock -->
-<div id="quickDock">
-  <button id="fabBtn">＋</button>
-  <button id="voiceFab">🎤</button>
-  <button id="dockCam">📷</button>
-  <button id="dockPhoto">🖼️</button>
-  <button id="dockVideo">🎞️</button>
+<!-- テーマモードバナー -->
+<div id="themeBanner" class="theme-banner" style="display:none;">
+  <span id="themeBannerIcon" class="theme-banner-icon"></span>
+  <div class="theme-banner-text">
+    <span id="themeBannerLabel"></span>
+    <span id="themeBannerSub"></span>
+  </div>
+  <div class="theme-banner-actions">
+    <button id="themeBannerIconBtn">🎨 アイコン</button>
+    <button id="themeBannerKanseiBtn">📝 kansei</button>
+    <button id="themeBannerAddBtn">＋ ホーム追加</button>
+  </div>
 </div>
 
-<!-- Flow-Mindへ送信 -->
-<button id="sendBtn">Flow-Mindへ送信</button>
+<!-- ホーム追加ガイド -->
+<div id="addGuide" class="add-guide">
+  <div class="add-guide-sheet">
+    <h3 id="addGuideTitle">ホーム画面に追加</h3>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
+      Safari → 共有ボタン → 「ホーム画面に追加」で登録できます。
+    </p>
+    <div id="addGuideUrl" class="add-guide-url"></div>
+    <button id="addGuideClose" class="add-guide-close">閉じる</button>
+  </div>
+</div>
+
+<!-- iCloud ガイド -->
+<div id="icloudGuide" class="add-guide">
+  <div class="add-guide-sheet">
+    <h3>☁️ iCloud Drive に保存する方法</h3>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
+      ダウンロードされた JSON を「ファイル」アプリで iCloud Drive に移動してください。
+    </p>
+    <div id="icloudGuideFilename" class="add-guide-url"></div>
+
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ダウンロードフォルダに保存されます</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>「ファイル」アプリ → 「最近使った項目」</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ファイルを長押し → 「移動」</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p>iCloud Drive → 任意のフォルダへ</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">5</div><p>Mac から Finder → iCloud Drive でアクセス可能</p></div>
+
+    <button id="icloudGuideClose" class="add-guide-close">閉じる</button>
+  </div>
+</div>
+
+<!-- バックアップバナー -->
+<div id="backupBanner" class="backup-banner" style="display:none;">
+  <span id="backupBannerText"></span>
+  <button id="backupBannerBtn">📤 エクスポート</button>
+</div>
+
+<!-- PIN モーダル -->
+<div id="pinOverlay" class="pin-overlay"></div>
+<div id="pinModal" class="pin-modal">
+  <div class="pin-sheet">
+    <h3 id="pinModalTitle">パスコードを設定</h3>
+    <p id="pinModalDesc" class="pin-desc"></p>
+
+    <input type="password" id="pinInput1" class="pin-input" placeholder="パスコード">
+    <input type="password" id="pinInput2" class="pin-input" placeholder="確認用">
+
+    <div id="pinError" class="pin-error" style="display:none;"></div>
+
+    <button id="pinConfirmBtn" class="pin-confirm-btn">設定する</button>
+    <button id="pinForgotBtn" class="pin-forgot-btn" style="display:none;">パスコードをリセット</button>
+    <button id="pinCancelBtn" class="pin-cancel-btn">キャンセル</button>
+  </div>
+</div>
+
+<!-- トースト -->
+<div id="toast" class="toast"></div>
+
+<!-- 共有ターゲット用ファイル入力 -->
+<input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+
+<!-- JS: DB / Crypto / Search / Attachments / AI / Review / Related / Ecosystem -->
+<script>
+'use strict';
+
+/* ─────────────────────────────
+   DB LAYER（添付ファイル対応）
+───────────────────────────── */
+const DB_NAME = 'quickRefDB';
+const DB_VERSION = 2;
+let dbPromise = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+
+      if (!db.objectStoreNames.contains('items')) {
+        const s = db.createObjectStore('items', { keyPath: 'id' });
+        s.createIndex('tags', 'tags', { multiEntry: true });
+        s.createIndex('updatedAt', 'updatedAt');
+      }
+
+      if (!db.objectStoreNames.contains('attachments')) {
+        const a = db.createObjectStore('attachments', { keyPath: 'id' });
+        a.createIndex('itemId', 'itemId');
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+  return dbPromise;
+}
+
+async function dbGetAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('items', 'readonly');
+    const req = tx.objectStore('items').getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPut(item) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('items', 'readwrite');
+    tx.objectStore('items').put(item);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDelete(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('items', 'readwrite');
+    tx.objectStore('items').delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+/* ─────────────────────────────
+   添付ファイルメタ
+───────────────────────────── */
+async function dbGetAllAttachmentMeta() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('attachments', 'readonly');
+    const req = tx.objectStore('attachments').getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbGetAttachments(itemId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('attachments', 'readonly');
+    const idx = tx.objectStore('attachments').index('itemId');
+    const req = idx.getAll(itemId);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPutAttachment(att) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('attachments', 'readwrite');
+    tx.objectStore('attachments').put(att);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDeleteAttachment(attId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('attachments', 'readwrite');
+    tx.objectStore('attachments').delete(attId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDeleteAttachmentsByItemId(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  for (const a of atts) await dbDeleteAttachment(a.id);
+}
+
+/* ─────────────────────────────
+   暗号化 / PIN
+───────────────────────────── */
+const PIN_META_KEY = 'qr_pin_meta';
+let sessionKey = null;
+let decryptedCache = new Map();
+
+function bytesToBase64(bytes) {
+  let s = '';
+  bytes.forEach(x => s += String.fromCharCode(x));
+  return btoa(s);
+}
+function base64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function getPinMeta() {
+  try { return JSON.parse(localStorage.getItem(PIN_META_KEY)); }
+  catch (_) { return null; }
+}
+function setPinMeta(m) {
+  localStorage.setItem(PIN_META_KEY, JSON.stringify(m));
+}
+function hasPinSetup() {
+  return !!getPinMeta();
+}
+
+async function deriveKeyFromPin(pin, saltB64) {
+  const salt = base64ToBytes(saltB64);
+  const km = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pin),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+    km,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function setupPin(pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltB64 = bytesToBase64(salt);
+  const key = await deriveKeyFromPin(pin, saltB64);
+  sessionKey = key;
+  setPinMeta({ salt: saltB64 });
+}
+
+async function tryUnlockWithPin(pin) {
+  const meta = getPinMeta();
+  if (!meta) return false;
+  try {
+    const key = await deriveKeyFromPin(pin, meta.salt);
+    sessionKey = key;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function lockSession() {
+  sessionKey = null;
+  decryptedCache.clear();
+  updateLockButton();
+  renderAll();
+}
+
+function updateLockButton() {
+  const btn = document.getElementById('lockToggleBtn');
+  if (sessionKey) {
+    btn.textContent = '🔓';
+    btn.title = 'タップでロック';
+  } else {
+    btn.textContent = '🔒';
+    btn.title = 'タップでロック解除';
+  }
+}
+
+/* ─────────────────────────────
+   暗号化された項目の復号
+───────────────────────────── */
+async function decryptItemContent(item) {
+  if (!sessionKey) return null;
+  try {
+    const iv = item.encBody.iv;
+    const data = item.encBody.data;
+    const bodyBuf = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      sessionKey,
+      data
+    );
+    const body = new TextDecoder().decode(bodyBuf);
+
+    const fieldsBuf = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: item.encFields.iv },
+      sessionKey,
+      item.encFields.data
+    );
+    const fieldsJson = new TextDecoder().decode(fieldsBuf);
+    const fields = JSON.parse(fieldsJson);
+
+    const out = { body, fields };
+    decryptedCache.set(item.id, out);
+    return out;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function refreshDecryptedCache() {
+  decryptedCache.clear();
+  for (const item of allItems) {
+    if (item.sensitive) await decryptItemContent(item);
+  }
+}
+
+/* ─────────────────────────────
+   暗号化して保存
+───────────────────────────── */
+async function encryptToItemFields(body, fields) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const bodyBuf = new TextEncoder().encode(body);
+  const fieldsBuf = new TextEncoder().encode(JSON.stringify(fields));
+
+  const encBody = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    sessionKey,
+    bodyBuf
+  );
+  const encFields = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    sessionKey,
+    fieldsBuf
+  );
+
+  return {
+    encBody: { iv, data: new Uint8Array(encBody) },
+    encFields: { iv, data: new Uint8Array(encFields) }
+  };
+}
+
+/* ─────────────────────────────
+   検索
+───────────────────────────── */
+function escapeHtml(str) {
+  return (str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function bigrams(str) {
+  const s = (str || '').toLowerCase().replace(/\s+/g, '');
+  const r = new Set();
+  for (let i = 0; i < s.length - 1; i++) r.add(s.slice(i, i + 2));
+  if (s.length === 1) r.add(s);
+  return r;
+}
+
+function buildSearchText(item) {
+  const cached = decryptedCache.get(item.id);
+  const body = cached ? cached.body : (item.body || '');
+  const fieldsText = (cached ? cached.fields : (item.fields || []))
+    .map(f => `${f.key} ${f.value}`)
+    .join(' ');
+  return [
+    item.title || '',
+    body,
+    (item.tags || []).join(' '),
+    fieldsText,
+    item.url || ''
+  ].join(' ').toLowerCase();
+}
+
+function searchItems(items, query) {
+  if (!query.trim()) return items;
+  const q = query.trim().toLowerCase();
+  const qBi = bigrams(q);
+
+  return items.filter(item => {
+    const text = buildSearchText(item);
+    if (text.includes(q)) return true;
+
+    if (q.length >= 2) {
+      const tBi = bigrams(text);
+      let m = 0;
+      for (const b of qBi) if (tBi.has(b)) m++;
+      return m / qBi.size >= 0.5;
+    }
+    return false;
+  }).sort((a, b) => {
+    const aT = (a.title || '').toLowerCase().includes(q) ? 1 : 0;
+    const bT = (b.title || '').toLowerCase().includes(q) ? 1 : 0;
+    if (bT !== aT) return bT - aT;
+    return (b.updatedAt || 0) - (a.updatedAt || 0);
+  });
+}
+
+function highlightText(text, query) {
+  if (!query.trim()) return escapeHtml(text);
+  const q = escapeHtml(query.trim());
+  const escaped = escapeHtml(text);
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  return escaped.replace(re, m => `<mark>${m}</mark>`);
+}
+/* ─────────────────────────────
+   タグフィルタ / カード描画
+───────────────────────────── */
+let allItems = [];
+let attachmentMeta = [];
+let filterTag = null;
+let searchQuery = '';
+let linkFilterActive = false;
+
+function getAllTagsSorted() {
+  const s = new Set();
+  allItems.forEach(i => (i.tags || []).forEach(t => s.add(t)));
+  return [...s].sort();
+}
+
+function renderTagFilter() {
+  const row = document.getElementById('tagFilterRow');
+  const allTags = getAllTagsSorted();
+  const chips = ['__all__', ...allTags].map(tag => {
+    const label = tag === '__all__' ? 'すべて' : tag;
+    const active = filterTag === tag ? 'active' : '';
+    return `<button class="filter-chip ${active}" data-tag="${escapeHtml(tag)}">${escapeHtml(label)}</button>`;
+  });
+
+  row.innerHTML =
+    chips.join('') +
+    `<button class="filter-chip${linkFilterActive ? ' active' : ''}" id="linkFilterBtn">🔗 リンク集</button>`;
+
+  row.querySelectorAll('.filter-chip[data-tag]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterTag = btn.dataset.tag;
+      renderTagFilter();
+      renderAll();
+    });
+  });
+
+  document.getElementById('linkFilterBtn').addEventListener('click', () => {
+    linkFilterActive = !linkFilterActive;
+    renderTagFilter();
+    renderAll();
+  });
+}
+
+function renderAll() {
+  const list = document.getElementById('cardList');
+  const empty = document.getElementById('emptyState');
+
+  let items = [...allItems];
+
+  if (filterTag && filterTag !== '__all__') {
+    items = items.filter(i => (i.tags || []).includes(filterTag));
+  }
+
+  if (linkFilterActive) {
+    const links = getLinks();
+    items = items.filter(i => (links[i.id] || []).length > 0);
+  }
+
+  items = searchItems(items, searchQuery);
+
+  if (!items.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('countLabel').textContent = '0件';
+    return;
+  }
+
+  empty.style.display = 'none';
+  document.getElementById('countLabel').textContent = `${items.length}件`;
+
+  list.innerHTML = items
+    .map(item => {
+      const cached = decryptedCache.get(item.id);
+      const body = cached ? cached.body : (item.body || '');
+      const snippet = body.replace(/<[^>]+>/g, '').slice(0, 80);
+      const tagsHtml = (item.tags || [])
+        .map(t => `<span class="chip">#${escapeHtml(t)}</span>`)
+        .join('');
+
+      return `
+        <div class="card" data-id="${item.id}">
+          <div class="card-title">${highlightText(item.title || '(無題)', searchQuery)}</div>
+          <div class="card-snippet">${highlightText(snippet, searchQuery)}</div>
+          <div class="chips">${tagsHtml}</div>
+          <div class="card-meta">
+            <span>${item.url ? '🔗 URLあり' : ''}</span>
+            <span>${item.sensitive ? '🔒 保護' : ''}</span>
+          </div>
+        </div>`;
+    })
+    .join('');
+
+  list.querySelectorAll('.card').forEach(el => {
+    el.addEventListener('click', () => openEdit(el.dataset.id));
+  });
+}
+
+/* ─────────────────────────────
+   編集シート：新規
+───────────────────────────── */
+let editingId = null;
+let draftTags = [];
+let draftFields = [];
+let draftSensitive = false;
+let draftImages = [];
+let draftAudios = [];
+let draftVideos = [];
+let pendingDeleteAttIds = [];
+let objURLs = [];
+
+function revokeAllObjURLs() {
+  objURLs.forEach(u => URL.revokeObjectURL(u));
+  objURLs = [];
+}
+
+function openNew() {
+  editingId = null;
+  draftTags = [];
+  draftFields = [];
+  draftSensitive = false;
+  draftImages = [];
+  draftAudios = [];
+  draftVideos = [];
+  pendingDeleteAttIds = [];
+  revokeAllObjURLs();
+
+  document.getElementById('sheetTitle').textContent = '新規追加';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fBody').innerHTML = '';
+  document.getElementById('tagInput').value = '';
+  document.getElementById('inputUrl').value = '';
+  document.getElementById('sensitiveToggle').checked = false;
+  document.getElementById('dangerZone').style.display = 'none';
+  document.getElementById('fieldRows').innerHTML = '';
+  document.getElementById('imgThumbs').innerHTML = '';
+  document.getElementById('audioList').innerHTML = '';
+  document.getElementById('videoList').innerHTML = '';
+  document.getElementById('relatedSection').innerHTML = '';
+
+  renderTagChips();
+  renderTagSuggestions();
+  openSheet();
+}
+
+/* ─────────────────────────────
+   編集シート：既存項目を開く
+───────────────────────────── */
+async function openEdit(id) {
+  const item = allItems.find(i => i.id === id);
+  if (!item) return;
+
+  let plainBody = '';
+  let plainFields = [];
+
+  if (item.sensitive) {
+    const ok = await ensureUnlocked();
+    if (!ok) return;
+
+    const cached = decryptedCache.get(item.id) || (await decryptItemContent(item));
+    if (cached) {
+      plainBody = cached.body || '';
+      plainFields = cached.fields || [];
+    }
+  } else {
+    plainBody = item.body || '';
+    plainFields = item.fields || [];
+  }
+
+  editingId = id;
+  draftTags = [...(item.tags || [])];
+  draftFields = [...plainFields];
+  draftSensitive = !!item.sensitive;
+
+  revokeAllObjURLs();
+  draftImages = [];
+  draftAudios = [];
+  draftVideos = [];
+  pendingDeleteAttIds = [];
+  stopRecordingIfActive();
+
+  document.getElementById('sheetTitle').textContent = '編集';
+  document.getElementById('fTitle').value = item.title || '';
+  document.getElementById('fBody').innerHTML = plainBody;
+  document.getElementById('tagInput').value = '';
+  document.getElementById('inputUrl').value = item.url || '';
+  document.getElementById('sensitiveToggle').checked = draftSensitive;
+  document.getElementById('dangerZone').style.display = '';
+
+  renderTagChips();
+  renderTagSuggestions();
+  renderFieldRows();
+
+  document.getElementById('imgThumbs').innerHTML = '';
+  document.getElementById('audioList').innerHTML = '';
+  document.getElementById('videoList').innerHTML = '';
+
+  await loadExistingImages(id);
+  await loadExistingAudios(id);
+  await loadExistingVideos(id);
+
+  openSheet();
+
+  // flow-mind 連携ボタン
+  document.getElementById('relatedSection').insertAdjacentElement(
+    'afterend',
+    (() => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'margin-top:10px;';
+      const btn = window.QuickRefBridge?.createSendButton(item);
+      if (btn) wrap.appendChild(btn);
+      return wrap;
+    })()
+  );
+
+  setTimeout(() => renderRelatedItems(item), 80);
+}
+
+function openSheet() {
+  document.getElementById('editSheet').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('fTitle').focus(), 300);
+}
+
+function closeSheet() {
+  stopRecordingIfActive();
+  revokeAllObjURLs();
+  pendingDeleteAttIds = [];
+  document.getElementById('editSheet').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+/* ─────────────────────────────
+   タグ入力・構造化項目
+───────────────────────────── */
+function renderTagChips() {
+  const el = document.getElementById('tagChips');
+  el.innerHTML = draftTags
+    .map(t => `<span class="chip" data-tag="${escapeHtml(t)}">#${escapeHtml(t)} <button class="chip-del">✕</button></span>`)
+    .join('');
+
+  el.querySelectorAll('.chip-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.parentElement.dataset.tag;
+      draftTags = draftTags.filter(x => x !== tag);
+      renderTagChips();
+      renderTagSuggestions();
+    });
+  });
+}
+
+function renderTagSuggestions() {
+  const el = document.getElementById('tagSuggestions');
+  const input = document.getElementById('tagInput').value.trim().toLowerCase();
+  const all = getAllTagsSorted().filter(t => !draftTags.includes(t));
+
+  const filtered = input
+    ? all.filter(t => t.toLowerCase().includes(input))
+    : all.slice(0, 10);
+
+  el.innerHTML = filtered
+    .map(t => `<span class="chip suggestion" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</span>`)
+    .join('');
+
+  el.querySelectorAll('.suggestion').forEach(btn => {
+    btn.addEventListener('click', () => {
+      draftTags.push(btn.dataset.tag);
+      document.getElementById('tagInput').value = '';
+      renderTagChips();
+      renderTagSuggestions();
+    });
+  });
+}
+
+function commitTagInput() {
+  const v = document.getElementById('tagInput').value.trim();
+  if (!v) return;
+  if (!draftTags.includes(v)) draftTags.push(v);
+  document.getElementById('tagInput').value = '';
+  renderTagChips();
+  renderTagSuggestions();
+}
+
+/* ─────────────────────────────
+   構造化項目
+───────────────────────────── */
+function renderFieldRows() {
+  const el = document.getElementById('fieldRows');
+  el.innerHTML = draftFields
+    .map((f, i) => `
+      <div class="field-row" data-i="${i}">
+        <input type="text" class="field-key" placeholder="項目名" value="${escapeHtml(f.key)}">
+        <input type="text" class="field-value" placeholder="値" value="${escapeHtml(f.value)}">
+        <button class="field-del">✕</button>
+      </div>
+    `)
+    .join('');
+
+  el.querySelectorAll('.field-row').forEach(row => {
+    const i = Number(row.dataset.i);
+    row.querySelector('.field-key').addEventListener('input', e => {
+      draftFields[i].key = e.target.value;
+    });
+    row.querySelector('.field-value').addEventListener('input', e => {
+      draftFields[i].value = e.target.value;
+    });
+    row.querySelector('.field-del').addEventListener('click', () => {
+      draftFields.splice(i, 1);
+      renderFieldRows();
+    });
+  });
+}
+
+/* ─────────────────────────────
+   画像添付
+───────────────────────────── */
+function renderImageThumbs() {
+  const el = document.getElementById('imgThumbs');
+  el.innerHTML = '';
+
+  draftImages.forEach((img, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'img-thumb-wrap';
+
+    const thumb = document.createElement('img');
+    thumb.className = 'img-thumb';
+    thumb.src = img.url;
+    thumb.addEventListener('click', () => openImgPreview(img.url));
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'img-thumb-del';
+    del.textContent = '×';
+    del.addEventListener('click', () => {
+      if (img.isExisting && img.attId) pendingDeleteAttIds.push(img.attId);
+      URL.revokeObjectURL(img.url);
+      draftImages.splice(i, 1);
+      renderImageThumbs();
+    });
+
+    wrap.appendChild(thumb);
+    wrap.appendChild(del);
+    el.appendChild(wrap);
+  });
+}
+
+function addBlobToDraft(blob, name) {
+  if (blob.size > 5 * 1024 * 1024) {
+    showToast('画像サイズが大きすぎます(上限5MB)');
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  objURLs.push(url);
+  draftImages.push({
+    tempId: crypto.randomUUID(),
+    blob,
+    url,
+    name: name || 'image.jpg',
+    isExisting: false
+  });
+  renderImageThumbs();
+}
+
+async function loadExistingImages(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  atts
+    .filter(a => a.type === 'image')
+    .forEach(a => {
+      const url = URL.createObjectURL(a.blob);
+      objURLs.push(url);
+      draftImages.push({
+        tempId: crypto.randomUUID(),
+        blob: a.blob,
+        url,
+        name: a.name,
+        isExisting: true,
+        attId: a.id
+      });
+    });
+  renderImageThumbs();
+}
+
+async function saveImageAttachments(itemId) {
+  for (const img of draftImages) {
+    if (!img.isExisting) {
+      await dbPutAttachment({
+        id: crypto.randomUUID(),
+        itemId,
+        type: 'image',
+        blob: img.blob,
+        mimeType: img.blob.type || 'image/jpeg',
+        name: img.name,
+        createdAt: Date.now()
+      });
+    }
+  }
+}
+
+/* ─────────────────────────────
+   音声添付
+───────────────────────────── */
+let mediaRecorder = null;
+let recChunks = [];
+let recSeconds = 0;
+let recTimerInterval = null;
+
+function formatTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function stopRecordingIfActive() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if (recTimerInterval) {
+    clearInterval(recTimerInterval);
+    recTimerInterval = null;
+  }
+  document.getElementById('recStatus').classList.remove('active');
+  mediaRecorder = null;
+  recChunks = [];
+  recSeconds = 0;
+}
+
+function addAudioToDraft(blob, name, type = 'audio', meta = {}) {
+  const url = URL.createObjectURL(blob);
+  objURLs.push(url);
+  draftAudios.push({
+    tempId: crypto.randomUUID(),
+    blob,
+    url,
+    name,
+    type,
+    meta,
+    isExisting: false
+  });
+  renderAudioList();
+}
+
+async function loadExistingAudios(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  atts
+    .filter(a => a.type === 'audio' || a.type === 'music-ref')
+    .forEach(a => {
+      const url = a.type === 'music-ref' ? null : URL.createObjectURL(a.blob);
+      if (url) objURLs.push(url);
+      draftAudios.push({
+        tempId: crypto.randomUUID(),
+        blob: a.blob,
+        url,
+        name: a.name,
+        type: a.type,
+        meta: a.meta || {},
+        isExisting: true,
+        attId: a.id
+      });
+    });
+  renderAudioList();
+}
+
+async function saveAudioAttachments(itemId) {
+  for (const aud of draftAudios) {
+    if (!aud.isExisting) {
+      await dbPutAttachment({
+        id: crypto.randomUUID(),
+        itemId,
+        type: aud.type,
+        blob: aud.blob,
+        mimeType: aud.blob ? aud.blob.type : 'application/json',
+        name: aud.name,
+        meta: aud.meta,
+        createdAt: Date.now()
+      });
+    }
+  }
+}
+/* ─────────────────────────────
+   音声リスト描画
+───────────────────────────── */
+function renderAudioList() {
+  const el = document.getElementById('audioList');
+  el.innerHTML = '';
+
+  draftAudios.forEach((aud, i) => {
+    const row = document.createElement('div');
+    row.className = 'audio-row';
+
+    const name = document.createElement('span');
+    name.className = 'audio-name';
+    name.textContent = aud.name;
+
+    const play = document.createElement('button');
+    play.className = 'audio-play-btn';
+    play.textContent = '▶︎';
+    play.addEventListener('click', () => {
+      if (!aud.url) {
+        alert('music-suite素材はJSONのため再生できません');
+        return;
+      }
+      const audio = new Audio(aud.url);
+      audio.play();
+    });
+
+    const del = document.createElement('button');
+    del.className = 'audio-del-btn';
+    del.textContent = '✕';
+    del.addEventListener('click', () => {
+      if (aud.isExisting && aud.attId) pendingDeleteAttIds.push(aud.attId);
+      if (aud.url) URL.revokeObjectURL(aud.url);
+      draftAudios.splice(i, 1);
+      renderAudioList();
+    });
+
+    row.appendChild(name);
+    row.appendChild(play);
+    row.appendChild(del);
+    el.appendChild(row);
+  });
+}
+
+/* ─────────────────────────────
+   動画添付
+───────────────────────────── */
+function addVideoToDraft(file, name) {
+  if (file.size > 20 * 1024 * 1024) {
+    showToast('動画サイズが大きすぎます(上限20MB)');
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  objURLs.push(url);
+  draftVideos.push({
+    tempId: crypto.randomUUID(),
+    blob: file,
+    url,
+    name: name || 'video.mp4',
+    isExisting: false
+  });
+  renderVideoList();
+}
+
+async function loadExistingVideos(itemId) {
+  const atts = await dbGetAttachments(itemId);
+  atts
+    .filter(a => a.type === 'video')
+    .forEach(a => {
+      const url = URL.createObjectURL(a.blob);
+      objURLs.push(url);
+      draftVideos.push({
+        tempId: crypto.randomUUID(),
+        blob: a.blob,
+        url,
+        name: a.name,
+        isExisting: true,
+        attId: a.id
+      });
+    });
+  renderVideoList();
+}
+
+function renderVideoList() {
+  const el = document.getElementById('videoList');
+  el.innerHTML = '';
+
+  draftVideos.forEach((vid, i) => {
+    const row = document.createElement('div');
+    row.className = 'video-row';
+
+    const name = document.createElement('span');
+    name.className = 'video-name';
+    name.textContent = vid.name;
+
+    const play = document.createElement('button');
+    play.className = 'video-play-btn';
+    play.textContent = '▶︎';
+    play.addEventListener('click', () => {
+      const video = document.createElement('video');
+      video.src = vid.url;
+      video.controls = true;
+      video.style.width = '100%';
+      const overlay = document.createElement('div');
+      overlay.className = 'video-preview-overlay';
+      overlay.appendChild(video);
+      overlay.addEventListener('click', () => overlay.remove());
+      document.body.appendChild(overlay);
+      video.play();
+    });
+
+    const del = document.createElement('button');
+    del.className = 'video-del-btn';
+    del.textContent = '✕';
+    del.addEventListener('click', () => {
+      if (vid.isExisting && vid.attId) pendingDeleteAttIds.push(vid.attId);
+      URL.revokeObjectURL(vid.url);
+      draftVideos.splice(i, 1);
+      renderVideoList();
+    });
+
+    row.appendChild(name);
+    row.appendChild(play);
+    row.appendChild(del);
+    el.appendChild(row);
+  });
+}
+
+async function saveVideoAttachments(itemId) {
+  for (const vid of draftVideos) {
+    if (!vid.isExisting) {
+      await dbPutAttachment({
+        id: crypto.randomUUID(),
+        itemId,
+        type: 'video',
+        blob: vid.blob,
+        mimeType: vid.blob.type || 'video/mp4',
+        name: vid.name,
+        createdAt: Date.now()
+      });
+    }
+  }
+}
+
+/* ─────────────────────────────
+   保存処理
+───────────────────────────── */
+async function saveItem() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) {
+    showToast('タイトルを入力してください');
+    return;
+  }
+
+  const url = document.getElementById('inputUrl').value.trim();
+  const body = document.getElementById('fBody').innerHTML;
+  const fields = draftFields.filter(f => f.key.trim() || f.value.trim());
+  const now = Date.now();
+
+  let item = {
+    id: editingId || crypto.randomUUID(),
+    title,
+    tags: [...draftTags],
+    url,
+    sensitive: draftSensitive,
+    createdAt: editingId ? allItems.find(i => i.id === editingId).createdAt : now,
+    updatedAt: now
+  };
+
+  if (draftSensitive) {
+    if (!sessionKey) {
+      const ok = await ensureUnlocked();
+      if (!ok) return;
+    }
+    const enc = await encryptToItemFields(body, fields);
+    item.encBody = enc.encBody;
+    item.encFields = enc.encFields;
+    item.body = '';
+    item.fields = [];
+  } else {
+    item.body = body;
+    item.fields = fields;
+    item.encBody = null;
+    item.encFields = null;
+  }
+
+  await dbPut(item);
+
+  for (const attId of pendingDeleteAttIds) await dbDeleteAttachment(attId);
+  pendingDeleteAttIds = [];
+
+  await saveImageAttachments(item.id);
+  await saveAudioAttachments(item.id);
+  await saveVideoAttachments(item.id);
+
+  await reload();
+  closeSheet();
+  showToast('保存しました');
+}
+
+/* ─────────────────────────────
+   削除処理
+───────────────────────────── */
+async function deleteItem() {
+  if (!editingId) return;
+  if (!confirm('この項目を削除しますか？')) return;
+
+  await dbDelete(editingId);
+  await dbDeleteAttachmentsByItemId(editingId);
+
+  await reload();
+  closeSheet();
+  showToast('削除しました');
+}
+
+/* ─────────────────────────────
+   画像プレビュー
+───────────────────────────── */
+function openImgPreview(url) {
+  const overlay = document.getElementById('imgPreviewOverlay');
+  const img = document.getElementById('imgPreviewImg');
+  img.src = url;
+  overlay.classList.add('open');
+}
+/* ─────────────────────────────
+   画像プレビュークローズ
+───────────────────────────── */
+document.getElementById('imgPreviewClose').addEventListener('click', () => {
+  document.getElementById('imgPreviewOverlay').classList.remove('open');
+  document.getElementById('imgPreviewImg').src = '';
+});
+document.getElementById('imgPreviewOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('imgPreviewOverlay')) {
+    document.getElementById('imgPreviewOverlay').classList.remove('open');
+    document.getElementById('imgPreviewImg').src = '';
+  }
+});
+
+/* ─────────────────────────────
+   共有テキスト（Share Target）
+───────────────────────────── */
+let sharedText = null;
+
+function checkShareTarget() {
+  if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
+    launchQueue.setConsumer(async params => {
+      if (!params.files.length) return;
+      const file = params.files[0];
+      const text = await file.text();
+      sharedText = text.trim();
+      if (sharedText) {
+        document.getElementById('shareReceivedText').textContent =
+          sharedText.slice(0, 120);
+        document.getElementById('shareReceivedBanner').classList.add('show');
+      }
+    });
+  }
+}
+
+function useSharedText() {
+  if (!sharedText) return;
+  openNew();
+  document.getElementById('fBody').innerText = sharedText;
+  sharedText = null;
+  document.getElementById('shareReceivedBanner').classList.remove('show');
+}
+
+/* ─────────────────────────────
+   iCloud 保存 / 自動同期
+───────────────────────────── */
+const ICLOUD_AUTO_KEY = 'qr_icloud_auto';
+
+async function doExport() {
+  const payload = {
+    exportedAt: Date.now(),
+    items: allItems,
+    attachments: attachmentMeta
+  };
+  const blob = new Blob([JSON.stringify(payload)], {
+    type: 'application/json'
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const filename = `quick-ref-backup-${new Date()
+    .toISOString()
+    .slice(0, 10)}.json`;
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  document.getElementById('icloudGuideFilename').textContent = filename;
+  document.getElementById('icloudGuide').classList.add('open');
+}
+
+async function doImport(file) {
+  try {
+    const text = await file.text();
+    const json = JSON.parse(text);
+
+    const items = json.items || [];
+    const atts = json.attachments || [];
+
+    let count = 0;
+    for (const item of items) {
+      if (!item.id) item.id = crypto.randomUUID();
+      await dbPut(item);
+      count++;
+    }
+
+    for (const a of atts) {
+      if (!a.id) a.id = crypto.randomUUID();
+      await dbPutAttachment(a);
+    }
+
+    await reload();
+    return { ok: true, msg: `${count}件をインポートしました` };
+  } catch (e) {
+    return { ok: false, msg: 'インポートに失敗しました' };
+  }
+}
+
+async function saveToiCloud() {
+  try {
+    await doExport();
+    showToast('iCloud Drive に保存しました');
+  } catch (_) {
+    showToast('保存に失敗しました');
+  }
+}
+
+function setupPeriodicSync() {
+  localStorage.setItem(ICLOUD_AUTO_KEY, '1');
+  updateAutoToggleBtn();
+  showToast('自動保存を有効化しました');
+}
+
+function cancelPeriodicSync() {
+  localStorage.removeItem(ICLOUD_AUTO_KEY);
+  updateAutoToggleBtn();
+  showToast('自動保存を停止しました');
+}
+
+function updateiCloudStatus() {
+  const desc = document.getElementById('icloudMenuDesc');
+  if (localStorage.getItem(ICLOUD_AUTO_KEY)) {
+    desc.textContent = '自動保存 ON（定期的にバックアップ）';
+  } else {
+    desc.textContent = 'ファイルアプリ経由で自動バックアップ';
+  }
+}
+
+function updateAutoToggleBtn() {
+  const btn = document.getElementById('icloudAutoToggleBtn');
+  if (!btn) return;
+  const on = !!localStorage.getItem(ICLOUD_AUTO_KEY);
+  btn.textContent = on ? '✅ 自動保存ON' : '⏰ 自動保存設定';
+  btn.style.background = on ? 'rgba(52,199,89,0.12)' : '';
+  btn.style.color = on ? '#1A8C3A' : '';
+  btn.style.borderColor = on ? 'rgba(52,199,89,0.3)' : '';
+}
+
+/* ─────────────────────────────
+   Siri Shortcuts ガイド
+───────────────────────────── */
+function showSiriShortcutGuide() {
+  const base = location.origin + location.pathname;
+  const msg = [
+    '【Siri Shortcuts 設定手順】',
+    '',
+    '① ショートカットアプリを開く',
+    '② 右上（＋）→「アクションを追加」',
+    '③「URLを開く」を追加',
+    '④ 以下のURLを入力：',
+    '',
+    '  ⚡ 即保存(推奨): ' +
+      base +
+      '?shortcut=quicksave&text=[ここに「テキストを入力」変数を挿入]',
+    '  音声追加: ' + base + '?shortcut=voice',
+    '  カメラ追加: ' + base + '?shortcut=camera',
+    '  新規追加: ' + base + '?shortcut=new',
+    '  レビュー: ' + base + '?shortcut=review',
+    '',
+    '⑤ Siriフレーズを設定（例：「参照に追加」）',
+    '',
+    '設定後「Hey Siri、参照に追加」で即起動します。',
+    '',
+    '【⚡即保存の作り方】',
+    'ショートカット手順を「テキストを入力」→「URLエンコード」',
+    '→「URLを開く」の順に組むと、確認画面なしで一発保存できます。'
+  ].join('\n');
+  alert(msg);
+}
+
+/* ─────────────────────────────
+   Shortcut URL パラメータ処理
+───────────────────────────── */
+function checkShortcutParam() {
+  const params = new URLSearchParams(location.search);
+  const sc = params.get('shortcut');
+  if (!sc) return;
+
+  const quickText = params.get('text') || '';
+  history.replaceState(null, '', location.pathname + (location.hash || ''));
+
+  if (sc === 'quicksave') {
+    quickSaveText(quickText);
+    return;
+  }
+
+  setTimeout(() => {
+    if (sc === 'voice') openVoiceModal();
+    if (sc === 'camera') {
+      openNew();
+      setTimeout(() => document.getElementById('imgCameraInput').click(), 300);
+    }
+    if (sc === 'new') openNew();
+    if (sc === 'review') openReview();
+    if (sc === 'export') saveToiCloud();
+  }, 600);
+}
+/* ─────────────────────────────
+   Siriショートカット：即保存
+───────────────────────────── */
+async function quickSaveText(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) {
+    showToast('保存する内容が空です');
+    return;
+  }
+
+  const lines = trimmed.split('\n');
+  const now = Date.now();
+
+  const item = {
+    id: crypto.randomUUID(),
+    title: (lines[0] || '無題').slice(0, 60),
+    tags: [],
+    body: escapeHtml(trimmed).replace(/\n/g, '<br>'),
+    fields: [],
+    url: '',
+    sensitive: false,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  await dbPut(item);
+  window.QuickRefBridge?.onItemSaved(item);
+  await reload();
+  syncEcosystemTags();
+  showToast('⚡ 保存しました: ' + item.title);
+}
+
+/* ─────────────────────────────
+   Service Worker メッセージ受信
+───────────────────────────── */
+function setupSWMessages() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'SW_SYNC_ICLOUD') saveToiCloud();
+    if (e.data?.type === 'TRIGGER_ICLOUD_EXPORT') saveToiCloud();
+  });
+}
+
+/* ─────────────────────────────
+   リンク（関連項目）
+───────────────────────────── */
+const LINKS_KEY = 'qr_links';
+
+function getLinks() {
+  try {
+    return JSON.parse(localStorage.getItem(LINKS_KEY) || '{}');
+  } catch (_) {
+    return {};
+  }
+}
+
+function addLink(fromId, toId) {
+  const l = getLinks();
+  [fromId, toId].forEach(a => {
+    const b = a === fromId ? toId : fromId;
+    if (!l[a]) l[a] = [];
+    if (!l[a].includes(b)) l[a].push(b);
+  });
+  localStorage.setItem(LINKS_KEY, JSON.stringify(l));
+}
+
+function removeLink(fromId, toId) {
+  const l = getLinks();
+  l[fromId] = (l[fromId] || []).filter(i => i !== toId);
+  l[toId] = (l[toId] || []).filter(i => i !== fromId);
+  localStorage.setItem(LINKS_KEY, JSON.stringify(l));
+}
+
+function getLinkedItems(itemId) {
+  return allItems.filter(it => (getLinks()[itemId] || []).includes(it.id));
+}
+
+/* ─────────────────────────────
+   AI 関連項目検出
+───────────────────────────── */
+function extractNgrams(text, n = 2) {
+  const t = (text || '').toLowerCase().replace(/[\s\u3000]+/g, '');
+  const g = new Set();
+  for (let i = 0; i <= t.length - n; i++) g.add(t.slice(i, i + n));
+  return g;
+}
+
+function jaccard(a, b) {
+  if (!a.size && !b.size) return 0;
+  const i = [...a].filter(x => b.has(x)).length;
+  return i / new Set([...a, ...b]).size;
+}
+
+function relatedScore(a, b) {
+  if (a.id === b.id) return 0;
+
+  const ts = jaccard(new Set(a.tags || []), new Set(b.tags || []));
+  const getT = it => {
+    const c = decryptedCache.get(it.id);
+    return `${it.title || ''} ${c ? c.body : it.body || ''} ${(it.tags || []).join(' ')}`;
+  };
+  const tx = jaccard(extractNgrams(getT(a), 2), extractNgrams(getT(b), 2));
+
+  return Math.round((ts * 60 + tx * 40) * 100);
+}
+
+function findRelated(item, limit = 5) {
+  return allItems
+    .filter(it => it.id !== item.id)
+    .map(it => ({ item: it, score: relatedScore(item, it) }))
+    .filter(x => x.score > 3)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+function renderRelatedItems(item) {
+  const el = document.getElementById('relatedSection');
+  if (!el) return;
+
+  const confirmed = getLinkedItems(item.id);
+  const cIds = new Set(confirmed.map(c => c.id));
+  const auto = findRelated(item, 6).filter(r => !cIds.has(r.item.id));
+
+  if (!confirmed.length && !auto.length) {
+    el.innerHTML = '<p class="related-empty">関連する項目が自動検出されませんでした。</p>';
+    setupAiRelatedBtn(item);
+    return;
+  }
+
+  const mkCard = (relItem, score, isConf) => {
+    const cached = decryptedCache.get(relItem.id);
+    const snippet = relItem.sensitive
+      ? '🔒 保護中'
+      : ((cached ? cached.body : relItem.body || '').replace(/<[^>]+>/g, '').slice(0, 45));
+
+    const tagsHtml = (relItem.tags || [])
+      .map(t => `<span class="related-tag">#${escapeHtml(t)}</span>`)
+      .join('');
+
+    return `
+      <div class="related-card${isConf ? ' confirmed' : ''}" data-id="${relItem.id}">
+        <div class="related-main">
+          <div class="related-header">
+            <span class="related-icon">${isConf ? '🔗' : '💭'}</span>
+            <span class="related-title">${escapeHtml(relItem.title || '(無題)')}</span>
+            ${score != null ? `<span class="related-score">${score}%</span>` : ''}
+          </div>
+          ${snippet ? `<div class="related-snippet">${escapeHtml(snippet)}</div>` : ''}
+          ${tagsHtml ? `<div class="related-tags">${tagsHtml}</div>` : ''}
+        </div>
+        <div class="related-actions">
+          <button class="related-open-btn" data-id="${relItem.id}">→</button>
+          ${
+            isConf
+              ? `<button class="related-unlink-btn" data-id="${relItem.id}">×</button>`
+              : `<button class="related-link-btn" data-id="${relItem.id}">🔗</button>`
+          }
+        </div>
+      </div>`;
+  };
+
+  el.innerHTML =
+    confirmed.map(it => mkCard(it, null, true)).join('') +
+    auto.map(r => mkCard(r.item, r.score, false)).join('');
+
+  el.querySelectorAll('.related-open-btn').forEach(btn =>
+    btn.addEventListener('click', async () => {
+      closeSheet();
+      await openEdit(btn.dataset.id);
+    })
+  );
+
+  el.querySelectorAll('.related-link-btn').forEach(btn =>
+    btn.addEventListener('click', () => {
+      addLink(item.id, btn.dataset.id);
+      renderRelatedItems(item);
+      renderAll();
+    })
+  );
+
+  el.querySelectorAll('.related-unlink-btn').forEach(btn =>
+    btn.addEventListener('click', () => {
+      if (!confirm('このリンクを削除しますか？')) return;
+      removeLink(item.id, btn.dataset.id);
+      renderRelatedItems(item);
+      renderAll();
+    })
+  );
+
+  setupAiRelatedBtn(item);
+}
+
+/* ─────────────────────────────
+   AI 関連項目ボタン
+───────────────────────────── */
+function setupAiRelatedBtn(item) {
+  const btn = document.getElementById('aiRelatedBtn');
+  if (!btn) return;
+
+  btn.onclick = async () => {
+    const geminiKey = localStorage.getItem('ml_gemini');
+    const claudeKey = localStorage.getItem('ml_claude');
+    const proxyUrl = localStorage.getItem('kansei_proxy_url');
+    const openaiKey = localStorage.getItem('ml_openai');
+
+    if (!geminiKey && !claudeKey && !proxyUrl && !openaiKey) {
+      alert('APIキーが設定されていません。⚙️設定から入力してください。');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '✨ 検索中…';
+
+    try {
+      const candidates = allItems
+        .filter(it => it.id !== item.id && !it.sensitive)
+        .slice(0, 60)
+        .map(it => `${it.id.slice(0, 8)}: ${it.title} [${(it.tags || []).join(',')}]`)
+        .join('\n');
+
+      const prompt = `以下の「対象項目」と意味的に関連する項目を「候補一覧」から選んでください。
+対象: タイトル: ${item.title} タグ: ${(item.tags || []).join(', ')}
+候補:
+${candidates}
+
+IDプレフィックス(8文字)を最大5つ、JSON配列のみ返してください:
+["xxxxxxxx"]`;
+
+      let raw = '';
+
+      if (geminiKey) {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }]
+            })
+          }
+        );
+        const d = await res.json();
+        raw = d.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      } else {
+        const ep = proxyUrl || 'https://api.anthropic.com/v1/messages';
+        const headers = { 'Content-Type': 'application/json' };
+        if (!proxyUrl && claudeKey) {
+          headers['x-api-key'] = claudeKey;
+          headers['anthropic-version'] = '2023-06-01';
+        }
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5',
+            max_tokens: 256,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+        const d = await res.json();
+        raw = d.content?.[0]?.text || '[]';
+      }
+
+      const ids = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      let added = 0;
+
+      ids.forEach(sid => {
+        const found = allItems.find(it => it.id.startsWith(sid) && it.id !== item.id);
+        if (found && !(getLinks()[item.id] || []).includes(found.id)) {
+          addLink(item.id, found.id);
+          added++;
+        }
+      });
+
+      renderRelatedItems(item);
+      renderAll();
+
+      btn.textContent = added > 0 ? `✨ ${added}件のつながりを発見` : '✨ 新たなつながりなし';
+    } catch (e) {
+      alert(`AI検索失敗: ${e.message}`);
+      btn.textContent = '✨ AIでさらに探す';
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+/* ─────────────────────────────
+   AIモデル設定
+───────────────────────────── */
+const LS = {
+  CLAUDE: 'ml_claude',
+  GEMINI: 'ml_gemini',
+  OPENAI: 'ml_openai',
+  PROXY: 'kansei_proxy_url',
+  MODEL: 'kansei_model'
+};
+
+const MODELS = {
+  claude: {
+    label: 'Claude',
+    detail: 'claude-sonnet-4-6',
+    endpoint: 'https://api.anthropic.com/v1/messages'
+  },
+  gemini: {
+    label: 'Gemini',
+    detail: 'gemini-2.0-flash',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+  },
+  openai: {
+    label: 'OpenAI',
+    detail: 'gpt-4o-mini',
+    endpoint: 'https://api.openai.com/v1/chat/completions'
+  }
+};
+
+let activeModel = localStorage.getItem(LS.MODEL) || 'claude';
+let lastAiResult = '';
+
+const AI_PROMPTS = {
+  summarize: t => `以下のメモを3行で要約してください。\n\n${t}`,
+  organize: t => `以下のメモを見出しと箇条書きで整理してください。\n\n${t}`,
+  expand:   t => `以下のメモを補足して理解を深める内容にしてください。\n\n${t}`,
+  question: t => `以下のメモを学習するための質問を5つ生成してください。\n\n${t}`
+};
+
+/* ─────────────────────────────
+   AI呼び出し
+───────────────────────────── */
+async function callAI(userPrompt) {
+  const proxyUrl = localStorage.getItem(LS.PROXY) || '';
+  const m = MODELS[activeModel];
+  const apiKey = localStorage.getItem(LS[activeModel.toUpperCase()]) || '';
+
+  if (!apiKey && !proxyUrl) {
+    throw new Error(`${m.label}のAPIキーが未設定です`);
+  }
+
+  if (activeModel === 'gemini') {
+    const res = await fetch(`${m.endpoint}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: userPrompt }] }]
+      })
+    });
+    const d = await res.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  if (activeModel === 'openai') {
+    const res = await fetch(m.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    const d = await res.json();
+    return d.choices?.[0]?.message?.content || '';
+  }
+
+  const ep = proxyUrl || m.endpoint;
+  const headers = { 'Content-Type': 'application/json' };
+  if (!proxyUrl && apiKey) {
+    headers['x-api-key'] = apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+  }
+
+  const res = await fetch(ep, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+  const d = await res.json();
+  return d.content?.[0]?.text || '';
+}
+
+/* ─────────────────────────────
+   AI構造化（音声 → メモ）
+───────────────────────────── */
+async function callStructureAPI(text) {
+  const prompt = `以下の話し言葉のメモを、クイック参照アプリ用のデータに整理してください。
+必ずJSONのみ返してください:
+{"title":"一行タイトル","tags":["タグ1","タグ2"],"body":"詳細メモ","fields":[{"key":"項目名","value":"値"}]}
+
+ルール:
+- title 15字以内
+- tags 2〜4個
+- fields は構造化できるものだけ（なければ空配列）
+
+既存タグ候補: ${getAllTagsSorted().slice(0, 10).join(',')}
+メモ: ${text}`;
+
+  const result = await callAI(prompt).catch(() => null);
+  if (!result) {
+    return {
+      title: text.slice(0, 30),
+      tags: [],
+      body: text,
+      fields: []
+    };
+  }
+
+  try {
+    return JSON.parse(result.replace(/```json|```/g, '').trim());
+  } catch (_) {
+    return {
+      title: text.slice(0, 30),
+      tags: [],
+      body: text,
+      fields: []
+    };
+  }
+}
+
+/* ─────────────────────────────
+   設定画面
+───────────────────────────── */
+function loadSettings() {
+  document.getElementById('sClaudeKey').value =
+    localStorage.getItem(LS.CLAUDE) || '';
+  document.getElementById('sGeminiKey').value =
+    localStorage.getItem(LS.GEMINI) || '';
+  document.getElementById('sOpenAIKey').value =
+    localStorage.getItem(LS.OPENAI) || '';
+  document.getElementById('sProxyUrl').value =
+    localStorage.getItem(LS.PROXY) || '';
+
+  activeModel = localStorage.getItem(LS.MODEL) || 'claude';
+  renderModelSelect();
+  updateAIBadge();
+}
+
+function saveSettings() {
+  ['Claude', 'Gemini', 'OpenAI'].forEach(n => {
+    const v = document.getElementById(`s${n}Key`).value.trim();
+    if (v) localStorage.setItem(LS[n.toUpperCase()], v);
+    else localStorage.removeItem(LS[n.toUpperCase()]);
+  });
+
+  const p = document.getElementById('sProxyUrl').value.trim();
+  if (p) localStorage.setItem(LS.PROXY, p);
+  else localStorage.removeItem(LS.PROXY);
+
+  localStorage.setItem(LS.MODEL, activeModel);
+  updateAIBadge();
+  closeSettingsSheet();
+  showToast('設定を保存しました');
+}
+
+function renderModelSelect() {
+  document.querySelectorAll('.model-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.model === activeModel)
+  );
+  const m = MODELS[activeModel];
+  document.getElementById('modelDetail').textContent =
+    m ? `使用モデル: ${m.detail}` : '';
+}
+
+function updateAIBadge() {
+  const m = MODELS[activeModel];
+  const b = document.getElementById('aiModelBadge');
+  if (b) b.textContent = m ? m.label : activeModel;
+}
+
+/* ─────────────────────────────
+   AIパネル
+───────────────────────────── */
+function openAIPanel() {
+  document.getElementById('aiPanel').classList.add('open');
+}
+function closeAIPanel() {
+  document.getElementById('aiPanel').classList.remove('open');
+}
+
+function getEditorText() {
+  const e = document.getElementById('memoPopupEditor');
+  return e.innerText || e.textContent || '';
+}
+
+/* ─────────────────────────────
+   AI実行
+───────────────────────────── */
+async function runAIAction(action, customPrompt) {
+  const editorText = getEditorText();
+  if (!editorText.trim() && !customPrompt) {
+    showToast('メモにテキストを入力してください');
+    return;
+  }
+
+  const prompt = customPrompt
+    ? `${customPrompt}\n\n---\n${editorText}`
+    : AI_PROMPTS[action]?.(editorText) || editorText;
+
+  document.getElementById('aiLoading').style.display = 'block';
+  document.getElementById('aiResult').style.display = 'none';
+  document.getElementById('aiResultActions').classList.remove('visible');
+  document.querySelectorAll('.ai-action-btn').forEach(b =>
+    b.classList.add('loading')
+  );
+
+  try {
+    const result = await callAI(prompt);
+    lastAiResult = result;
+
+    const el = document.getElementById('aiResult');
+    el.textContent = result;
+    el.style.display = 'block';
+
+    document.getElementById('aiResultActions').classList.add('visible');
+    document.getElementById('aiResultActions').style.display = 'flex';
+  } catch (e) {
+    showToast(e.message);
+  } finally {
+    document.getElementById('aiLoading').style.display = 'none';
+    document.querySelectorAll('.ai-action-btn').forEach(b =>
+      b.classList.remove('loading')
+    );
+  }
+}
+
+/* ─────────────────────────────
+   AI結果挿入
+───────────────────────────── */
+function insertAIResult(replace = false) {
+  const editor = document.getElementById('memoPopupEditor');
+  editor.focus();
+
+  if (replace) {
+    editor.innerHTML = lastAiResult.replace(/\n/g, '<br>');
+  } else {
+    const hr = document.createElement('hr');
+    hr.style.cssText =
+      'border:none;border-top:1px solid var(--border);margin:12px 0;';
+    const div = document.createElement('div');
+    div.innerHTML = lastAiResult.replace(/\n/g, '<br>');
+    editor.appendChild(hr);
+    editor.appendChild(div);
+    editor.scrollTop = editor.scrollHeight;
+  }
+
+  closeAIPanel();
+  showToast('メモに挿入しました');
+}
+/* ─────────────────────────────
+   EVENT WIRING（イベント接続）
+───────────────────────────── */
+function wireEvents() {
+  /* Quick Dock */
+  document.getElementById('fabBtn').addEventListener('click', () => {
+    haptic();
+    openNew();
+  });
+
+  document.getElementById('voiceFab').addEventListener('click', () => {
+    haptic();
+    openVoiceModal();
+  });
+
+  document.getElementById('dockCam').addEventListener('click', () => {
+    haptic();
+    if (!document.getElementById('editSheet').classList.contains('open')) openNew();
+    setTimeout(() => document.getElementById('imgCameraInput').click(), 200);
+  });
+
+  document.getElementById('dockPhoto').addEventListener('click', () => {
+    haptic();
+    if (!document.getElementById('editSheet').classList.contains('open')) openNew();
+    setTimeout(() => document.getElementById('imgFileInput').click(), 200);
+  });
+
+  document.getElementById('dockVideo').addEventListener('click', () => {
+    haptic();
+    if (!document.getElementById('editSheet').classList.contains('open')) openNew();
+    setTimeout(() => document.getElementById('videoCamInput').click(), 200);
+  });
+
+  /* Overlay */
+  document.getElementById('overlay').addEventListener('click', () => {
+    closeSheet();
+    closeSettingsSheet();
+  });
+
+  /* Sheet Buttons */
+  document.getElementById('cancelBtn').addEventListener('click', closeSheet);
+  document.getElementById('saveBtn').addEventListener('click', saveItem);
+  document.getElementById('deleteBtn').addEventListener('click', deleteItem);
+
+  /* URL Preview */
+  document.getElementById('previewUrlBtn').addEventListener('click', () => {
+    const u = document.getElementById('inputUrl').value.trim();
+    if (u) window.open(u, '_blank');
+  });
+
+  /* Search */
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value;
+    searchClear.classList.toggle('visible', !!searchQuery);
+    renderAll();
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchQuery = '';
+    searchClear.classList.remove('visible');
+    searchInput.focus();
+    renderAll();
+  });
+
+  /* Tags */
+  document.getElementById('tagAddBtn').addEventListener('click', commitTagInput);
+  document.getElementById('tagInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      commitTagInput();
+    }
+  });
+  document.getElementById('tagInput').addEventListener('input', renderTagSuggestions);
+
+  /* Fields */
+  document.getElementById('addFieldBtn').addEventListener('click', () => {
+    draftFields.push({ key: '', value: '' });
+    renderFieldRows();
+  });
+
+  document.getElementById('sensitiveToggle').addEventListener('change', e => {
+    draftSensitive = e.target.checked;
+  });
+
+  /* 画像添付 */
+  document.getElementById('imgPickBtn').addEventListener('click', () => {
+    haptic();
+    document.getElementById('imgFileInput').click();
+  });
+
+  document.getElementById('imgCameraBtn').addEventListener('click', () => {
+    haptic();
+    document.getElementById('imgCameraInput').click();
+  });
+
+  document.getElementById('imgSelfieBtn').addEventListener('click', () => {
+    haptic();
+    document.getElementById('imgSelfieInput').click();
+  });
+
+  document.getElementById('imgIllustBtn').addEventListener('click', tryImportFromIllustStudio);
+
+  /* 画像ファイル入力 */
+  document.getElementById('imgFileInput').addEventListener('change', async e => {
+    await handleImgFiles(e.target.files);
+    e.target.value = '';
+  });
+
+  document.getElementById('imgCameraInput').addEventListener('change', async e => {
+    if (e.target.files[0]) {
+      const b = await resizeImage(e.target.files[0]);
+      addBlobToDraft(b, e.target.files[0].name);
+    }
+    e.target.value = '';
+  });
+
+  document.getElementById('imgSelfieInput').addEventListener('change', async e => {
+    if (e.target.files[0]) {
+      const b = await resizeImage(e.target.files[0]);
+      addBlobToDraft(b, e.target.files[0].name);
+    }
+    e.target.value = '';
+  });
+
+  /* 動画添付 */
+  document.getElementById('videoCamBtn').addEventListener('click', () => {
+    haptic();
+    document.getElementById('videoCamInput').click();
+  });
+
+  document.getElementById('videoPickBtn').addEventListener('click', () => {
+    haptic();
+    document.getElementById('videoFileInput').click();
+  });
+
+  document.getElementById('videoCamInput').addEventListener('change', e => {
+    if (e.target.files[0]) addVideoToDraft(e.target.files[0], e.target.files[0].name);
+    e.target.value = '';
+  });
+
+  document.getElementById('videoFileInput').addEventListener('change', e => {
+    Array.from(e.target.files).forEach(f => addVideoToDraft(f, f.name));
+    e.target.value = '';
+  });
+
+  /* ペースト画像 */
+  document.querySelector('.sheet-body').addEventListener('paste', async e => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const blob = await resizeImageBlob(item.getAsFile());
+        addBlobToDraft(blob, `paste-${Date.now()}.jpg`);
+        showToast('画像を貼り付けました');
+        return;
+      }
+    }
+  });
+
+  /* 共有バナー */
+  document.getElementById('shareReceivedUse').addEventListener('click', () => {
+    haptic();
+    useSharedText();
+  });
+
+  document.getElementById('shareReceivedDismiss').addEventListener('click', () => {
+    document.getElementById('shareReceivedBanner').classList.remove('show');
+    sharedText = null;
+  });
+
+  /* 音声録音 */
+  document.getElementById('recStartBtn').addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recChunks = [];
+      recSeconds = 0;
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : '';
+
+      mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) recChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        clearInterval(recTimerInterval);
+        recTimerInterval = null;
+        document.getElementById('recStatus').classList.remove('active');
+
+        const blob = new Blob(recChunks, {
+          type: mediaRecorder.mimeType || 'audio/mp4'
+        });
+        const ext = (mediaRecorder.mimeType || 'audio/mp4').includes('webm')
+          ? 'webm'
+          : 'm4a';
+
+        addAudioToDraft(
+          blob,
+          `録音-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.${ext}`
+        );
+
+        mediaRecorder = null;
+        recChunks = [];
+      };
+
+      mediaRecorder.start(500);
+      document.getElementById('recStatus').classList.add('active');
+      document.getElementById('recTimer').textContent = '00:00';
+
+      recTimerInterval = setInterval(() => {
+        recSeconds++;
+        document.getElementById('recTimer').textContent = formatTime(recSeconds);
+      }, 1000);
+    } catch (_) {
+      showToast('マイクへのアクセスが許可されていません');
+    }
+  });
+
+  document.getElementById('recStopBtn').addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  });
+
+  /* music-suite */
+  document.getElementById('musicSuiteBtn').addEventListener('click', () => {
+    let data = null;
+
+    if (location.hash.startsWith('#import=')) {
+      try {
+        data = JSON.parse(atob(location.hash.slice(8)));
+        history.replaceState(null, '', location.pathname);
+      } catch (_) {}
+    }
+
+    if (!data) {
+      for (const k of ['ms_transfer', 'music_transfer', 'ms_export']) {
+        const r = localStorage.getItem(k);
+        if (r) {
+          try {
+            data = JSON.parse(r);
+            localStorage.removeItem(k);
+            break;
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (!data) {
+      alert('music-suiteからの転送データが見つかりません。');
+      return;
+    }
+
+    const name = `${data.source || 'music-suite'} ${data.key || ''}${
+      data.bpm ? ' ' + data.bpm + 'BPM' : ''
+    }`.trim();
+
+    const jsonBlob = new Blob([JSON.stringify(data)], {
+      type: 'application/json'
+    });
+
+    draftAudios.push({
+      tempId: crypto.randomUUID(),
+      blob: jsonBlob,
+      url: null,
+      name,
+      type: 'music-ref',
+      meta: { bpm: data.bpm, key: data.key, source: data.source },
+      isExisting: false
+    });
+
+    renderAudioList();
+  });
+
+  /* メモ全画面 */
+  document.getElementById('expandMemoBtn').addEventListener('click', openMemoPopup);
+  document.getElementById('memoPopupClose').addEventListener('click', closeMemoPopup);
+  document.getElementById('memoPopupClear').addEventListener('click', () => {
+    document.execCommand('removeFormat');
+    document.getElementById('memoPopupEditor').focus();
+  });
+
+  /* 音声 → AI解析 */
+  document.getElementById('voiceStopBtn').addEventListener('click', () => {
+    stopVoiceRec();
+    document.getElementById('voiceAnalyzeBtn').disabled =
+      voiceFullText.trim().length === 0;
+  });
+
+  document.getElementById('voiceCancelBtn').addEventListener('click', closeVoiceModal);
+
+  document.getElementById('voiceModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('voiceModal')) closeVoiceModal();
+  });
+
+  document.getElementById('voiceAnalyzeBtn').addEventListener('click', async () => {
+    const text = voiceFullText.trim();
+    if (!text) return;
+
+    document.getElementById('voiceAnalyzeBtn').disabled = true;
+    document.getElementById('voiceAnalyzeBtn').textContent = '✨ 解析中…';
+    stopVoiceRec();
+
+    try {
+      const r = await callStructureAPI(text);
+      renderAIPreview(r);
+    } catch (e) {
+      alert(`AI解析に失敗しました:\n${e.message}`);
+      document.getElementById('voiceAnalyzeBtn').disabled = false;
+      document.getElementById('voiceAnalyzeBtn').textContent = '✨ AI で整理する';
+    }
+  });
+
+  document.getElementById('aiSaveBtn').addEventListener('click', async () => {
+    const title = document.getElementById('aiTitle').value.trim();
+    if (!title) return;
+
+    const tags = [
+      ...document.getElementById('aiTagsRow').querySelectorAll('[data-tag]')
+    ].map(el => el.dataset.tag);
+
+    const now = Date.now();
+
+    await dbPut({
+      id: crypto.randomUUID(),
+      title,
+      tags,
+      body: document.getElementById('aiBody').value.trim(),
+      fields: [],
+      url: '',
+      sensitive: false,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await reload();
+    syncEcosystemTags();
+    closeVoiceModal();
+  });
+
+  /* PIN */
+  document.getElementById('lockToggleBtn').addEventListener('click', async () => {
+    if (sessionKey) lockSession();
+    else await ensureUnlocked();
+  });
+
+  document.getElementById('pinCancelBtn').addEventListener('click', () =>
+    closePinModal(false)
+  );
+
+  document.getElementById('pinOverlay').addEventListener('click', () =>
+    closePinModal(false)
+  );
+
+  document.getElementById('pinConfirmBtn').addEventListener('click', async () => {
+    const v1 = document.getElementById('pinInput1').value;
+    const v2 = document.getElementById('pinInput2').value;
+
+    if (!v1) {
+      document.getElementById('pinError').textContent = 'パスコードを入力してください';
+      document.getElementById('pinError').style.display = 'block';
+      return;
+    }
+
+    if (pinMode === 'setup') {
+      if (v1.length < 4) {
+        document.getElementById('pinError').textContent = '4文字以上で入力してください';
+        document.getElementById('pinError').style.display = 'block';
+        return;
+      }
+      if (v1 !== v2) {
+        document.getElementById('pinError').textContent = '確認用と一致しません';
+        document.getElementById('pinError').style.display = 'block';
+        return;
+      }
+      await setupPin(v1);
+    } else {
+      const ok = await tryUnlockWithPin(v1);
+      if (!ok) {
+        document.getElementById('pinError').textContent = 'パスコードが違います';
+        document.getElementById('pinError').style.display = 'block';
+        return;
+      }
+    }
+
+    await refreshDecryptedCache();
+    updateLockButton();
+    closePinModal(true);
+    renderAll();
+  });
+
+  document.getElementById('pinForgotBtn').addEventListener('click', async () => {
+    if (!confirm('パスコードをリセットすると保護された項目はすべて削除されます。続行しますか？'))
+      return;
+
+    const sensitiveItems = allItems.filter(it => it.sensitive);
+    for (const it of sensitiveItems) await dbDelete(it.id);
+
+    localStorage.removeItem(PIN_META_KEY);
+    sessionKey = null;
+    decryptedCache.clear();
+
+    await reload();
+    updateLockButton();
+    closePinModal(false);
+
+    alert('パスコードと保護された項目をリセットしました。');
+  });
+
+  /* iCloud / Shortcuts */
+  document.getElementById('icloudSaveBtn').addEventListener('click', () => {
+    haptic();
+    saveToiCloud();
+  });
+
+  document.getElementById('icloudAutoToggleBtn').addEventListener('click', () => {
+    haptic();
+    if (localStorage.getItem(ICLOUD_AUTO_KEY)) cancelPeriodicSync();
+    else setupPeriodicSync();
+  });
+
+  document.getElementById('siriShortcutBtn').addEventListener('click', () =>
+    showSiriShortcutGuide()
+  );
+
+  document.getElementById('icloudMenuBtn').addEventListener('click', () => {
+    closeMenu();
+    saveToiCloud();
+  });
+
+  document.getElementById('icloudGuideClose')?.addEventListener('click', () =>
+    document.getElementById('icloudGuide').classList.remove('open')
+  );
+
+  document.getElementById('icloudGuide')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('icloudGuide'))
+      document.getElementById('icloudGuide').classList.remove('open');
+  });
+
+  /* Settings */
+  document.getElementById('settingsBtn').addEventListener('click', openSettingsSheet);
+  document.getElementById('settingsCancelBtn').addEventListener('click', closeSettingsSheet);
+  document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
+
+  document.querySelectorAll('.model-btn').forEach(btn =>
+    btn.addEventListener('click', () => {
+      activeModel = btn.dataset.model;
+      renderModelSelect();
+    })
+  );
+
+  document.getElementById('sendToEcoBtn').addEventListener('click', () => {
+    sendToEcosystem();
+    closeSettingsSheet();
+  });
+
+  /* AIパネル */
+  document.getElementById('memoAiBtn').addEventListener('click', openAIPanel);
+  document.getElementById('aiPanelClose').addEventListener('click', closeAIPanel);
+
+  document.querySelectorAll('.ai-action-btn').forEach(btn =>
+    btn.addEventListener('click', () => runAIAction(btn.dataset.action))
+  );
+
+  document.getElementById('aiCustomSend').addEventListener('click', () => {
+    const v = document.getElementById('aiCustomPrompt').value.trim();
+    if (v) runAIAction(null, v);
+  });
+
+  document.getElementById('aiCustomPrompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const v = document.getElementById('aiCustomPrompt').value.trim();
+      if (v) runAIAction(null, v);
+    }
+  });
+
+  document.getElementById('aiInsertBtn').addEventListener('click', () =>
+    insertAIResult(false)
+  );
+
+  document.getElementById('aiReplaceBtn').addEventListener('click', () =>
+    insertAIResult(true)
+  );
+
+  /* Review */
+  document.getElementById('reviewBtn').addEventListener('click', openReview);
+  document.getElementById('reviewCloseBtn').addEventListener('click', closeReview);
+
+  document.getElementById
+    /* Review 続き（前回の途中から） */
+  document.getElementById('reviewOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('reviewOverlay')) closeReview();
+  });
+
+  /* メニュー */
+  document.getElementById('menuBtn').addEventListener('click', openMenu);
+  document.getElementById('menuOverlay').addEventListener('click', closeMenu);
+
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    closeMenu();
+    await doExport();
+  });
+
+  document.getElementById('importBtn').addEventListener('click', () => {
+    closeMenu();
+    document.getElementById('importFileInput').click();
+  });
+
+  document.getElementById('importFileInput').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (f) {
+      const r = await doImport(f);
+      alert(r.msg);
+    }
+    e.target.value = '';
+  });
+
+  document.getElementById('tagBridgeBtn').addEventListener('click', () => {
+    closeMenu();
+    syncEcosystemTags();
+    const tags = getAllTagsSorted();
+    alert(
+      tags.length > 0
+        ? `${tags.length}件のタグをecosystem_tagsに書き込みました。\n\n${tags
+            .map(t => '・' + t)
+            .join('\n')}`
+        : 'タグがまだありません。'
+    );
+  });
+
+  document.getElementById('kanseiExportBtn').addEventListener('click', () => {
+    closeMenu();
+    sendToKansei(themeTag);
+  });
+
+  document.getElementById('iconGenBtn').addEventListener('click', () => {
+    closeMenu();
+    openIconModal();
+  });
+
+  document.getElementById('themeUrlBtn').addEventListener('click', () => {
+    closeMenu();
+    const tags = getAllTagsSorted();
+    if (!tags.length) {
+      alert('タグがまだありません。');
+      return;
+    }
+    const base = location.origin + location.pathname;
+    alert(
+      `テーマ別URL一覧\n\n${tags
+        .map(t => `${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`)
+        .join('\n\n')}`
+    );
+  });
+
+  document.getElementById('backupBannerBtn').addEventListener('click', doExport);
+
+  /* アイコン生成 */
+  document.getElementById('iconOverlay').addEventListener('click', closeIconModal);
+  document.getElementById('iconModalClose').addEventListener('click', closeIconModal);
+
+  document.getElementById('iconDl192').addEventListener('click', () =>
+    downloadIcon(
+      'iconCanvas192',
+      themeTag ? `icon-${themeTag}-192.png` : 'icon-192.png'
+    )
+  );
+
+  document.getElementById('iconDl512').addEventListener('click', () =>
+    downloadIcon(
+      'iconCanvas512',
+      themeTag ? `icon-${themeTag}-512.png` : 'icon-512.png'
+    )
+  );
+
+  ['iconEmoji', 'iconBgColor', 'iconBgColor2', 'iconFgColor', 'iconFontSize'].forEach(
+    id => document.getElementById(id).addEventListener('input', refreshIconPreviews)
+  );
+
+  document.getElementById('themeBannerIconBtn').addEventListener('click', () => {
+    if (!themeTag) return;
+    const [c1, c2] = getTagColors(themeTag);
+    document.getElementById('iconEmoji').value = getTagEmoji(themeTag);
+    document.getElementById('iconBgColor').value = c1;
+    document.getElementById('iconBgColor2').value = c2;
+    document.getElementById('iconFgColor').value = '#FFFFFF';
+    openIconModal();
+  });
+
+  document.getElementById('themeBannerKanseiBtn').addEventListener('click', () =>
+    sendToKansei(themeTag)
+  );
+
+  document.getElementById('themeBannerAddBtn').addEventListener('click', () => {
+    const tag = themeTag || '';
+    const url = `${location.origin + location.pathname}?tag=${encodeURIComponent(tag)}`;
+    document.getElementById('addGuideUrl').textContent = url;
+    document.getElementById('addGuideTitle').textContent = `🌐 「${tag}」をホーム画面に追加`;
+    document.getElementById('addGuide').classList.add('open');
+  });
+
+  document.getElementById('addGuideClose').addEventListener('click', () =>
+    document.getElementById('addGuide').classList.remove('open')
+  );
+
+  document.getElementById('addGuide').addEventListener('click', e => {
+    if (e.target === document.getElementById('addGuide'))
+      document.getElementById('addGuide').classList.remove('open');
+  });
+}
+
+/* ─────────────────────────────
+   INIT（アプリ初期化）
+───────────────────────────── */
+async function init() {
+  try {
+    await openDB();
+    allItems = await dbGetAll();
+    attachmentMeta = await dbGetAllAttachmentMeta();
+
+    updateLockButton();
+    initThemeMode();
+    renderTagFilter();
+    renderAll();
+    wireEvents();
+    loadSettings();
+    updateAIBadge();
+    updateiCloudStatus();
+    updateAutoToggleBtn();
+    checkImportHash();
+    checkIncomingTransfer();
+    checkShareTarget();
+    checkShortcutParam();
+    setupSWMessages();
+    updateBackupBanner();
+    updateReviewBadge();
+
+    /* flow-mind attractor indicator */
+    const indicator = window.QuickRefBridge?.createAttractorIndicator();
+    if (indicator) document.querySelector('.header-actions').prepend(indicator);
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loadingOverlay').textContent =
+      'DB起動に失敗しました。リロードしてください。';
+    return;
+  }
+
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+/* ─────────────────────────────
+   Service Worker 登録
+───────────────────────────── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(e =>
+      console.warn('SW登録失敗:', e)
+    )
+  );
+}
+
+/* ─────────────────────────────
+   アプリ起動
+───────────────────────────── */
+init();
+</script>
 
 <!-- 送信モジュール -->
 <script src="/shared/senders/flow-mind.js"></script>
@@ -221,6 +3090,7 @@
 
 <!-- main.js（ES module） -->
 <script type="module" src="/main.js"></script>
+
 
 </body>
 </html>
