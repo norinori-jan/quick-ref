@@ -43,3 +43,9 @@ const btn = document.querySelector("#sendBtn");
 if (btn) {
   btn.addEventListener("click", handleFlowMindSend);
 }
+window.addEventListener("DOMContentLoaded", () => {
+  const btn = document.querySelector("#sendBtn");
+  if (btn) {
+    btn.addEventListener("click", handleFlowMindSend);
+  }
+});
