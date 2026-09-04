@@ -2274,6 +2274,30 @@ async function callStructureAPI(text) {
   }
 }
 
+function renderAIPreview(data) {
+  if (!data) return;
+  const titleEl = document.getElementById('aiTitle');
+  const tagsEl = document.getElementById('aiTags');
+  const bodyEl = document.getElementById('aiBody');
+  const fieldsEl = document.getElementById('aiFields');
+
+  if (titleEl) titleEl.value = data.title || '';
+  if (tagsEl) tagsEl.value = Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || '');
+  if (bodyEl) bodyEl.value = data.body || '';
+
+  if (fieldsEl) {
+    fieldsEl.innerHTML = '';
+    if (Array.isArray(data.fields)) {
+      data.fields.forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'ai-field-row';
+        div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
+        div.innerHTML = `<input type="text" class="ai-field-key" value="${escapeHtml(f.key || '')}" style="width:30%;" placeholder="項目名"><input type="text" class="ai-field-val" value="${escapeHtml(f.value || '')}" style="flex:1;" placeholder="内容">`;
+        fieldsEl.appendChild(div);
+      });
+    }
+  }
+}
 /* ─────────────────────────────
    設定画面
 ───────────────────────────── */
@@ -2387,14 +2411,16 @@ function insertAIResult(replace = false) {
   const editor = document.getElementById('memoPopupEditor');
   editor.focus();
 
+  const formatted = escapeHtml(lastAiResult).replace(/\n/g, '<br>');
+
   if (replace) {
-    editor.innerHTML = lastAiResult.replace(/\n/g, '<br>');
+    editor.innerHTML = formatted;
   } else {
     const hr = document.createElement('hr');
     hr.style.cssText =
       'border:none;border-top:1px solid var(--border);margin:12px 0;';
     const div = document.createElement('div');
-    div.innerHTML = lastAiResult.replace(/\n/g, '<br>');
+    div.innerHTML = formatted;
     editor.appendChild(hr);
     editor.appendChild(div);
     editor.scrollTop = editor.scrollHeight;
@@ -3094,3 +3120,5 @@ init();
 
 </body>
 </html>
+
+
