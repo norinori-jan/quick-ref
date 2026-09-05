@@ -1,9 +1,9 @@
-?<!DOCTYPE html>
+ï»¿ï»¿?<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ƒNƒCƒbƒNQÆ ? “‡”Å</title>
+<title>ã‚¯ã‚¤ãƒƒã‚¯å‚ç…§ ? çµ±åˆç‰ˆ</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -22,7 +22,7 @@
   --radius: 14px;
 }
 
-/* Šî–{ƒŒƒCƒAƒEƒg */
+/* åŸºæœ¬ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆ */
 body {
   margin: 0;
   padding: 0;
@@ -46,7 +46,12 @@ body {
 }
 .loading-overlay.hidden { opacity: 0; pointer-events: none; }
 
-/* ƒwƒbƒ_[ */
+.sheet { transform: translateY(100%); transition: transform .22s ease-out; }
+.sheet.open { transform: translateY(0); }
+#aiPanel.open { transform: translateY(0) !important; }
+.overlay.open { opacity: 1; pointer-events: auto; }
+
+/* ãƒ˜ãƒƒãƒ€ãƒ¼ */
 header {
   padding: env(safe-area-inset-top) 16px 12px;
   background: var(--card-bg);
@@ -87,7 +92,7 @@ header {
   border-radius: 10px;
 }
 
-/* ŒŸõ */
+/* æ¤œç´¢ */
 .search-row {
   margin-top: 12px;
   display: flex;
@@ -116,7 +121,7 @@ header {
 }
 .search-clear.visible { display: block; }
 
-/* ƒ^ƒOƒtƒBƒ‹ƒ^ */
+/* ã‚¿ã‚°ãƒ•ã‚£ãƒ«ã‚¿ */
 .tag-filter-row {
   margin-top: 10px;
   display: flex;
@@ -138,7 +143,7 @@ header {
   border-color: var(--accent);
 }
 
-/* ƒJ[ƒhˆê—— */
+/* ã‚«ãƒ¼ãƒ‰ä¸€è¦§ */
 #cardList {
   padding: 16px;
 }
@@ -188,13 +193,13 @@ header {
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">“Ç‚İ‚İ’†c</div>
+<div class="loading-overlay" id="loadingOverlay">èª­ã¿è¾¼ã¿ä¸­â€¦</div>
 
 <header>
   <div class="header-top">
-    <h1>ƒNƒCƒbƒNQÆ</h1>
+    <h1>ã‚¯ã‚¤ãƒƒã‚¯å‚ç…§</h1>
     <div class="header-actions">
-      <span id="countLabel">0Œ</span>
+      <span id="countLabel">0ä»¶</span>
       <button class="review-btn" id="reviewBtn">??<span class="review-badge" id="reviewBadge"></span></button>
       <button class="icon-btn" id="lockToggleBtn">??</button>
       <button class="icon-btn" id="settingsBtn">??</button>
@@ -204,52 +209,52 @@ header {
 
   <div class="search-row">
     <span class="search-icon">??</span>
-    <input type="search" id="searchInput" placeholder="ƒ^ƒCƒgƒ‹Eƒƒ‚Eƒ^ƒO‚ÅŒŸõ">
+    <input type="search" id="searchInput" placeholder="ã‚¿ã‚¤ãƒˆãƒ«ãƒ»ãƒ¡ãƒ¢ãƒ»ã‚¿ã‚°ã§æ¤œç´¢">
     <button class="search-clear" id="searchClear">?</button>
   </div>
 
   <div class="tag-filter-row" id="tagFilterRow"></div>
 </header>
-<!-- ‹¤—LƒeƒLƒXƒgƒoƒi[ -->
+<!-- å…±æœ‰ãƒ†ã‚­ã‚¹ãƒˆãƒãƒŠãƒ¼ -->
 <div id="shareReceivedBanner" class="share-banner">
   <span id="shareReceivedText"></span>
   <div class="share-banner-actions">
-    <button id="shareReceivedUse">’Ç‰Á‚·‚é</button>
-    <button id="shareReceivedDismiss">•Â‚¶‚é</button>
+    <button id="shareReceivedUse">è¿½åŠ ã™ã‚‹</button>
+    <button id="shareReceivedDismiss">é–‰ã˜ã‚‹</button>
   </div>
 </div>
 
-<!-- ‹óó‘Ô -->
+<!-- ç©ºçŠ¶æ…‹ -->
 <div class="empty" id="emptyState" style="display:none;">
-  ‚Ü‚¾‰½‚à‚ ‚è‚Ü‚¹‚ñB<br>‰E‰º‚Ì{‚©‚ç’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢B
+  ã¾ã ä½•ã‚‚ã‚ã‚Šã¾ã›ã‚“ã€‚<br>å³ä¸‹ã®ï¼‹ã‹ã‚‰è¿½åŠ ã—ã¦ãã ã•ã„ã€‚
 </div>
 
-<!-- ƒJ[ƒhˆê—— -->
+<!-- ã‚«ãƒ¼ãƒ‰ä¸€è¦§ -->
 <div id="cardList"></div>
 
 <!-- Quick Dock -->
 <div class="quick-dock" id="quickDock">
-  <button class="dock-btn dock-mic" id="voiceFab">??<span class="dock-label">‰¹º</span></button>
-  <button class="dock-btn dock-cam" id="dockCam">??<span class="dock-label">ƒJƒƒ‰</span></button>
-  <button class="dock-btn dock-photo" id="dockPhoto">??<span class="dock-label">Ê^</span></button>
-  <button class="dock-btn dock-video" id="dockVideo">??<span class="dock-label">“®‰æ</span></button>
-  <button class="dock-btn dock-add" id="fabBtn">{<span class="dock-label">’Ç‰Á</span></button>
+  <button class="dock-btn dock-mic" id="voiceFab">??<span class="dock-label">éŸ³å£°</span></button>
+  <button class="dock-btn dock-cam" id="dockCam">??<span class="dock-label">ã‚«ãƒ¡ãƒ©</span></button>
+  <button class="dock-btn dock-photo" id="dockPhoto">??<span class="dock-label">å†™çœŸ</span></button>
+  <button class="dock-btn dock-video" id="dockVideo">??<span class="dock-label">å‹•ç”»</span></button>
+  <button class="dock-btn dock-add" id="fabBtn">ï¼‹<span class="dock-label">è¿½åŠ </span></button>
 </div>
 
-<!-- ƒtƒ@ƒCƒ‹“ü—Í -->
+<!-- ãƒ•ã‚¡ã‚¤ãƒ«å…¥åŠ› -->
 <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none">
 <input type="file" id="imgCameraInput" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="imgSelfieInput" accept="image/*" capture="user" style="display:none">
 <input type="file" id="videoFileInput" accept="video/*" multiple style="display:none">
 <input type="file" id="videoCamInput" accept="video/*" capture="environment" style="display:none">
 
-<!-- ‰¹ºƒ‚[ƒ_ƒ‹ -->
+<!-- éŸ³å£°ãƒ¢ãƒ¼ãƒ€ãƒ« -->
 <div class="voice-modal" id="voiceModal">
   <div class="voice-sheet">
     <div class="voice-sheet-handle"></div>
     <div class="voice-status" id="voiceStatus">
       <span class="voice-dot" id="voiceDot" style="display:none;"></span>
-      <span id="voiceStatusText">ƒ}ƒCƒN‚Å˜b‚µ‚Ä‚­‚¾‚³‚¢</span>
+      <span id="voiceStatusText">ãƒã‚¤ã‚¯ã§è©±ã—ã¦ãã ã•ã„</span>
     </div>
 
     <div class="voice-transcript" id="voiceTranscript">
@@ -258,68 +263,70 @@ header {
     </div>
 
     <div class="voice-actions">
-      <button class="voice-stop-btn" id="voiceStopBtn">? ’â~</button>
-      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>? AI ‚Å®—‚·‚é</button>
+      <button class="voice-stop-btn" id="voiceStopBtn">? åœæ­¢</button>
+      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>? AI ã§æ•´ç†ã™ã‚‹</button>
     </div>
 
     <!-- AI Preview -->
     <div id="aiPreviewArea" style="display:none;">
+      <input type="hidden" id="aiTags">
+      <div id="aiFields" style="display:none;"></div>
       <div class="ai-preview">
-        <div class="ai-preview-header">?? AI ‚ª®—‚µ‚½“à—e</div>
+        <div class="ai-preview-header">?? AI ãŒæ•´ç†ã—ãŸå†…å®¹</div>
         <div class="ai-preview-body">
           <div class="ai-field">
-            <div class="ai-field-label">ƒ^ƒCƒgƒ‹</div>
+            <div class="ai-field-label">ã‚¿ã‚¤ãƒˆãƒ«</div>
             <div class="ai-field-value"><input type="text" id="aiTitle"></div>
           </div>
 
           <div class="ai-field">
-            <div class="ai-field-label">ƒ^ƒO</div>
+            <div class="ai-field-label">ã‚¿ã‚°</div>
             <div class="ai-field-value ai-tags-row" id="aiTagsRow"></div>
           </div>
 
           <div class="ai-field">
-            <div class="ai-field-label">ƒƒ‚</div>
+            <div class="ai-field-label">ãƒ¡ãƒ¢</div>
             <div class="ai-field-value"><textarea id="aiBody"></textarea></div>
           </div>
         </div>
       </div>
-      <button class="voice-save-btn" id="aiSaveBtn">?? ‚±‚Ì“à—e‚Å•Û‘¶</button>
+      <button class="voice-save-btn" id="aiSaveBtn">?? ã“ã®å†…å®¹ã§ä¿å­˜</button>
     </div>
 
-    <button class="voice-cancel-btn" id="voiceCancelBtn">ƒLƒƒƒ“ƒZƒ‹</button>
+    <button class="voice-cancel-btn" id="voiceCancelBtn">ã‚­ãƒ£ãƒ³ã‚»ãƒ«</button>
   </div>
 </div>
 
 <div class="overlay" id="overlay"></div>
 
-<!-- •ÒWƒV[ƒg -->
+<!-- ç·¨é›†ã‚·ãƒ¼ãƒˆ -->
 <div class="sheet" id="editSheet">
   <div class="sheet-handle"></div>
 
   <div class="sheet-header">
-    <button id="cancelBtn">ƒLƒƒƒ“ƒZƒ‹</button>
-    <h2 id="sheetTitle">V‹K’Ç‰Á</h2>
-    <button class="save" id="saveBtn">•Û‘¶</button>
+    <button id="cancelBtn">ã‚­ãƒ£ãƒ³ã‚»ãƒ«</button>
+    <h2 id="sheetTitle">æ–°è¦è¿½åŠ </h2>
+    <button class="save" id="saveBtn">ä¿å­˜</button>
   </div>
 
   <div class="sheet-body">
-    <label class="field-label">ƒ^ƒCƒgƒ‹</label>
-    <input type="text" id="fTitle" placeholder="ƒ^ƒCƒgƒ‹‚ğ“ü—Í" maxlength="100"
+    <label class="field-label">ã‚¿ã‚¤ãƒˆãƒ«</label>
+    <input type="text" id="fTitle" placeholder="ã‚¿ã‚¤ãƒˆãƒ«ã‚’å…¥åŠ›" maxlength="100"
       autocapitalize="sentences" autocorrect="on" spellcheck="true">
 
-    <label class="field-label">ƒ^ƒO</label>
+    <label class="field-label">ã‚¿ã‚°</label>
     <div class="tag-input-row">
-      <input type="text" id="tagInput" placeholder="ƒ^ƒO‚ğ“ü—Í" maxlength="30"
+      <input type="text" id="tagInput" placeholder="ã‚¿ã‚°ã‚’å…¥åŠ›" maxlength="30"
         autocapitalize="none" autocorrect="off" spellcheck="false">
-      <button id="tagAddBtn">’Ç‰Á</button>
+      <button id="tagAddBtn">è¿½åŠ </button>
     </div>
     <div class="tag-chips" id="tagChips"></div>
     <div class="tag-suggestions" id="tagSuggestions"></div>
 
     <div class="toggle-row" style="margin-top:16px;">
       <div class="toggle-row-text">
-        <span class="toggle-row-title">ŒÂlî•ñ‚Æ‚µ‚Ä•ÛŒì</span>
-        <span class="toggle-row-desc">ƒƒ‚E\‘¢‰»€–Ú‚ğˆÃ†‰»‚µ‚Ü‚·iƒ^ƒCƒgƒ‹Eƒ^ƒO‚Í•ÛŒì‚³‚ê‚Ü‚¹‚ñj</span>
+        <span class="toggle-row-title">å€‹äººæƒ…å ±ã¨ã—ã¦ä¿è­·</span>
+        <span class="toggle-row-desc">ãƒ¡ãƒ¢ãƒ»æ§‹é€ åŒ–é …ç›®ã‚’æš—å·åŒ–ã—ã¾ã™ï¼ˆã‚¿ã‚¤ãƒˆãƒ«ãƒ»ã‚¿ã‚°ã¯ä¿è­·ã•ã‚Œã¾ã›ã‚“ï¼‰</span>
       </div>
       <label class="switch">
         <input type="checkbox" id="sensitiveToggle">
@@ -327,13 +334,13 @@ header {
       </label>
     </div>
 
-    <label class="field-label">URLi”CˆÓj</label>
+    <label class="field-label">URLï¼ˆä»»æ„ï¼‰</label>
     <div class="url-field-row">
       <input type="text" id="inputUrl" placeholder="https://...">
-      <button type="button" class="open-link-btn" id="previewUrlBtn">¨</button>
+      <button type="button" class="open-link-btn" id="previewUrlBtn">â†’</button>
     </div>
 
-    <label class="field-label">ƒƒ‚</label>
+    <label class="field-label">ãƒ¡ãƒ¢</label>
     <div class="rich-editor-wrap">
       <div class="rich-toolbar">
         <button type="button" onclick="fmtCmd('bold')"><strong>B</strong></button>
@@ -346,31 +353,31 @@ header {
         <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">?fmt</button>
       </div>
 
-      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="“à—e‚ğ“ü—Í"
+      <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="å†…å®¹ã‚’å…¥åŠ›"
         autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 
-      <button type="button" class="expand-btn" id="expandMemoBtn">? ‘S‰æ–Ê</button>
+      <button type="button" class="expand-btn" id="expandMemoBtn">? å…¨ç”»é¢</button>
     </div>
-    <!-- \‘¢‰»ƒtƒB[ƒ‹ƒh -->
-    <label class="field-label" style="margin-top:18px;">\‘¢‰»€–Ú</label>
+    <!-- æ§‹é€ åŒ–ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ -->
+    <label class="field-label" style="margin-top:18px;">æ§‹é€ åŒ–é …ç›®</label>
     <div id="fieldRows"></div>
-    <button type="button" id="addFieldBtn" class="add-field-btn">{ €–Ú‚ğ’Ç‰Á</button>
+    <button type="button" id="addFieldBtn" class="add-field-btn">ï¼‹ é …ç›®ã‚’è¿½åŠ </button>
 
-    <!-- ‰æ‘œ“Y•t -->
-    <label class="field-label" style="margin-top:18px;">‰æ‘œ</label>
+    <!-- ç”»åƒæ·»ä»˜ -->
+    <label class="field-label" style="margin-top:18px;">ç”»åƒ</label>
     <div class="img-btn-row">
-      <button type="button" id="imgPickBtn">?? ‘I‘ğ</button>
-      <button type="button" id="imgCameraBtn">?? ƒJƒƒ‰</button>
-      <button type="button" id="imgSelfieBtn">?? ©B‚è</button>
+      <button type="button" id="imgPickBtn">?? é¸æŠ</button>
+      <button type="button" id="imgCameraBtn">?? ã‚«ãƒ¡ãƒ©</button>
+      <button type="button" id="imgSelfieBtn">?? è‡ªæ’®ã‚Š</button>
       <button type="button" id="imgIllustBtn">?? illust-studio</button>
     </div>
     <div id="imgThumbs" class="img-thumbs"></div>
 
-    <!-- ‰¹º“Y•t -->
-    <label class="field-label" style="margin-top:18px;">‰¹º</label>
+    <!-- éŸ³å£°æ·»ä»˜ -->
+    <label class="field-label" style="margin-top:18px;">éŸ³å£°</label>
     <div class="audio-btn-row">
-      <button type="button" id="recStartBtn">?? ˜^‰¹ŠJn</button>
-      <button type="button" id="recStopBtn">? ’â~</button>
+      <button type="button" id="recStartBtn">?? éŒ²éŸ³é–‹å§‹</button>
+      <button type="button" id="recStopBtn">? åœæ­¢</button>
       <button type="button" id="musicSuiteBtn">?? music-suite</button>
     </div>
     <div id="recStatus" class="rec-status">
@@ -378,40 +385,89 @@ header {
     </div>
     <div id="audioList" class="audio-list"></div>
 
-    <!-- “®‰æ“Y•t -->
-    <label class="field-label" style="margin-top:18px;">“®‰æ</label>
+    <!-- å‹•ç”»æ·»ä»˜ -->
+    <label class="field-label" style="margin-top:18px;">å‹•ç”»</label>
     <div class="video-btn-row">
-      <button type="button" id="videoCamBtn">?? ƒJƒƒ‰</button>
-      <button type="button" id="videoPickBtn">?? ‘I‘ğ</button>
+      <button type="button" id="videoCamBtn">?? ã‚«ãƒ¡ãƒ©</button>
+      <button type="button" id="videoPickBtn">?? é¸æŠ</button>
     </div>
     <div id="videoList" class="video-list"></div>
 
-    <!-- ŠÖ˜A€–Ú -->
-    <label class="field-label" style="margin-top:18px;">ŠÖ˜A€–Ú</label>
+    <!-- é–¢é€£é …ç›® -->
+    <label class="field-label" style="margin-top:18px;">é–¢é€£é …ç›®</label>
     <div id="relatedSection" class="related-section"></div>
-    <button id="aiRelatedBtn" class="ai-related-btn">? AI‚Å‚³‚ç‚É’T‚·</button>
+    <button id="aiRelatedBtn" class="ai-related-btn">? AIã§ã•ã‚‰ã«æ¢ã™</button>
 
-    <!-- ŠëŒ¯ƒ][ƒ“ -->
+    <!-- å±é™ºã‚¾ãƒ¼ãƒ³ -->
     <div id="dangerZone" class="danger-zone" style="display:none;">
-      <button id="deleteBtn" class="danger-btn">?? íœ‚·‚é</button>
+      <button id="deleteBtn" class="danger-btn">?? å‰Šé™¤ã™ã‚‹</button>
     </div>
   </div>
 </div>
 
-<!-- ‰æ‘œƒvƒŒƒrƒ…[ -->
+<!-- ç”»åƒãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ -->
 <div id="imgPreviewOverlay" class="img-preview-overlay">
   <img id="imgPreviewImg" class="img-preview-img">
   <button id="imgPreviewClose" class="img-preview-close">?</button>
 </div>
 
-<!-- ƒƒ‚‘S‰æ–Ê•ÒW -->
+<!-- è¨­å®š / AIé€£æº -->
+<div class="sheet" id="settingsSheet" style="z-index:35;">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <button id="settingsCancelBtn">é–‰ã˜ã‚‹</button>
+    <h2>è¨­å®š / AIé€£æº</h2>
+    <button class="save" id="settingsSaveBtn">ä¿å­˜</button>
+  </div>
+  <div class="sheet-body">
+    <label class="field-label">AIãƒ¢ãƒ‡ãƒ«é¸æŠ</label>
+    <div id="modelSelect" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+      <button class="model-btn" data-model="claude">Claude</button>
+      <button class="model-btn" data-model="gemini">Gemini</button>
+      <button class="model-btn" data-model="openai">OpenAI</button>
+    </div>
+    <p id="modelDetail" style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;"></p>
+    <label class="field-label">Claude APIã‚­ãƒ¼</label>
+    <input type="password" id="sClaudeKey" autocomplete="off">
+    <label class="field-label">Gemini APIã‚­ãƒ¼</label>
+    <input type="password" id="sGeminiKey" autocomplete="off">
+    <label class="field-label">OpenAI APIã‚­ãƒ¼</label>
+    <input type="password" id="sOpenAIKey" autocomplete="off">
+    <label class="field-label">Proxyã‚µãƒ¼ãƒãƒ¼ URL</label>
+    <input type="url" id="sProxyUrl" autocomplete="off">
+    <label class="field-label" style="margin-top:20px;">iCloud Driveé€£æº</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="icloudSaveBtn" style="flex:1;">ä»Šã™ãiCloudã«ä¿å­˜</button>
+      <button id="icloudAutoToggleBtn" style="flex:1;">è‡ªå‹•ä¿å­˜è¨­å®š</button>
+    </div>
+    <div id="icloudStatus" style="font-size:12px;color:var(--text-secondary);"></div>
+    <button id="siriShortcutBtn" style="width:100%;margin-top:12px;">Shortcutsè¨­å®šã‚¬ã‚¤ãƒ‰</button>
+    <button id="sendToEcoBtn" style="width:100%;margin-top:8px;">å…¨ãƒ‡ãƒ¼ã‚¿ã‚’ä»–ã‚¢ãƒ—ãƒªã¸é€ä¿¡</button>
+  </div>
+</div>
+
+<div id="aiPanel" style="position:fixed;bottom:0;left:0;right:0;z-index:45;background:var(--card-bg);border-top:1px solid var(--border);padding:12px 16px;transform:translateY(100%);transition:transform .22s;">
+  <div style="display:flex;align-items:center;gap:8px;"><strong>AI</strong><span id="aiModelBadge"></span><span style="flex:1"></span><button id="aiPanelClose">âœ•</button></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+    <button class="ai-action-btn" data-action="summarize">è¦ç´„</button>
+    <button class="ai-action-btn" data-action="organize">æ•´ç†</button>
+    <button class="ai-action-btn" data-action="expand">è£œè¶³</button>
+    <button class="ai-action-btn" data-action="question">è³ªå•ç”Ÿæˆ</button>
+  </div>
+  <div style="display:flex;gap:8px;"><input id="aiCustomPrompt" style="flex:1" placeholder="ã‚«ã‚¹ã‚¿ãƒ æŒ‡ç¤ºã‚’å…¥åŠ›"><button id="aiCustomSend">é€ä¿¡</button></div>
+  <div id="aiResult" style="display:none;margin-top:10px;"></div>
+  <div id="aiResultActions" style="display:none;gap:8px;margin-top:8px;"><button id="aiInsertBtn">ãƒ¡ãƒ¢ã«æŒ¿å…¥</button><button id="aiReplaceBtn">ç½®æ›</button></div>
+  <div id="aiLoading" style="display:none;text-align:center;padding:12px;">ç”Ÿæˆä¸­â€¦</div>
+</div>
+
+<!-- ãƒ¡ãƒ¢å…¨ç”»é¢ç·¨é›† -->
 <div class="memo-popup" id="memoPopup">
   <div class="memo-popup-header">
-    <button id="memoPopupClose">Š®—¹</button>
-    <h2>ƒƒ‚•ÒW</h2>
+    <button id="memoPopupClose">å®Œäº†</button>
+    <h2>ãƒ¡ãƒ¢ç·¨é›†</h2>
     <div class="memo-popup-actions">
       <button id="memoAiBtn">? AI</button>
-      <button id="memoPopupClear">‘®ƒNƒŠƒA</button>
+      <button id="memoPopupClear">æ›¸å¼ã‚¯ãƒªã‚¢</button>
     </div>
   </div>
 
@@ -428,16 +484,16 @@ header {
   </div>
 
   <div class="memo-popup-editor" id="memoPopupEditor"
-    contenteditable="true" data-placeholder="“à—e‚ğ“ü—Íc"
+    contenteditable="true" data-placeholder="å†…å®¹ã‚’å…¥åŠ›â€¦"
     autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 </div>
 
-<!-- ƒfƒCƒŠ[ƒŒƒrƒ…[ -->
+<!-- ãƒ‡ã‚¤ãƒªãƒ¼ãƒ¬ãƒ“ãƒ¥ãƒ¼ -->
 <div class="review-overlay" id="reviewOverlay">
   <div class="review-sheet">
     <div class="review-header">
       <div class="review-header-top">
-        <span class="review-title">?? ƒfƒCƒŠ[ƒŒƒrƒ…[</span>
+        <span class="review-title">?? ãƒ‡ã‚¤ãƒªãƒ¼ãƒ¬ãƒ“ãƒ¥ãƒ¼</span>
         <button class="review-close-btn" id="reviewCloseBtn">?</button>
       </div>
       <div class="review-progress-track">
@@ -452,90 +508,90 @@ header {
   </div>
 </div>
 
-<!-- ƒƒjƒ…[ -->
+<!-- ãƒ¡ãƒ‹ãƒ¥ãƒ¼ -->
 <div class="overlay" id="menuOverlay"></div>
 <div class="action-sheet" id="menuSheet">
   <div class="action-sheet-handle"></div>
-  <h3>ƒf[ƒ^ŠÇ—</h3>
+  <h3>ãƒ‡ãƒ¼ã‚¿ç®¡ç†</h3>
 
   <button type="button" class="action-btn" id="icloudMenuBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">iCloud Drive‚É•Û‘¶</span>
-      <span class="action-desc" id="icloudMenuDesc">ƒtƒ@ƒCƒ‹ƒAƒvƒŠŒo—R‚Å©“®ƒoƒbƒNƒAƒbƒv</span>
+      <span class="action-label">iCloud Driveã«ä¿å­˜</span>
+      <span class="action-desc" id="icloudMenuDesc">ãƒ•ã‚¡ã‚¤ãƒ«ã‚¢ãƒ—ãƒªçµŒç”±ã§è‡ªå‹•ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—</span>
     </span>
   </button>
 
   <button type="button" class="action-btn" id="exportBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">JSONƒGƒNƒXƒ|[ƒg</span>
-      <span class="action-desc">‘Sƒf[ƒ^‚ğƒtƒ@ƒCƒ‹‚É‘‚«o‚·</span>
+      <span class="action-label">JSONã‚¨ã‚¯ã‚¹ãƒãƒ¼ãƒˆ</span>
+      <span class="action-desc">å…¨ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ•ã‚¡ã‚¤ãƒ«ã«æ›¸ãå‡ºã™</span>
     </span>
   </button>
 
   <button type="button" class="action-btn" id="importBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">JSONƒCƒ“ƒ|[ƒg</span>
-      <span class="action-desc">ƒoƒbƒNƒAƒbƒv‚©‚ç•œŒ³Eƒ}[ƒW</span>
+      <span class="action-label">JSONã‚¤ãƒ³ãƒãƒ¼ãƒˆ</span>
+      <span class="action-desc">ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã‹ã‚‰å¾©å…ƒãƒ»ãƒãƒ¼ã‚¸</span>
     </span>
   </button>
 
   <button type="button" class="action-btn" id="tagBridgeBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">ƒ^ƒO‚ğ‘¼ƒAƒvƒŠ‚Æ‹¤—L</span>
-      <span class="action-desc">illust-studio / music-suite ‚È‚Ç‚É“¯Šú</span>
+      <span class="action-label">ã‚¿ã‚°ã‚’ä»–ã‚¢ãƒ—ãƒªã¨å…±æœ‰</span>
+      <span class="action-desc">illust-studio / music-suite ãªã©ã«åŒæœŸ</span>
     </span>
   </button>
 
   <button type="button" class="action-btn" id="kanseiExportBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">‘fŞ‚ğ kansei ‚É‘—‚é</span>
-      <span class="action-desc">•\¦’†‚Ì€–Ú‚ğ·•Mx‰‡¶¬ƒc[ƒ‹‚Ö</span>
+      <span class="action-label">ç´ æã‚’ kansei ã«é€ã‚‹</span>
+      <span class="action-desc">è¡¨ç¤ºä¸­ã®é …ç›®ã‚’åŸ·ç­†æ”¯æ´ç”Ÿæˆãƒ„ãƒ¼ãƒ«ã¸</span>
     </span>
   </button>
 
   <button type="button" class="action-btn" id="iconGenBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">ƒAƒCƒRƒ“‚ğ¶¬Eƒ_ƒEƒ“ƒ[ƒh</span>
-      <span class="action-desc">ƒz[ƒ€‰æ–Ê—p icon-192.png / icon-512.png</span>
+      <span class="action-label">ã‚¢ã‚¤ã‚³ãƒ³ã‚’ç”Ÿæˆãƒ»ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰</span>
+      <span class="action-desc">ãƒ›ãƒ¼ãƒ ç”»é¢ç”¨ icon-192.png / icon-512.png</span>
     </span>
   </button>
 
   <button type="button" class="action-btn" id="themeUrlBtn">
     <span class="action-icon">??</span>
     <span class="action-btn-inner">
-      <span class="action-label">ƒe[ƒ}•ÊURLˆê——‚ğ•\¦</span>
-      <span class="action-desc">ƒ^ƒO‚²‚Æ‚Ìƒz[ƒ€‰æ–Ê’Ç‰Á—pURL</span>
+      <span class="action-label">ãƒ†ãƒ¼ãƒåˆ¥URLä¸€è¦§ã‚’è¡¨ç¤º</span>
+      <span class="action-desc">ã‚¿ã‚°ã”ã¨ã®ãƒ›ãƒ¼ãƒ ç”»é¢è¿½åŠ ç”¨URL</span>
     </span>
   </button>
 </div>
-<!-- ƒAƒCƒRƒ“¶¬ƒ‚[ƒ_ƒ‹ -->
+<!-- ã‚¢ã‚¤ã‚³ãƒ³ç”Ÿæˆãƒ¢ãƒ¼ãƒ€ãƒ« -->
 <div id="iconOverlay" class="icon-overlay"></div>
 <div id="iconModal" class="icon-modal">
   <div class="icon-modal-header">
-    <h3>ƒAƒCƒRƒ“¶¬</h3>
+    <h3>ã‚¢ã‚¤ã‚³ãƒ³ç”Ÿæˆ</h3>
     <button id="iconModalClose">?</button>
   </div>
 
   <div class="icon-config">
-    <label>ŠG•¶š / •¶š</label>
-    <input type="text" id="iconEmoji" maxlength="2" value="Q">
+    <label>çµµæ–‡å­— / æ–‡å­—</label>
+    <input type="text" id="iconEmoji" maxlength="2" value="å‚">
 
-    <label>”wŒiFiãj</label>
+    <label>èƒŒæ™¯è‰²ï¼ˆä¸Šï¼‰</label>
     <input type="color" id="iconBgColor" value="#007AFF">
 
-    <label>”wŒiFi‰ºj</label>
+    <label>èƒŒæ™¯è‰²ï¼ˆä¸‹ï¼‰</label>
     <input type="color" id="iconBgColor2" value="#005ECB">
 
-    <label>•¶šF</label>
+    <label>æ–‡å­—è‰²</label>
     <input type="color" id="iconFgColor" value="#FFFFFF">
 
-    <label>•¶šƒTƒCƒYi%j</label>
+    <label>æ–‡å­—ã‚µã‚¤ã‚ºï¼ˆ%ï¼‰</label>
     <input type="range" id="iconFontSize" min="40" max="90" value="70">
   </div>
 
@@ -550,7 +606,7 @@ header {
   </div>
 </div>
 
-<!-- ƒe[ƒ}ƒ‚[ƒhƒoƒi[ -->
+<!-- ãƒ†ãƒ¼ãƒãƒ¢ãƒ¼ãƒ‰ãƒãƒŠãƒ¼ -->
 <div id="themeBanner" class="theme-banner" style="display:none;">
   <span id="themeBannerIcon" class="theme-banner-icon"></span>
   <div class="theme-banner-text">
@@ -558,80 +614,80 @@ header {
     <span id="themeBannerSub"></span>
   </div>
   <div class="theme-banner-actions">
-    <button id="themeBannerIconBtn">?? ƒAƒCƒRƒ“</button>
+    <button id="themeBannerIconBtn">?? ã‚¢ã‚¤ã‚³ãƒ³</button>
     <button id="themeBannerKanseiBtn">?? kansei</button>
-    <button id="themeBannerAddBtn">{ ƒz[ƒ€’Ç‰Á</button>
+    <button id="themeBannerAddBtn">ï¼‹ ãƒ›ãƒ¼ãƒ è¿½åŠ </button>
   </div>
 </div>
 
-<!-- ƒz[ƒ€’Ç‰ÁƒKƒCƒh -->
+<!-- ãƒ›ãƒ¼ãƒ è¿½åŠ ã‚¬ã‚¤ãƒ‰ -->
 <div id="addGuide" class="add-guide">
   <div class="add-guide-sheet">
-    <h3 id="addGuideTitle">ƒz[ƒ€‰æ–Ê‚É’Ç‰Á</h3>
+    <h3 id="addGuideTitle">ãƒ›ãƒ¼ãƒ ç”»é¢ã«è¿½åŠ </h3>
     <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
-      Safari ¨ ‹¤—Lƒ{ƒ^ƒ“ ¨ uƒz[ƒ€‰æ–Ê‚É’Ç‰Áv‚Å“o˜^‚Å‚«‚Ü‚·B
+      Safari â†’ å…±æœ‰ãƒœã‚¿ãƒ³ â†’ ã€Œãƒ›ãƒ¼ãƒ ç”»é¢ã«è¿½åŠ ã€ã§ç™»éŒ²ã§ãã¾ã™ã€‚
     </p>
     <div id="addGuideUrl" class="add-guide-url"></div>
-    <button id="addGuideClose" class="add-guide-close">•Â‚¶‚é</button>
+    <button id="addGuideClose" class="add-guide-close">é–‰ã˜ã‚‹</button>
   </div>
 </div>
 
-<!-- iCloud ƒKƒCƒh -->
+<!-- iCloud ã‚¬ã‚¤ãƒ‰ -->
 <div id="icloudGuide" class="add-guide">
   <div class="add-guide-sheet">
-    <h3>?? iCloud Drive ‚É•Û‘¶‚·‚é•û–@</h3>
+    <h3>?? iCloud Drive ã«ä¿å­˜ã™ã‚‹æ–¹æ³•</h3>
     <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
-      ƒ_ƒEƒ“ƒ[ƒh‚³‚ê‚½ JSON ‚ğuƒtƒ@ƒCƒ‹vƒAƒvƒŠ‚Å iCloud Drive ‚ÉˆÚ“®‚µ‚Ä‚­‚¾‚³‚¢B
+      ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã•ã‚ŒãŸ JSON ã‚’ã€Œãƒ•ã‚¡ã‚¤ãƒ«ã€ã‚¢ãƒ—ãƒªã§ iCloud Drive ã«ç§»å‹•ã—ã¦ãã ã•ã„ã€‚
     </p>
     <div id="icloudGuideFilename" class="add-guide-url"></div>
 
-    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ƒ_ƒEƒ“ƒ[ƒhƒtƒHƒ‹ƒ_‚É•Û‘¶‚³‚ê‚Ü‚·</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">2</div><p>uƒtƒ@ƒCƒ‹vƒAƒvƒŠ ¨ uÅ‹ßg‚Á‚½€–Úv</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ƒtƒ@ƒCƒ‹‚ğ’·‰Ÿ‚µ ¨ uˆÚ“®v</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">4</div><p>iCloud Drive ¨ ”CˆÓ‚ÌƒtƒHƒ‹ƒ_‚Ö</p></div>
-    <div class="add-guide-step"><div class="add-guide-num">5</div><p>Mac ‚©‚ç Finder ¨ iCloud Drive ‚ÅƒAƒNƒZƒX‰Â”\</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">1</div><p>ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ãƒ•ã‚©ãƒ«ãƒ€ã«ä¿å­˜ã•ã‚Œã¾ã™</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">2</div><p>ã€Œãƒ•ã‚¡ã‚¤ãƒ«ã€ã‚¢ãƒ—ãƒª â†’ ã€Œæœ€è¿‘ä½¿ã£ãŸé …ç›®ã€</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">3</div><p>ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é•·æŠ¼ã— â†’ ã€Œç§»å‹•ã€</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">4</div><p>iCloud Drive â†’ ä»»æ„ã®ãƒ•ã‚©ãƒ«ãƒ€ã¸</p></div>
+    <div class="add-guide-step"><div class="add-guide-num">5</div><p>Mac ã‹ã‚‰ Finder â†’ iCloud Drive ã§ã‚¢ã‚¯ã‚»ã‚¹å¯èƒ½</p></div>
 
-    <button id="icloudGuideClose" class="add-guide-close">•Â‚¶‚é</button>
+    <button id="icloudGuideClose" class="add-guide-close">é–‰ã˜ã‚‹</button>
   </div>
 </div>
 
-<!-- ƒoƒbƒNƒAƒbƒvƒoƒi[ -->
+<!-- ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ãƒãƒŠãƒ¼ -->
 <div id="backupBanner" class="backup-banner" style="display:none;">
   <span id="backupBannerText"></span>
-  <button id="backupBannerBtn">?? ƒGƒNƒXƒ|[ƒg</button>
+  <button id="backupBannerBtn">?? ã‚¨ã‚¯ã‚¹ãƒãƒ¼ãƒˆ</button>
 </div>
 
-<!-- PIN ƒ‚[ƒ_ƒ‹ -->
+<!-- PIN ãƒ¢ãƒ¼ãƒ€ãƒ« -->
 <div id="pinOverlay" class="pin-overlay"></div>
 <div id="pinModal" class="pin-modal">
   <div class="pin-sheet">
-    <h3 id="pinModalTitle">ƒpƒXƒR[ƒh‚ğİ’è</h3>
+    <h3 id="pinModalTitle">ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ã‚’è¨­å®š</h3>
     <p id="pinModalDesc" class="pin-desc"></p>
 
-    <input type="password" id="pinInput1" class="pin-input" placeholder="ƒpƒXƒR[ƒh">
-    <input type="password" id="pinInput2" class="pin-input" placeholder="Šm”F—p">
+    <input type="password" id="pinInput1" class="pin-input" placeholder="ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰">
+    <input type="password" id="pinInput2" class="pin-input" placeholder="ç¢ºèªç”¨">
 
     <div id="pinError" class="pin-error" style="display:none;"></div>
 
-    <button id="pinConfirmBtn" class="pin-confirm-btn">İ’è‚·‚é</button>
-    <button id="pinForgotBtn" class="pin-forgot-btn" style="display:none;">ƒpƒXƒR[ƒh‚ğƒŠƒZƒbƒg</button>
-    <button id="pinCancelBtn" class="pin-cancel-btn">ƒLƒƒƒ“ƒZƒ‹</button>
+    <button id="pinConfirmBtn" class="pin-confirm-btn">è¨­å®šã™ã‚‹</button>
+    <button id="pinForgotBtn" class="pin-forgot-btn" style="display:none;">ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ã‚’ãƒªã‚»ãƒƒãƒˆ</button>
+    <button id="pinCancelBtn" class="pin-cancel-btn">ã‚­ãƒ£ãƒ³ã‚»ãƒ«</button>
   </div>
 </div>
 
-<!-- ƒg[ƒXƒg -->
+<!-- ãƒˆãƒ¼ã‚¹ãƒˆ -->
 <div id="toast" class="toast"></div>
 
-<!-- ‹¤—Lƒ^[ƒQƒbƒg—pƒtƒ@ƒCƒ‹“ü—Í -->
+<!-- å…±æœ‰ã‚¿ãƒ¼ã‚²ãƒƒãƒˆç”¨ãƒ•ã‚¡ã‚¤ãƒ«å…¥åŠ› -->
 <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
 
 <!-- JS: DB / Crypto / Search / Attachments / AI / Review / Related / Ecosystem -->
 <script>
 'use strict';
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   DB LAYERi“Y•tƒtƒ@ƒCƒ‹‘Î‰j
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DB LAYERï¼ˆæ·»ä»˜ãƒ•ã‚¡ã‚¤ãƒ«å¯¾å¿œï¼‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const DB_NAME = 'quickRefDB';
 const DB_VERSION = 2;
 let dbPromise = null;
@@ -689,9 +745,9 @@ async function dbDelete(id) {
     tx.onerror = () => reject(tx.error);
   });
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   “Y•tƒtƒ@ƒCƒ‹ƒƒ^
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   æ·»ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ãƒ¡ã‚¿
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function dbGetAllAttachmentMeta() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -738,9 +794,9 @@ async function dbDeleteAttachmentsByItemId(itemId) {
   for (const a of atts) await dbDeleteAttachment(a.id);
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ˆÃ†‰» / PIN
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   æš—å·åŒ– / PIN
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const PIN_META_KEY = 'qr_pin_meta';
 let sessionKey = null;
 let decryptedCache = new Map();
@@ -817,16 +873,16 @@ function updateLockButton() {
   const btn = document.getElementById('lockToggleBtn');
   if (sessionKey) {
     btn.textContent = '??';
-    btn.title = 'ƒ^ƒbƒv‚ÅƒƒbƒN';
+    btn.title = 'ã‚¿ãƒƒãƒ—ã§ãƒ­ãƒƒã‚¯';
   } else {
     btn.textContent = '??';
-    btn.title = 'ƒ^ƒbƒv‚ÅƒƒbƒN‰ğœ';
+    btn.title = 'ã‚¿ãƒƒãƒ—ã§ãƒ­ãƒƒã‚¯è§£é™¤';
   }
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ˆÃ†‰»‚³‚ê‚½€–Ú‚Ì•œ†
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   æš—å·åŒ–ã•ã‚ŒãŸé …ç›®ã®å¾©å·
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function decryptItemContent(item) {
   if (!sessionKey) return null;
   try {
@@ -862,9 +918,9 @@ async function refreshDecryptedCache() {
   }
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ˆÃ†‰»‚µ‚Ä•Û‘¶
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   æš—å·åŒ–ã—ã¦ä¿å­˜
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function encryptToItemFields(body, fields) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const bodyBuf = new TextEncoder().encode(body);
@@ -887,9 +943,9 @@ async function encryptToItemFields(body, fields) {
   };
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ŒŸõ
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   æ¤œç´¢
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function escapeHtml(str) {
   return (str || '')
     .replace(/&/g, '&amp;')
@@ -953,14 +1009,53 @@ function highlightText(text, query) {
   const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
   return escaped.replace(re, m => `<mark>${m}</mark>`);
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ƒ^ƒOƒtƒBƒ‹ƒ^ / ƒJ[ƒh•`‰æ
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+
+function initThemeMode() {
+  if (!themeTag) {
+    document.getElementById('themeBanner').style.display = 'none';
+    return;
+  }
+  filterTag = themeTag;
+  const emoji = getTagEmoji(themeTag);
+  document.getElementById('themeBannerIcon').textContent = emoji;
+  document.getElementById('themeBannerLabel').textContent = `#${themeTag}`;
+  document.getElementById('themeBannerSub').textContent = 'ãƒ†ãƒ¼ãƒãƒ¢ãƒ¼ãƒ‰ã§èµ·å‹•ä¸­';
+  document.getElementById('themeBanner').style.display = 'flex';
+  document.title = `${emoji} ${themeTag} â€” ã‚¯ã‚¤ãƒƒã‚¯å‚ç…§`;
+  document.getElementById('searchInput').placeholder = `#${themeTag} å†…ã‚’æ¤œç´¢`;
+}
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ã‚¿ã‚°ãƒ•ã‚£ãƒ«ã‚¿ / ã‚«ãƒ¼ãƒ‰æç”»
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 let allItems = [];
 let attachmentMeta = [];
 let filterTag = null;
 let searchQuery = '';
 let linkFilterActive = false;
+const themeTag = new URLSearchParams(location.search).get('tag') || '';
+let voiceRec = null;
+let voiceIsRec = false;
+let voiceFullText = '';
+
+function haptic() {
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+
+async function reload() {
+  allItems = await dbGetAll();
+  attachmentMeta = await dbGetAllAttachmentMeta();
+  renderTagFilter();
+  renderAll();
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
 
 function getAllTagsSorted() {
   const s = new Set();
@@ -972,14 +1067,14 @@ function renderTagFilter() {
   const row = document.getElementById('tagFilterRow');
   const allTags = getAllTagsSorted();
   const chips = ['__all__', ...allTags].map(tag => {
-    const label = tag === '__all__' ? '‚·‚×‚Ä' : tag;
+    const label = tag === '__all__' ? 'ã™ã¹ã¦' : tag;
     const active = filterTag === tag ? 'active' : '';
     return `<button class="filter-chip ${active}" data-tag="${escapeHtml(tag)}">${escapeHtml(label)}</button>`;
   });
 
   row.innerHTML =
     chips.join('') +
-    `<button class="filter-chip${linkFilterActive ? ' active' : ''}" id="linkFilterBtn">?? ƒŠƒ“ƒNW</button>`;
+    `<button class="filter-chip${linkFilterActive ? ' active' : ''}" id="linkFilterBtn">?? ãƒªãƒ³ã‚¯é›†</button>`;
 
   row.querySelectorAll('.filter-chip[data-tag]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1016,12 +1111,12 @@ function renderAll() {
   if (!items.length) {
     list.innerHTML = '';
     empty.style.display = 'block';
-    document.getElementById('countLabel').textContent = '0Œ';
+    document.getElementById('countLabel').textContent = '0ä»¶';
     return;
   }
 
   empty.style.display = 'none';
-  document.getElementById('countLabel').textContent = `${items.length}Œ`;
+  document.getElementById('countLabel').textContent = `${items.length}ä»¶`;
 
   list.innerHTML = items
     .map(item => {
@@ -1034,12 +1129,12 @@ function renderAll() {
 
       return `
         <div class="card" data-id="${item.id}">
-          <div class="card-title">${highlightText(item.title || '(–³‘è)', searchQuery)}</div>
+          <div class="card-title">${highlightText(item.title || '(ç„¡é¡Œ)', searchQuery)}</div>
           <div class="card-snippet">${highlightText(snippet, searchQuery)}</div>
           <div class="chips">${tagsHtml}</div>
           <div class="card-meta">
-            <span>${item.url ? '?? URL‚ ‚è' : ''}</span>
-            <span>${item.sensitive ? '?? •ÛŒì' : ''}</span>
+            <span>${item.url ? '?? URLã‚ã‚Š' : ''}</span>
+            <span>${item.sensitive ? '?? ä¿è­·' : ''}</span>
           </div>
         </div>`;
     })
@@ -1050,9 +1145,9 @@ function renderAll() {
   });
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   •ÒWƒV[ƒgFV‹K
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ç·¨é›†ã‚·ãƒ¼ãƒˆï¼šæ–°è¦
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 let editingId = null;
 let draftTags = [];
 let draftFields = [];
@@ -1079,7 +1174,7 @@ function openNew() {
   pendingDeleteAttIds = [];
   revokeAllObjURLs();
 
-  document.getElementById('sheetTitle').textContent = 'V‹K’Ç‰Á';
+  document.getElementById('sheetTitle').textContent = 'æ–°è¦è¿½åŠ ';
   document.getElementById('fTitle').value = '';
   document.getElementById('fBody').innerHTML = '';
   document.getElementById('tagInput').value = '';
@@ -1097,9 +1192,9 @@ function openNew() {
   openSheet();
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   •ÒWƒV[ƒgFŠù‘¶€–Ú‚ğŠJ‚­
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ç·¨é›†ã‚·ãƒ¼ãƒˆï¼šæ—¢å­˜é …ç›®ã‚’é–‹ã
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function openEdit(id) {
   const item = allItems.find(i => i.id === id);
   if (!item) return;
@@ -1133,7 +1228,7 @@ async function openEdit(id) {
   pendingDeleteAttIds = [];
   stopRecordingIfActive();
 
-  document.getElementById('sheetTitle').textContent = '•ÒW';
+  document.getElementById('sheetTitle').textContent = 'ç·¨é›†';
   document.getElementById('fTitle').value = item.title || '';
   document.getElementById('fBody').innerHTML = plainBody;
   document.getElementById('tagInput').value = '';
@@ -1155,7 +1250,7 @@ async function openEdit(id) {
 
   openSheet();
 
-  // flow-mind ˜AŒgƒ{ƒ^ƒ“
+  // flow-mind é€£æºãƒœã‚¿ãƒ³
   document.getElementById('relatedSection').insertAdjacentElement(
     'afterend',
     (() => {
@@ -1183,9 +1278,9 @@ function closeSheet() {
   document.getElementById('editSheet').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ƒ^ƒO“ü—ÍE\‘¢‰»€–Ú
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ã‚¿ã‚°å…¥åŠ›ãƒ»æ§‹é€ åŒ–é …ç›®
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function renderTagChips() {
   const el = document.getElementById('tagChips');
   el.innerHTML = draftTags
@@ -1234,16 +1329,16 @@ function commitTagInput() {
   renderTagSuggestions();
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   \‘¢‰»€–Ú
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   æ§‹é€ åŒ–é …ç›®
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function renderFieldRows() {
   const el = document.getElementById('fieldRows');
   el.innerHTML = draftFields
     .map((f, i) => `
       <div class="field-row" data-i="${i}">
-        <input type="text" class="field-key" placeholder="€–Ú–¼" value="${escapeHtml(f.key)}">
-        <input type="text" class="field-value" placeholder="’l" value="${escapeHtml(f.value)}">
+        <input type="text" class="field-key" placeholder="é …ç›®å" value="${escapeHtml(f.key)}">
+        <input type="text" class="field-value" placeholder="å€¤" value="${escapeHtml(f.value)}">
         <button class="field-del">?</button>
       </div>
     `)
@@ -1264,9 +1359,9 @@ function renderFieldRows() {
   });
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ‰æ‘œ“Y•t
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ç”»åƒæ·»ä»˜
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function renderImageThumbs() {
   const el = document.getElementById('imgThumbs');
   el.innerHTML = '';
@@ -1283,7 +1378,7 @@ function renderImageThumbs() {
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'img-thumb-del';
-    del.textContent = '~';
+    del.textContent = 'Ã—';
     del.addEventListener('click', () => {
       if (img.isExisting && img.attId) pendingDeleteAttIds.push(img.attId);
       URL.revokeObjectURL(img.url);
@@ -1299,7 +1394,7 @@ function renderImageThumbs() {
 
 function addBlobToDraft(blob, name) {
   if (blob.size > 5 * 1024 * 1024) {
-    showToast('‰æ‘œƒTƒCƒY‚ª‘å‚«‚·‚¬‚Ü‚·(ãŒÀ5MB)');
+    showToast('ç”»åƒã‚µã‚¤ã‚ºãŒå¤§ãã™ãã¾ã™(ä¸Šé™5MB)');
     return;
   }
   const url = URL.createObjectURL(blob);
@@ -1349,9 +1444,9 @@ async function saveImageAttachments(itemId) {
   }
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ‰¹º“Y•t
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   éŸ³å£°æ·»ä»˜
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 let mediaRecorder = null;
 let recChunks = [];
 let recSeconds = 0;
@@ -1427,9 +1522,9 @@ async function saveAudioAttachments(itemId) {
     }
   }
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ‰¹ºƒŠƒXƒg•`‰æ
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   éŸ³å£°ãƒªã‚¹ãƒˆæç”»
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function renderAudioList() {
   const el = document.getElementById('audioList');
   el.innerHTML = '';
@@ -1447,7 +1542,7 @@ function renderAudioList() {
     play.textContent = '??';
     play.addEventListener('click', () => {
       if (!aud.url) {
-        alert('music-suite‘fŞ‚ÍJSON‚Ì‚½‚ßÄ¶‚Å‚«‚Ü‚¹‚ñ');
+        alert('music-suiteç´ æã¯JSONã®ãŸã‚å†ç”Ÿã§ãã¾ã›ã‚“');
         return;
       }
       const audio = new Audio(aud.url);
@@ -1471,12 +1566,12 @@ function renderAudioList() {
   });
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   “®‰æ“Y•t
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   å‹•ç”»æ·»ä»˜
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function addVideoToDraft(file, name) {
   if (file.size > 20 * 1024 * 1024) {
-    showToast('“®‰æƒTƒCƒY‚ª‘å‚«‚·‚¬‚Ü‚·(ãŒÀ20MB)');
+    showToast('å‹•ç”»ã‚µã‚¤ã‚ºãŒå¤§ãã™ãã¾ã™(ä¸Šé™20MB)');
     return;
   }
   const url = URL.createObjectURL(file);
@@ -1571,13 +1666,13 @@ async function saveVideoAttachments(itemId) {
   }
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   •Û‘¶ˆ—
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ä¿å­˜å‡¦ç†
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function saveItem() {
   const title = document.getElementById('fTitle').value.trim();
   if (!title) {
-    showToast('ƒ^ƒCƒgƒ‹‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢');
+    showToast('ã‚¿ã‚¤ãƒˆãƒ«ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„');
     return;
   }
 
@@ -1624,36 +1719,36 @@ async function saveItem() {
 
   await reload();
   closeSheet();
-  showToast('•Û‘¶‚µ‚Ü‚µ‚½');
+  showToast('ä¿å­˜ã—ã¾ã—ãŸ');
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   íœˆ—
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   å‰Šé™¤å‡¦ç†
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function deleteItem() {
   if (!editingId) return;
-  if (!confirm('‚±‚Ì€–Ú‚ğíœ‚µ‚Ü‚·‚©H')) return;
+  if (!confirm('ã“ã®é …ç›®ã‚’å‰Šé™¤ã—ã¾ã™ã‹ï¼Ÿ')) return;
 
   await dbDelete(editingId);
   await dbDeleteAttachmentsByItemId(editingId);
 
   await reload();
   closeSheet();
-  showToast('íœ‚µ‚Ü‚µ‚½');
+  showToast('å‰Šé™¤ã—ã¾ã—ãŸ');
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ‰æ‘œƒvƒŒƒrƒ…[
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ç”»åƒãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function openImgPreview(url) {
   const overlay = document.getElementById('imgPreviewOverlay');
   const img = document.getElementById('imgPreviewImg');
   img.src = url;
   overlay.classList.add('open');
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ‰æ‘œƒvƒŒƒrƒ…[ƒNƒ[ƒY
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ç”»åƒãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ã‚¯ãƒ­ãƒ¼ã‚º
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 document.getElementById('imgPreviewClose').addEventListener('click', () => {
   document.getElementById('imgPreviewOverlay').classList.remove('open');
   document.getElementById('imgPreviewImg').src = '';
@@ -1665,9 +1760,9 @@ document.getElementById('imgPreviewOverlay').addEventListener('click', e => {
   }
 });
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ‹¤—LƒeƒLƒXƒgiShare Targetj
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   å…±æœ‰ãƒ†ã‚­ã‚¹ãƒˆï¼ˆShare Targetï¼‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 let sharedText = null;
 
 function checkShareTarget() {
@@ -1694,9 +1789,69 @@ function useSharedText() {
   document.getElementById('shareReceivedBanner').classList.remove('show');
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   iCloud •Û‘¶ / ©“®“¯Šú
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+function tryImportFromIllustStudio() {
+  try {
+    const raw = localStorage.getItem('is_transfer');
+    if (!raw) {
+      alert('illust-studioã‹ã‚‰ã®è»¢é€ãƒ‡ãƒ¼ã‚¿ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚');
+      return;
+    }
+    const data = JSON.parse(raw);
+    const src = data.image || data.dataUrl || data.src || null;
+    if (!src) {
+      alert('ç”»åƒãƒ‡ãƒ¼ã‚¿ãŒå–å¾—ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚');
+      return;
+    }
+    fetch(src).then(r => r.blob()).then(blob => {
+      addBlobToDraft(blob, data.title ? `${data.title}.png` : 'illust-studio.png');
+      localStorage.removeItem('is_transfer');
+    });
+  } catch (e) {
+    alert('is_transferèª­ã¿è¾¼ã¿å¤±æ•—: ' + e.message);
+  }
+}
+
+async function importItemsFromPayload(items, source) {
+  let count = 0;
+  for (const item of items) {
+    if (!item.id) item.id = crypto.randomUUID();
+    item.source = source;
+    await dbPut(item);
+    count++;
+  }
+  await reload();
+  showToast(`${source}ã‹ã‚‰${count}ä»¶ã‚’å—ä¿¡ã—ã¾ã—ãŸ`);
+}
+
+function checkImportHash() {
+  if (!location.hash.startsWith('#import=')) return;
+  try {
+    const payload = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(8)))));
+    const items = Array.isArray(payload.items) ? payload.items : payload;
+    if (Array.isArray(items)) importItemsFromPayload(items, payload.source || 'unknown');
+  } catch (e) {
+    console.warn(e);
+  } finally {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+}
+
+function checkIncomingTransfer() {
+  try {
+    const raw = localStorage.getItem(LS.TRANSFER);
+    if (!raw) return;
+    const payload = JSON.parse(raw);
+    if (payload.source === 'quick-ref' || !Array.isArray(payload.items)) return;
+    if (confirm(`${payload.source || 'ä»–ã‚¢ãƒ—ãƒª'}ã‹ã‚‰${payload.items.length}ä»¶ã®ãƒ‡ãƒ¼ã‚¿ãŒã‚ã‚Šã¾ã™ã€‚ã‚¤ãƒ³ãƒãƒ¼ãƒˆã—ã¾ã™ã‹ï¼Ÿ`)) {
+      importItemsFromPayload(payload.items, payload.source || 'transfer');
+      localStorage.removeItem(LS.TRANSFER);
+    }
+  } catch (_) {}
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   iCloud ä¿å­˜ / è‡ªå‹•åŒæœŸ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const ICLOUD_AUTO_KEY = 'qr_icloud_auto';
 
 async function doExport() {
@@ -1745,39 +1900,39 @@ async function doImport(file) {
     }
 
     await reload();
-    return { ok: true, msg: `${count}Œ‚ğƒCƒ“ƒ|[ƒg‚µ‚Ü‚µ‚½` };
+    return { ok: true, msg: `${count}ä»¶ã‚’ã‚¤ãƒ³ãƒãƒ¼ãƒˆã—ã¾ã—ãŸ` };
   } catch (e) {
-    return { ok: false, msg: 'ƒCƒ“ƒ|[ƒg‚É¸”s‚µ‚Ü‚µ‚½' };
+    return { ok: false, msg: 'ã‚¤ãƒ³ãƒãƒ¼ãƒˆã«å¤±æ•—ã—ã¾ã—ãŸ' };
   }
 }
 
 async function saveToiCloud() {
   try {
     await doExport();
-    showToast('iCloud Drive ‚É•Û‘¶‚µ‚Ü‚µ‚½');
+    showToast('iCloud Drive ã«ä¿å­˜ã—ã¾ã—ãŸ');
   } catch (_) {
-    showToast('•Û‘¶‚É¸”s‚µ‚Ü‚µ‚½');
+    showToast('ä¿å­˜ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 }
 
 function setupPeriodicSync() {
   localStorage.setItem(ICLOUD_AUTO_KEY, '1');
   updateAutoToggleBtn();
-  showToast('©“®•Û‘¶‚ğ—LŒø‰»‚µ‚Ü‚µ‚½');
+  showToast('è‡ªå‹•ä¿å­˜ã‚’æœ‰åŠ¹åŒ–ã—ã¾ã—ãŸ');
 }
 
 function cancelPeriodicSync() {
   localStorage.removeItem(ICLOUD_AUTO_KEY);
   updateAutoToggleBtn();
-  showToast('©“®•Û‘¶‚ğ’â~‚µ‚Ü‚µ‚½');
+  showToast('è‡ªå‹•ä¿å­˜ã‚’åœæ­¢ã—ã¾ã—ãŸ');
 }
 
 function updateiCloudStatus() {
   const desc = document.getElementById('icloudMenuDesc');
   if (localStorage.getItem(ICLOUD_AUTO_KEY)) {
-    desc.textContent = '©“®•Û‘¶ ONi’èŠú“I‚ÉƒoƒbƒNƒAƒbƒvj';
+    desc.textContent = 'è‡ªå‹•ä¿å­˜ ONï¼ˆå®šæœŸçš„ã«ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ï¼‰';
   } else {
-    desc.textContent = 'ƒtƒ@ƒCƒ‹ƒAƒvƒŠŒo—R‚Å©“®ƒoƒbƒNƒAƒbƒv';
+    desc.textContent = 'ãƒ•ã‚¡ã‚¤ãƒ«ã‚¢ãƒ—ãƒªçµŒç”±ã§è‡ªå‹•ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—';
   }
 }
 
@@ -1785,47 +1940,47 @@ function updateAutoToggleBtn() {
   const btn = document.getElementById('icloudAutoToggleBtn');
   if (!btn) return;
   const on = !!localStorage.getItem(ICLOUD_AUTO_KEY);
-  btn.textContent = on ? '? ©“®•Û‘¶ON' : '? ©“®•Û‘¶İ’è';
+  btn.textContent = on ? '? è‡ªå‹•ä¿å­˜ON' : '? è‡ªå‹•ä¿å­˜è¨­å®š';
   btn.style.background = on ? 'rgba(52,199,89,0.12)' : '';
   btn.style.color = on ? '#1A8C3A' : '';
   btn.style.borderColor = on ? 'rgba(52,199,89,0.3)' : '';
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   Siri Shortcuts ƒKƒCƒh
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Siri Shortcuts ã‚¬ã‚¤ãƒ‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function showSiriShortcutGuide() {
   const base = location.origin + location.pathname;
   const msg = [
-    'ySiri Shortcuts İ’èè‡z',
+    'ã€Siri Shortcuts è¨­å®šæ‰‹é †ã€‘',
     '',
-    '‡@ ƒVƒ‡[ƒgƒJƒbƒgƒAƒvƒŠ‚ğŠJ‚­',
-    '‡A ‰Eãi{j¨uƒAƒNƒVƒ‡ƒ“‚ğ’Ç‰Áv',
-    '‡BuURL‚ğŠJ‚­v‚ğ’Ç‰Á',
-    '‡C ˆÈ‰º‚ÌURL‚ğ“ü—ÍF',
+    'â‘  ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆã‚¢ãƒ—ãƒªã‚’é–‹ã',
+    'â‘¡ å³ä¸Šï¼ˆï¼‹ï¼‰â†’ã€Œã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’è¿½åŠ ã€',
+    'â‘¢ã€ŒURLã‚’é–‹ãã€ã‚’è¿½åŠ ',
+    'â‘£ ä»¥ä¸‹ã®URLã‚’å…¥åŠ›ï¼š',
     '',
-    '  ? ‘¦•Û‘¶(„§): ' +
+    '  ? å³ä¿å­˜(æ¨å¥¨): ' +
       base +
-      '?shortcut=quicksave&text=[‚±‚±‚ÉuƒeƒLƒXƒg‚ğ“ü—Ív•Ï”‚ğ‘}“ü]',
-    '  ‰¹º’Ç‰Á: ' + base + '?shortcut=voice',
-    '  ƒJƒƒ‰’Ç‰Á: ' + base + '?shortcut=camera',
-    '  V‹K’Ç‰Á: ' + base + '?shortcut=new',
-    '  ƒŒƒrƒ…[: ' + base + '?shortcut=review',
+      '?shortcut=quicksave&text=[ã“ã“ã«ã€Œãƒ†ã‚­ã‚¹ãƒˆã‚’å…¥åŠ›ã€å¤‰æ•°ã‚’æŒ¿å…¥]',
+    '  éŸ³å£°è¿½åŠ : ' + base + '?shortcut=voice',
+    '  ã‚«ãƒ¡ãƒ©è¿½åŠ : ' + base + '?shortcut=camera',
+    '  æ–°è¦è¿½åŠ : ' + base + '?shortcut=new',
+    '  ãƒ¬ãƒ“ãƒ¥ãƒ¼: ' + base + '?shortcut=review',
     '',
-    '‡D SiriƒtƒŒ[ƒY‚ğİ’èi—áFuQÆ‚É’Ç‰Ávj',
+    'â‘¤ Siriãƒ•ãƒ¬ãƒ¼ã‚ºã‚’è¨­å®šï¼ˆä¾‹ï¼šã€Œå‚ç…§ã«è¿½åŠ ã€ï¼‰',
     '',
-    'İ’èŒãuHey SiriAQÆ‚É’Ç‰Áv‚Å‘¦‹N“®‚µ‚Ü‚·B',
+    'è¨­å®šå¾Œã€ŒHey Siriã€å‚ç…§ã«è¿½åŠ ã€ã§å³èµ·å‹•ã—ã¾ã™ã€‚',
     '',
-    'y?‘¦•Û‘¶‚Ìì‚è•ûz',
-    'ƒVƒ‡[ƒgƒJƒbƒgè‡‚ğuƒeƒLƒXƒg‚ğ“ü—Ív¨uURLƒGƒ“ƒR[ƒhv',
-    '¨uURL‚ğŠJ‚­v‚Ì‡‚É‘g‚Ş‚ÆAŠm”F‰æ–Ê‚È‚µ‚Åˆê”­•Û‘¶‚Å‚«‚Ü‚·B'
+    'ã€?å³ä¿å­˜ã®ä½œã‚Šæ–¹ã€‘',
+    'ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆæ‰‹é †ã‚’ã€Œãƒ†ã‚­ã‚¹ãƒˆã‚’å…¥åŠ›ã€â†’ã€ŒURLã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã€',
+    'â†’ã€ŒURLã‚’é–‹ãã€ã®é †ã«çµ„ã‚€ã¨ã€ç¢ºèªç”»é¢ãªã—ã§ä¸€ç™ºä¿å­˜ã§ãã¾ã™ã€‚'
   ].join('\n');
   alert(msg);
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   Shortcut URL ƒpƒ‰ƒ[ƒ^ˆ—
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Shortcut URL ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿å‡¦ç†
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function checkShortcutParam() {
   const params = new URLSearchParams(location.search);
   const sc = params.get('shortcut');
@@ -1850,13 +2005,13 @@ function checkShortcutParam() {
     if (sc === 'export') saveToiCloud();
   }, 600);
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   SiriƒVƒ‡[ƒgƒJƒbƒgF‘¦•Û‘¶
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Siriã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆï¼šå³ä¿å­˜
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function quickSaveText(text) {
   const trimmed = (text || '').trim();
   if (!trimmed) {
-    showToast('•Û‘¶‚·‚é“à—e‚ª‹ó‚Å‚·');
+    showToast('ä¿å­˜ã™ã‚‹å†…å®¹ãŒç©ºã§ã™');
     return;
   }
 
@@ -1865,7 +2020,7 @@ async function quickSaveText(text) {
 
   const item = {
     id: crypto.randomUUID(),
-    title: (lines[0] || '–³‘è').slice(0, 60),
+    title: (lines[0] || 'ç„¡é¡Œ').slice(0, 60),
     tags: [],
     body: escapeHtml(trimmed).replace(/\n/g, '<br>'),
     fields: [],
@@ -1879,12 +2034,12 @@ async function quickSaveText(text) {
   window.QuickRefBridge?.onItemSaved(item);
   await reload();
   syncEcosystemTags();
-  showToast('? •Û‘¶‚µ‚Ü‚µ‚½: ' + item.title);
+  showToast('? ä¿å­˜ã—ã¾ã—ãŸ: ' + item.title);
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   Service Worker ƒƒbƒZ[ƒWóM
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Service Worker ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å—ä¿¡
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function setupSWMessages() {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.addEventListener('message', e => {
@@ -1893,9 +2048,9 @@ function setupSWMessages() {
   });
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ƒŠƒ“ƒNiŠÖ˜A€–Új
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ãƒªãƒ³ã‚¯ï¼ˆé–¢é€£é …ç›®ï¼‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const LINKS_KEY = 'qr_links';
 
 function getLinks() {
@@ -1927,9 +2082,9 @@ function getLinkedItems(itemId) {
   return allItems.filter(it => (getLinks()[itemId] || []).includes(it.id));
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AI ŠÖ˜A€–ÚŒŸo
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AI é–¢é€£é …ç›®æ¤œå‡º
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function extractNgrams(text, n = 2) {
   const t = (text || '').toLowerCase().replace(/[\s\u3000]+/g, '');
   const g = new Set();
@@ -1974,7 +2129,7 @@ function renderRelatedItems(item) {
   const auto = findRelated(item, 6).filter(r => !cIds.has(r.item.id));
 
   if (!confirmed.length && !auto.length) {
-    el.innerHTML = '<p class="related-empty">ŠÖ˜A‚·‚é€–Ú‚ª©“®ŒŸo‚³‚ê‚Ü‚¹‚ñ‚Å‚µ‚½B</p>';
+    el.innerHTML = '<p class="related-empty">é–¢é€£ã™ã‚‹é …ç›®ãŒè‡ªå‹•æ¤œå‡ºã•ã‚Œã¾ã›ã‚“ã§ã—ãŸã€‚</p>';
     setupAiRelatedBtn(item);
     return;
   }
@@ -1982,7 +2137,7 @@ function renderRelatedItems(item) {
   const mkCard = (relItem, score, isConf) => {
     const cached = decryptedCache.get(relItem.id);
     const snippet = relItem.sensitive
-      ? '?? •ÛŒì’†'
+      ? '?? ä¿è­·ä¸­'
       : ((cached ? cached.body : relItem.body || '').replace(/<[^>]+>/g, '').slice(0, 45));
 
     const tagsHtml = (relItem.tags || [])
@@ -1994,17 +2149,17 @@ function renderRelatedItems(item) {
         <div class="related-main">
           <div class="related-header">
             <span class="related-icon">${isConf ? '??' : '??'}</span>
-            <span class="related-title">${escapeHtml(relItem.title || '(–³‘è)')}</span>
+            <span class="related-title">${escapeHtml(relItem.title || '(ç„¡é¡Œ)')}</span>
             ${score != null ? `<span class="related-score">${score}%</span>` : ''}
           </div>
           ${snippet ? `<div class="related-snippet">${escapeHtml(snippet)}</div>` : ''}
           ${tagsHtml ? `<div class="related-tags">${tagsHtml}</div>` : ''}
         </div>
         <div class="related-actions">
-          <button class="related-open-btn" data-id="${relItem.id}">¨</button>
+          <button class="related-open-btn" data-id="${relItem.id}">â†’</button>
           ${
             isConf
-              ? `<button class="related-unlink-btn" data-id="${relItem.id}">~</button>`
+              ? `<button class="related-unlink-btn" data-id="${relItem.id}">Ã—</button>`
               : `<button class="related-link-btn" data-id="${relItem.id}">??</button>`
           }
         </div>
@@ -2032,7 +2187,7 @@ function renderRelatedItems(item) {
 
   el.querySelectorAll('.related-unlink-btn').forEach(btn =>
     btn.addEventListener('click', () => {
-      if (!confirm('‚±‚ÌƒŠƒ“ƒN‚ğíœ‚µ‚Ü‚·‚©H')) return;
+      if (!confirm('ã“ã®ãƒªãƒ³ã‚¯ã‚’å‰Šé™¤ã—ã¾ã™ã‹ï¼Ÿ')) return;
       removeLink(item.id, btn.dataset.id);
       renderRelatedItems(item);
       renderAll();
@@ -2042,9 +2197,9 @@ function renderRelatedItems(item) {
   setupAiRelatedBtn(item);
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AI ŠÖ˜A€–Úƒ{ƒ^ƒ“
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AI é–¢é€£é …ç›®ãƒœã‚¿ãƒ³
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function setupAiRelatedBtn(item) {
   const btn = document.getElementById('aiRelatedBtn');
   if (!btn) return;
@@ -2056,12 +2211,12 @@ function setupAiRelatedBtn(item) {
     const openaiKey = localStorage.getItem('ml_openai');
 
     if (!geminiKey && !claudeKey && !proxyUrl && !openaiKey) {
-      alert('APIƒL[‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB??İ’è‚©‚ç“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B');
+      alert('APIã‚­ãƒ¼ãŒè¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚??è¨­å®šã‹ã‚‰å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚');
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = '? ŒŸõ’†c';
+    btn.textContent = '? æ¤œç´¢ä¸­â€¦';
 
     try {
       const candidates = allItems
@@ -2070,12 +2225,12 @@ function setupAiRelatedBtn(item) {
         .map(it => `${it.id.slice(0, 8)}: ${it.title} [${(it.tags || []).join(',')}]`)
         .join('\n');
 
-      const prompt = `ˆÈ‰º‚Ìu‘ÎÛ€–Úv‚ÆˆÓ–¡“I‚ÉŠÖ˜A‚·‚é€–Ú‚ğuŒó•âˆê——v‚©‚ç‘I‚ñ‚Å‚­‚¾‚³‚¢B
-‘ÎÛ: ƒ^ƒCƒgƒ‹: ${item.title} ƒ^ƒO: ${(item.tags || []).join(', ')}
-Œó•â:
+      const prompt = `ä»¥ä¸‹ã®ã€Œå¯¾è±¡é …ç›®ã€ã¨æ„å‘³çš„ã«é–¢é€£ã™ã‚‹é …ç›®ã‚’ã€Œå€™è£œä¸€è¦§ã€ã‹ã‚‰é¸ã‚“ã§ãã ã•ã„ã€‚
+å¯¾è±¡: ã‚¿ã‚¤ãƒˆãƒ«: ${item.title} ã‚¿ã‚°: ${(item.tags || []).join(', ')}
+å€™è£œ:
 ${candidates}
 
-IDƒvƒŒƒtƒBƒbƒNƒX(8•¶š)‚ğÅ‘å5‚ÂAJSON”z—ñ‚Ì‚İ•Ô‚µ‚Ä‚­‚¾‚³‚¢:
+IDãƒ—ãƒ¬ãƒ•ã‚£ãƒƒã‚¯ã‚¹(8æ–‡å­—)ã‚’æœ€å¤§5ã¤ã€JSONé…åˆ—ã®ã¿è¿”ã—ã¦ãã ã•ã„:
 ["xxxxxxxx"]`;
 
       let raw = '';
@@ -2127,18 +2282,18 @@ IDƒvƒŒƒtƒBƒbƒNƒX(8•¶š)‚ğÅ‘å5‚ÂAJSON”z—ñ‚Ì‚İ•Ô‚µ‚Ä‚­‚¾‚³‚¢:
       renderRelatedItems(item);
       renderAll();
 
-      btn.textContent = added > 0 ? `? ${added}Œ‚Ì‚Â‚È‚ª‚è‚ğ”­Œ©` : '? V‚½‚È‚Â‚È‚ª‚è‚È‚µ';
+      btn.textContent = added > 0 ? `? ${added}ä»¶ã®ã¤ãªãŒã‚Šã‚’ç™ºè¦‹` : '? æ–°ãŸãªã¤ãªãŒã‚Šãªã—';
     } catch (e) {
-      alert(`AIŒŸõ¸”s: ${e.message}`);
-      btn.textContent = '? AI‚Å‚³‚ç‚É’T‚·';
+      alert(`AIæ¤œç´¢å¤±æ•—: ${e.message}`);
+      btn.textContent = '? AIã§ã•ã‚‰ã«æ¢ã™';
     } finally {
       btn.disabled = false;
     }
   };
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AIƒ‚ƒfƒ‹İ’è
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIãƒ¢ãƒ‡ãƒ«è¨­å®š
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const LS = {
   CLAUDE: 'ml_claude',
   GEMINI: 'ml_gemini',
@@ -2169,22 +2324,22 @@ let activeModel = localStorage.getItem(LS.MODEL) || 'claude';
 let lastAiResult = '';
 
 const AI_PROMPTS = {
-  summarize: t => `ˆÈ‰º‚Ìƒƒ‚‚ğ3s‚Å—v–ñ‚µ‚Ä‚­‚¾‚³‚¢B\n\n${t}`,
-  organize: t => `ˆÈ‰º‚Ìƒƒ‚‚ğŒ©o‚µ‚Æ‰Óğ‘‚«‚Å®—‚µ‚Ä‚­‚¾‚³‚¢B\n\n${t}`,
-  expand:   t => `ˆÈ‰º‚Ìƒƒ‚‚ğ•â‘«‚µ‚Ä—‰ğ‚ğ[‚ß‚é“à—e‚É‚µ‚Ä‚­‚¾‚³‚¢B\n\n${t}`,
-  question: t => `ˆÈ‰º‚Ìƒƒ‚‚ğŠwK‚·‚é‚½‚ß‚Ì¿–â‚ğ5‚Â¶¬‚µ‚Ä‚­‚¾‚³‚¢B\n\n${t}`
+  summarize: t => `ä»¥ä¸‹ã®ãƒ¡ãƒ¢ã‚’3è¡Œã§è¦ç´„ã—ã¦ãã ã•ã„ã€‚\n\n${t}`,
+  organize: t => `ä»¥ä¸‹ã®ãƒ¡ãƒ¢ã‚’è¦‹å‡ºã—ã¨ç®‡æ¡æ›¸ãã§æ•´ç†ã—ã¦ãã ã•ã„ã€‚\n\n${t}`,
+  expand:   t => `ä»¥ä¸‹ã®ãƒ¡ãƒ¢ã‚’è£œè¶³ã—ã¦ç†è§£ã‚’æ·±ã‚ã‚‹å†…å®¹ã«ã—ã¦ãã ã•ã„ã€‚\n\n${t}`,
+  question: t => `ä»¥ä¸‹ã®ãƒ¡ãƒ¢ã‚’å­¦ç¿’ã™ã‚‹ãŸã‚ã®è³ªå•ã‚’5ã¤ç”Ÿæˆã—ã¦ãã ã•ã„ã€‚\n\n${t}`
 };
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AIŒÄ‚Ño‚µ
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIå‘¼ã³å‡ºã—
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function callAI(userPrompt) {
   const proxyUrl = localStorage.getItem(LS.PROXY) || '';
   const m = MODELS[activeModel];
   const apiKey = localStorage.getItem(LS[activeModel.toUpperCase()]) || '';
 
   if (!apiKey && !proxyUrl) {
-    throw new Error(`${m.label}‚ÌAPIƒL[‚ª–¢İ’è‚Å‚·`);
+    throw new Error(`${m.label}ã®APIã‚­ãƒ¼ãŒæœªè¨­å®šã§ã™`);
   }
 
   if (activeModel === 'gemini') {
@@ -2236,21 +2391,21 @@ async function callAI(userPrompt) {
   return d.content?.[0]?.text || '';
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AI\‘¢‰»i‰¹º ¨ ƒƒ‚j
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIæ§‹é€ åŒ–ï¼ˆéŸ³å£° â†’ ãƒ¡ãƒ¢ï¼‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function callStructureAPI(text) {
-  const prompt = `ˆÈ‰º‚Ì˜b‚µŒ¾—t‚Ìƒƒ‚‚ğAƒNƒCƒbƒNQÆƒAƒvƒŠ—p‚Ìƒf[ƒ^‚É®—‚µ‚Ä‚­‚¾‚³‚¢B
-•K‚¸JSON‚Ì‚İ•Ô‚µ‚Ä‚­‚¾‚³‚¢:
-{"title":"ˆêsƒ^ƒCƒgƒ‹","tags":["ƒ^ƒO1","ƒ^ƒO2"],"body":"Ú×ƒƒ‚","fields":[{"key":"€–Ú–¼","value":"’l"}]}
+  const prompt = `ä»¥ä¸‹ã®è©±ã—è¨€è‘‰ã®ãƒ¡ãƒ¢ã‚’ã€ã‚¯ã‚¤ãƒƒã‚¯å‚ç…§ã‚¢ãƒ—ãƒªç”¨ã®ãƒ‡ãƒ¼ã‚¿ã«æ•´ç†ã—ã¦ãã ã•ã„ã€‚
+å¿…ãšJSONã®ã¿è¿”ã—ã¦ãã ã•ã„:
+{"title":"ä¸€è¡Œã‚¿ã‚¤ãƒˆãƒ«","tags":["ã‚¿ã‚°1","ã‚¿ã‚°2"],"body":"è©³ç´°ãƒ¡ãƒ¢","fields":[{"key":"é …ç›®å","value":"å€¤"}]}
 
-ƒ‹[ƒ‹:
-- title 15šˆÈ“à
-- tags 2?4ŒÂ
-- fields ‚Í\‘¢‰»‚Å‚«‚é‚à‚Ì‚¾‚¯i‚È‚¯‚ê‚Î‹ó”z—ñj
+ãƒ«ãƒ¼ãƒ«:
+- title 15å­—ä»¥å†…
+- tags 2?4å€‹
+- fields ã¯æ§‹é€ åŒ–ã§ãã‚‹ã‚‚ã®ã ã‘ï¼ˆãªã‘ã‚Œã°ç©ºé…åˆ—ï¼‰
 
-Šù‘¶ƒ^ƒOŒó•â: ${getAllTagsSorted().slice(0, 10).join(',')}
-ƒƒ‚: ${text}`;
+æ—¢å­˜ã‚¿ã‚°å€™è£œ: ${getAllTagsSorted().slice(0, 10).join(',')}
+ãƒ¡ãƒ¢: ${text}`;
 
   const result = await callAI(prompt).catch(() => null);
   if (!result) {
@@ -2292,15 +2447,167 @@ function renderAIPreview(data) {
         const div = document.createElement('div');
         div.className = 'ai-field-row';
         div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
-        div.innerHTML = `<input type="text" class="ai-field-key" value="${escapeHtml(f.key || '')}" style="width:30%;" placeholder="€–Ú–¼"><input type="text" class="ai-field-val" value="${escapeHtml(f.value || '')}" style="flex:1;" placeholder="“à—e">`;
+        div.innerHTML = `<input type="text" class="ai-field-key" value="${escapeHtml(f.key || '')}" style="width:30%;" placeholder="é …ç›®å"><input type="text" class="ai-field-val" value="${escapeHtml(f.value || '')}" style="flex:1;" placeholder="å†…å®¹">`;
         fieldsEl.appendChild(div);
       });
     }
   }
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   İ’è‰æ–Ê
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+
+function openVoiceModal() {
+  document.getElementById('voiceModal').classList.add('open');
+  document.getElementById('voiceFinal').textContent = '';
+  document.getElementById('voiceInter').textContent = '';
+  voiceFullText = '';
+  document.getElementById('aiPreviewArea').style.display = 'none';
+  document.getElementById('voiceAnalyzeBtn').disabled = true;
+  document.getElementById('voiceDot').style.display = 'none';
+  document.getElementById('voiceStatusText').textContent = 'ãƒã‚¤ã‚¯ã§è©±ã—ã¦ãã ã•ã„';
+  startVoiceRec();
+}
+
+function closeVoiceModal() {
+  stopVoiceRec();
+  document.getElementById('voiceModal').classList.remove('open');
+}
+
+function startVoiceRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('ã“ã®ãƒ–ãƒ©ã‚¦ã‚¶ã¯éŸ³å£°å…¥åŠ›ã«å¯¾å¿œã—ã¦ã„ã¾ã›ã‚“ã€‚');
+    return;
+  }
+  voiceRec = new SR();
+  voiceRec.lang = 'ja-JP';
+  voiceRec.continuous = true;
+  voiceRec.interimResults = true;
+  voiceRec.onstart = () => {
+    voiceIsRec = true;
+    document.getElementById('voiceFab').classList.add('recording');
+    document.getElementById('voiceDot').style.display = 'block';
+    document.getElementById('voiceStatusText').textContent = 'éŒ²éŸ³ä¸­â€¦ è©±ã—çµ‚ã‚ã£ãŸã‚‰åœæ­¢';
+  };
+  voiceRec.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) voiceFullText += t;
+      else interim += t;
+    }
+    document.getElementById('voiceFinal').textContent = voiceFullText;
+    document.getElementById('voiceInter').textContent = interim;
+    document.getElementById('voiceAnalyzeBtn').disabled = !voiceFullText.trim();
+  };
+  voiceRec.onerror = e => {
+    if (e.error === 'not-allowed') alert('ãƒã‚¤ã‚¯ã¸ã®ã‚¢ã‚¯ã‚»ã‚¹ãŒè¨±å¯ã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚');
+    stopVoiceRec();
+  };
+  voiceRec.onend = () => {
+    if (voiceIsRec) {
+      try { voiceRec.start(); } catch (_) {}
+    }
+  };
+  try { voiceRec.start(); } catch (_) {}
+}
+
+function stopVoiceRec() {
+  voiceIsRec = false;
+  document.getElementById('voiceFab').classList.remove('recording');
+  document.getElementById('voiceDot').style.display = 'none';
+  document.getElementById('voiceStatusText').textContent = 'éŒ²éŸ³å®Œäº†';
+  try { voiceRec?.stop(); } catch (_) {}
+  voiceRec = null;
+}
+
+function openReview() {
+  document.getElementById('reviewBody').innerHTML =
+    '<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);">ãƒ¬ãƒ“ãƒ¥ãƒ¼å¯¾è±¡ã¯ã‚ã‚Šã¾ã›ã‚“</div>';
+  document.getElementById('reviewProgressFill').style.width = '100%';
+  document.getElementById('reviewCounterText').textContent = '0 / 0';
+  document.getElementById('reviewOverlay').classList.add('open');
+}
+
+function closeReview() {
+  document.getElementById('reviewOverlay').classList.remove('open');
+  updateReviewBadge();
+  renderAll();
+}
+
+function openMenu() {
+  document.getElementById('menuSheet').classList.add('open');
+  document.getElementById('menuOverlay').classList.add('open');
+}
+
+function closeMenu() {
+  document.getElementById('menuSheet').classList.remove('open');
+  document.getElementById('menuOverlay').classList.remove('open');
+}
+
+function sendToKansei(targetTag) {
+  const items = allItems.filter(item =>
+    (!targetTag || (item.tags || []).includes(targetTag)) && !item.sensitive
+  );
+  if (!items.length) {
+    alert('é€ã‚Œã‚‹ç´ æãŒã‚ã‚Šã¾ã›ã‚“ã€‚');
+    return;
+  }
+  localStorage.setItem('kansei_materials', JSON.stringify({
+    source: 'quick-ref',
+    tag: targetTag || null,
+    materials: items,
+    exportedAt: Date.now()
+  }));
+  showToast(`${items.length}ä»¶ã®ç´ æã‚’kanseiã«é€ã‚Šã¾ã—ãŸ`);
+}
+
+function openIconModal() {
+  document.getElementById('iconOverlay').classList.add('open');
+  document.getElementById('iconModal').classList.add('open');
+  refreshIconPreviews();
+}
+
+function closeIconModal() {
+  document.getElementById('iconOverlay').classList.remove('open');
+  document.getElementById('iconModal').classList.remove('open');
+}
+
+function updateBackupBanner() {
+  const banner = document.getElementById('backupBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+function updateReviewBadge() {
+  const badge = document.getElementById('reviewBadge');
+  if (badge) {
+    badge.textContent = '';
+    badge.style.display = 'none';
+  }
+}
+
+function refreshIconPreviews() {
+  const emoji = document.getElementById('iconEmoji').value || 'å‚';
+  const colors = [
+    document.getElementById('iconBgColor').value,
+    document.getElementById('iconBgColor2').value
+  ];
+  ['iconCanvas192', 'iconCanvas512'].forEach(id => {
+    const canvas = document.getElementById(id);
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, colors[0]);
+    gradient.addColorStop(1, colors[1]);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = document.getElementById('iconFgColor').value;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${canvas.width * 0.55}px sans-serif`;
+    ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+  });
+}
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   è¨­å®šç”»é¢
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function loadSettings() {
   document.getElementById('sClaudeKey').value =
     localStorage.getItem(LS.CLAUDE) || '';
@@ -2330,7 +2637,7 @@ function saveSettings() {
   localStorage.setItem(LS.MODEL, activeModel);
   updateAIBadge();
   closeSettingsSheet();
-  showToast('İ’è‚ğ•Û‘¶‚µ‚Ü‚µ‚½');
+  showToast('è¨­å®šã‚’ä¿å­˜ã—ã¾ã—ãŸ');
 }
 
 function renderModelSelect() {
@@ -2339,7 +2646,7 @@ function renderModelSelect() {
   );
   const m = MODELS[activeModel];
   document.getElementById('modelDetail').textContent =
-    m ? `g—pƒ‚ƒfƒ‹: ${m.detail}` : '';
+    m ? `ä½¿ç”¨ãƒ¢ãƒ‡ãƒ«: ${m.detail}` : '';
 }
 
 function updateAIBadge() {
@@ -2348,9 +2655,34 @@ function updateAIBadge() {
   if (b) b.textContent = m ? m.label : activeModel;
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AIƒpƒlƒ‹
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+function openSettingsSheet() {
+  loadSettings();
+  document.getElementById('settingsSheet').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSettingsSheet() {
+  document.getElementById('settingsSheet').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function sendToEcosystem() {
+  try {
+    const payload = {
+      source: 'quick-ref',
+      exportedAt: Date.now(),
+      items: allItems.filter(i => !i.sensitive)
+    };
+    localStorage.setItem(LS.TRANSFER, JSON.stringify(payload));
+    showToast(`${payload.items.length}ä»¶ã‚’is_transferã«æ›¸ãè¾¼ã¿ã¾ã—ãŸ`);
+  } catch (_) {
+    showToast('é€ä¿¡ã«å¤±æ•—ã—ã¾ã—ãŸï¼ˆå®¹é‡è¶…éã®å¯èƒ½æ€§ï¼‰');
+  }
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIãƒ‘ãƒãƒ«
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function openAIPanel() {
   document.getElementById('aiPanel').classList.add('open');
 }
@@ -2363,13 +2695,26 @@ function getEditorText() {
   return e.innerText || e.textContent || '';
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AIÀs
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+function openMemoPopup() {
+  document.getElementById('memoPopupEditor').innerHTML =
+    document.getElementById('fBody').innerHTML;
+  document.getElementById('memoPopup').classList.add('open');
+  setTimeout(() => document.getElementById('memoPopupEditor').focus(), 300);
+}
+
+function closeMemoPopup() {
+  document.getElementById('fBody').innerHTML =
+    document.getElementById('memoPopupEditor').innerHTML;
+  document.getElementById('memoPopup').classList.remove('open');
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIå®Ÿè¡Œ
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function runAIAction(action, customPrompt) {
   const editorText = getEditorText();
   if (!editorText.trim() && !customPrompt) {
-    showToast('ƒƒ‚‚ÉƒeƒLƒXƒg‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢');
+    showToast('ãƒ¡ãƒ¢ã«ãƒ†ã‚­ã‚¹ãƒˆã‚’å…¥åŠ›ã—ã¦ãã ã•ã„');
     return;
   }
 
@@ -2404,9 +2749,9 @@ async function runAIAction(action, customPrompt) {
   }
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   AIŒ‹‰Ê‘}“ü
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIçµæœæŒ¿å…¥
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function insertAIResult(replace = false) {
   const editor = document.getElementById('memoPopupEditor');
   editor.focus();
@@ -2427,11 +2772,11 @@ function insertAIResult(replace = false) {
   }
 
   closeAIPanel();
-  showToast('ƒƒ‚‚É‘}“ü‚µ‚Ü‚µ‚½');
+  showToast('ãƒ¡ãƒ¢ã«æŒ¿å…¥ã—ã¾ã—ãŸ');
 }
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   EVENT WIRINGiƒCƒxƒ“ƒgÚ‘±j
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   EVENT WIRINGï¼ˆã‚¤ãƒ™ãƒ³ãƒˆæ¥ç¶šï¼‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function wireEvents() {
   /* Quick Dock */
   document.getElementById('fabBtn').addEventListener('click', () => {
@@ -2517,7 +2862,7 @@ function wireEvents() {
     draftSensitive = e.target.checked;
   });
 
-  /* ‰æ‘œ“Y•t */
+  /* ç”»åƒæ·»ä»˜ */
   document.getElementById('imgPickBtn').addEventListener('click', () => {
     haptic();
     document.getElementById('imgFileInput').click();
@@ -2535,7 +2880,7 @@ function wireEvents() {
 
   document.getElementById('imgIllustBtn').addEventListener('click', tryImportFromIllustStudio);
 
-  /* ‰æ‘œƒtƒ@ƒCƒ‹“ü—Í */
+  /* ç”»åƒãƒ•ã‚¡ã‚¤ãƒ«å…¥åŠ› */
   document.getElementById('imgFileInput').addEventListener('change', async e => {
     await handleImgFiles(e.target.files);
     e.target.value = '';
@@ -2557,7 +2902,7 @@ function wireEvents() {
     e.target.value = '';
   });
 
-  /* “®‰æ“Y•t */
+  /* å‹•ç”»æ·»ä»˜ */
   document.getElementById('videoCamBtn').addEventListener('click', () => {
     haptic();
     document.getElementById('videoCamInput').click();
@@ -2578,7 +2923,7 @@ function wireEvents() {
     e.target.value = '';
   });
 
-  /* ƒy[ƒXƒg‰æ‘œ */
+  /* ãƒšãƒ¼ã‚¹ãƒˆç”»åƒ */
   document.querySelector('.sheet-body').addEventListener('paste', async e => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -2587,13 +2932,13 @@ function wireEvents() {
         e.preventDefault();
         const blob = await resizeImageBlob(item.getAsFile());
         addBlobToDraft(blob, `paste-${Date.now()}.jpg`);
-        showToast('‰æ‘œ‚ğ“\‚è•t‚¯‚Ü‚µ‚½');
+        showToast('ç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã¾ã—ãŸ');
         return;
       }
     }
   });
 
-  /* ‹¤—Lƒoƒi[ */
+  /* å…±æœ‰ãƒãƒŠãƒ¼ */
   document.getElementById('shareReceivedUse').addEventListener('click', () => {
     haptic();
     useSharedText();
@@ -2604,7 +2949,7 @@ function wireEvents() {
     sharedText = null;
   });
 
-  /* ‰¹º˜^‰¹ */
+  /* éŸ³å£°éŒ²éŸ³ */
   document.getElementById('recStartBtn').addEventListener('click', async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -2640,7 +2985,7 @@ function wireEvents() {
 
         addAudioToDraft(
           blob,
-          `˜^‰¹-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.${ext}`
+          `éŒ²éŸ³-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.${ext}`
         );
 
         mediaRecorder = null;
@@ -2656,7 +3001,7 @@ function wireEvents() {
         document.getElementById('recTimer').textContent = formatTime(recSeconds);
       }, 1000);
     } catch (_) {
-      showToast('ƒ}ƒCƒN‚Ö‚ÌƒAƒNƒZƒX‚ª‹–‰Â‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ');
+      showToast('ãƒã‚¤ã‚¯ã¸ã®ã‚¢ã‚¯ã‚»ã‚¹ãŒè¨±å¯ã•ã‚Œã¦ã„ã¾ã›ã‚“');
     }
   });
 
@@ -2689,7 +3034,7 @@ function wireEvents() {
     }
 
     if (!data) {
-      alert('music-suite‚©‚ç‚Ì“]‘—ƒf[ƒ^‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB');
+      alert('music-suiteã‹ã‚‰ã®è»¢é€ãƒ‡ãƒ¼ã‚¿ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚');
       return;
     }
 
@@ -2714,7 +3059,7 @@ function wireEvents() {
     renderAudioList();
   });
 
-  /* ƒƒ‚‘S‰æ–Ê */
+  /* ãƒ¡ãƒ¢å…¨ç”»é¢ */
   document.getElementById('expandMemoBtn').addEventListener('click', openMemoPopup);
   document.getElementById('memoPopupClose').addEventListener('click', closeMemoPopup);
   document.getElementById('memoPopupClear').addEventListener('click', () => {
@@ -2722,7 +3067,7 @@ function wireEvents() {
     document.getElementById('memoPopupEditor').focus();
   });
 
-  /* ‰¹º ¨ AI‰ğÍ */
+  /* éŸ³å£° â†’ AIè§£æ */
   document.getElementById('voiceStopBtn').addEventListener('click', () => {
     stopVoiceRec();
     document.getElementById('voiceAnalyzeBtn').disabled =
@@ -2740,16 +3085,16 @@ function wireEvents() {
     if (!text) return;
 
     document.getElementById('voiceAnalyzeBtn').disabled = true;
-    document.getElementById('voiceAnalyzeBtn').textContent = '? ‰ğÍ’†c';
+    document.getElementById('voiceAnalyzeBtn').textContent = '? è§£æä¸­â€¦';
     stopVoiceRec();
 
     try {
       const r = await callStructureAPI(text);
       renderAIPreview(r);
     } catch (e) {
-      alert(`AI‰ğÍ‚É¸”s‚µ‚Ü‚µ‚½:\n${e.message}`);
+      alert(`AIè§£æã«å¤±æ•—ã—ã¾ã—ãŸ:\n${e.message}`);
       document.getElementById('voiceAnalyzeBtn').disabled = false;
-      document.getElementById('voiceAnalyzeBtn').textContent = '? AI ‚Å®—‚·‚é';
+      document.getElementById('voiceAnalyzeBtn').textContent = '? AI ã§æ•´ç†ã™ã‚‹';
     }
   });
 
@@ -2799,19 +3144,19 @@ function wireEvents() {
     const v2 = document.getElementById('pinInput2').value;
 
     if (!v1) {
-      document.getElementById('pinError').textContent = 'ƒpƒXƒR[ƒh‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢';
+      document.getElementById('pinError').textContent = 'ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„';
       document.getElementById('pinError').style.display = 'block';
       return;
     }
 
     if (pinMode === 'setup') {
       if (v1.length < 4) {
-        document.getElementById('pinError').textContent = '4•¶šˆÈã‚Å“ü—Í‚µ‚Ä‚­‚¾‚³‚¢';
+        document.getElementById('pinError').textContent = '4æ–‡å­—ä»¥ä¸Šã§å…¥åŠ›ã—ã¦ãã ã•ã„';
         document.getElementById('pinError').style.display = 'block';
         return;
       }
       if (v1 !== v2) {
-        document.getElementById('pinError').textContent = 'Šm”F—p‚Æˆê’v‚µ‚Ü‚¹‚ñ';
+        document.getElementById('pinError').textContent = 'ç¢ºèªç”¨ã¨ä¸€è‡´ã—ã¾ã›ã‚“';
         document.getElementById('pinError').style.display = 'block';
         return;
       }
@@ -2819,7 +3164,7 @@ function wireEvents() {
     } else {
       const ok = await tryUnlockWithPin(v1);
       if (!ok) {
-        document.getElementById('pinError').textContent = 'ƒpƒXƒR[ƒh‚ªˆá‚¢‚Ü‚·';
+        document.getElementById('pinError').textContent = 'ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ãŒé•ã„ã¾ã™';
         document.getElementById('pinError').style.display = 'block';
         return;
       }
@@ -2832,7 +3177,7 @@ function wireEvents() {
   });
 
   document.getElementById('pinForgotBtn').addEventListener('click', async () => {
-    if (!confirm('ƒpƒXƒR[ƒh‚ğƒŠƒZƒbƒg‚·‚é‚Æ•ÛŒì‚³‚ê‚½€–Ú‚Í‚·‚×‚Äíœ‚³‚ê‚Ü‚·B‘±s‚µ‚Ü‚·‚©H'))
+    if (!confirm('ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹ã¨ä¿è­·ã•ã‚ŒãŸé …ç›®ã¯ã™ã¹ã¦å‰Šé™¤ã•ã‚Œã¾ã™ã€‚ç¶šè¡Œã—ã¾ã™ã‹ï¼Ÿ'))
       return;
 
     const sensitiveItems = allItems.filter(it => it.sensitive);
@@ -2846,7 +3191,7 @@ function wireEvents() {
     updateLockButton();
     closePinModal(false);
 
-    alert('ƒpƒXƒR[ƒh‚Æ•ÛŒì‚³‚ê‚½€–Ú‚ğƒŠƒZƒbƒg‚µ‚Ü‚µ‚½B');
+    alert('ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ã¨ä¿è­·ã•ã‚ŒãŸé …ç›®ã‚’ãƒªã‚»ãƒƒãƒˆã—ã¾ã—ãŸã€‚');
   });
 
   /* iCloud / Shortcuts */
@@ -2896,7 +3241,7 @@ function wireEvents() {
     closeSettingsSheet();
   });
 
-  /* AIƒpƒlƒ‹ */
+  /* AIãƒ‘ãƒãƒ« */
   document.getElementById('memoAiBtn').addEventListener('click', openAIPanel);
   document.getElementById('aiPanelClose').addEventListener('click', closeAIPanel);
 
@@ -2930,12 +3275,12 @@ function wireEvents() {
   document.getElementById('reviewCloseBtn').addEventListener('click', closeReview);
 
   document.getElementById
-    /* Review ‘±‚«i‘O‰ñ‚Ì“r’†‚©‚çj */
+    /* Review ç¶šãï¼ˆå‰å›ã®é€”ä¸­ã‹ã‚‰ï¼‰ */
   document.getElementById('reviewOverlay').addEventListener('click', e => {
     if (e.target === document.getElementById('reviewOverlay')) closeReview();
   });
 
-  /* ƒƒjƒ…[ */
+  /* ãƒ¡ãƒ‹ãƒ¥ãƒ¼ */
   document.getElementById('menuBtn').addEventListener('click', openMenu);
   document.getElementById('menuOverlay').addEventListener('click', closeMenu);
 
@@ -2964,10 +3309,10 @@ function wireEvents() {
     const tags = getAllTagsSorted();
     alert(
       tags.length > 0
-        ? `${tags.length}Œ‚Ìƒ^ƒO‚ğecosystem_tags‚É‘‚«‚İ‚Ü‚µ‚½B\n\n${tags
-            .map(t => 'E' + t)
+        ? `${tags.length}ä»¶ã®ã‚¿ã‚°ã‚’ecosystem_tagsã«æ›¸ãè¾¼ã¿ã¾ã—ãŸã€‚\n\n${tags
+            .map(t => 'ãƒ»' + t)
             .join('\n')}`
-        : 'ƒ^ƒO‚ª‚Ü‚¾‚ ‚è‚Ü‚¹‚ñB'
+        : 'ã‚¿ã‚°ãŒã¾ã ã‚ã‚Šã¾ã›ã‚“ã€‚'
     );
   });
 
@@ -2985,12 +3330,12 @@ function wireEvents() {
     closeMenu();
     const tags = getAllTagsSorted();
     if (!tags.length) {
-      alert('ƒ^ƒO‚ª‚Ü‚¾‚ ‚è‚Ü‚¹‚ñB');
+      alert('ã‚¿ã‚°ãŒã¾ã ã‚ã‚Šã¾ã›ã‚“ã€‚');
       return;
     }
     const base = location.origin + location.pathname;
     alert(
-      `ƒe[ƒ}•ÊURLˆê——\n\n${tags
+      `ãƒ†ãƒ¼ãƒåˆ¥URLä¸€è¦§\n\n${tags
         .map(t => `${getTagEmoji(t)} #${t}\n${base}?tag=${encodeURIComponent(t)}`)
         .join('\n\n')}`
     );
@@ -2998,7 +3343,7 @@ function wireEvents() {
 
   document.getElementById('backupBannerBtn').addEventListener('click', doExport);
 
-  /* ƒAƒCƒRƒ“¶¬ */
+  /* ã‚¢ã‚¤ã‚³ãƒ³ç”Ÿæˆ */
   document.getElementById('iconOverlay').addEventListener('click', closeIconModal);
   document.getElementById('iconModalClose').addEventListener('click', closeIconModal);
 
@@ -3038,7 +3383,7 @@ function wireEvents() {
     const tag = themeTag || '';
     const url = `${location.origin + location.pathname}?tag=${encodeURIComponent(tag)}`;
     document.getElementById('addGuideUrl').textContent = url;
-    document.getElementById('addGuideTitle').textContent = `?? u${tag}v‚ğƒz[ƒ€‰æ–Ê‚É’Ç‰Á`;
+    document.getElementById('addGuideTitle').textContent = `?? ã€Œ${tag}ã€ã‚’ãƒ›ãƒ¼ãƒ ç”»é¢ã«è¿½åŠ `;
     document.getElementById('addGuide').classList.add('open');
   });
 
@@ -3052,9 +3397,9 @@ function wireEvents() {
   });
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   INITiƒAƒvƒŠ‰Šú‰»j
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   INITï¼ˆã‚¢ãƒ—ãƒªåˆæœŸåŒ–ï¼‰
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 async function init() {
   try {
     await openDB();
@@ -3084,39 +3429,35 @@ async function init() {
   } catch (err) {
     console.error(err);
     document.getElementById('loadingOverlay').textContent =
-      'DB‹N“®‚É¸”s‚µ‚Ü‚µ‚½BƒŠƒ[ƒh‚µ‚Ä‚­‚¾‚³‚¢B';
+      'DBèµ·å‹•ã«å¤±æ•—ã—ã¾ã—ãŸã€‚ãƒªãƒ­ãƒ¼ãƒ‰ã—ã¦ãã ã•ã„ã€‚';
     return;
   }
 
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   Service Worker “o˜^
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Service Worker ç™»éŒ²
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () =>
     navigator.serviceWorker.register('sw.js').catch(e =>
-      console.warn('SW“o˜^¸”s:', e)
+      console.warn('SWç™»éŒ²å¤±æ•—:', e)
     )
   );
 }
 
-/* „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-   ƒAƒvƒŠ‹N“®
-„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ã‚¢ãƒ—ãƒªèµ·å‹•
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 init();
 </script>
 
-<!-- ‘—Mƒ‚ƒWƒ…[ƒ‹ -->
+<!-- é€ä¿¡ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ« -->
 <script src="/shared/senders/flow-mind.js"></script>
 <script src="/shared/senders/flowchart-lab.js"></script>
 <script src="/shared/senders/creative-apps.js"></script>
 <script src="/shared/senders/security-apps.js"></script>
-
-<!-- main.jsiES modulej -->
-<!-- <script type="module" src="/main.js"></script> -->
-
 
 </body>
 </html>
