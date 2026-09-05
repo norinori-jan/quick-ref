@@ -1,9 +1,9 @@
-﻿﻿?<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>クイック参照 ? 統合版</title>
+<title>クイック参照 – 統合版</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -200,17 +200,17 @@ header {
     <h1>クイック参照</h1>
     <div class="header-actions">
       <span id="countLabel">0件</span>
-      <button class="review-btn" id="reviewBtn">??<span class="review-badge" id="reviewBadge"></span></button>
-      <button class="icon-btn" id="lockToggleBtn">??</button>
-      <button class="icon-btn" id="settingsBtn">??</button>
-      <button class="icon-btn" id="menuBtn">?</button>
+      <button class="review-btn" id="reviewBtn">📋<span class="review-badge" id="reviewBadge"></span></button>
+      <button class="icon-btn" id="lockToggleBtn">🔓</button>
+      <button class="icon-btn" id="settingsBtn">⚙️</button>
+      <button class="icon-btn" id="menuBtn">☰</button>
     </div>
   </div>
 
   <div class="search-row">
-    <span class="search-icon">??</span>
+    <span class="search-icon">🔍</span>
     <input type="search" id="searchInput" placeholder="タイトル・メモ・タグで検索">
-    <button class="search-clear" id="searchClear">?</button>
+    <button class="search-clear" id="searchClear">✕</button>
   </div>
 
   <div class="tag-filter-row" id="tagFilterRow"></div>
@@ -234,10 +234,10 @@ header {
 
 <!-- Quick Dock -->
 <div class="quick-dock" id="quickDock">
-  <button class="dock-btn dock-mic" id="voiceFab">??<span class="dock-label">音声</span></button>
-  <button class="dock-btn dock-cam" id="dockCam">??<span class="dock-label">カメラ</span></button>
-  <button class="dock-btn dock-photo" id="dockPhoto">??<span class="dock-label">写真</span></button>
-  <button class="dock-btn dock-video" id="dockVideo">??<span class="dock-label">動画</span></button>
+  <button class="dock-btn dock-mic" id="voiceFab">🎙<span class="dock-label">音声</span></button>
+  <button class="dock-btn dock-cam" id="dockCam">📷<span class="dock-label">カメラ</span></button>
+  <button class="dock-btn dock-photo" id="dockPhoto">🖼<span class="dock-label">写真</span></button>
+  <button class="dock-btn dock-video" id="dockVideo">🎬<span class="dock-label">動画</span></button>
   <button class="dock-btn dock-add" id="fabBtn">＋<span class="dock-label">追加</span></button>
 </div>
 
@@ -263,8 +263,8 @@ header {
     </div>
 
     <div class="voice-actions">
-      <button class="voice-stop-btn" id="voiceStopBtn">? 停止</button>
-      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>? AI で整理する</button>
+      <button class="voice-stop-btn" id="voiceStopBtn">⏹ 停止</button>
+      <button class="voice-analyze-btn" id="voiceAnalyzeBtn" disabled>✨ AI で整理する</button>
     </div>
 
     <!-- AI Preview -->
@@ -272,7 +272,7 @@ header {
       <input type="hidden" id="aiTags">
       <div id="aiFields" style="display:none;"></div>
       <div class="ai-preview">
-        <div class="ai-preview-header">?? AI が整理した内容</div>
+        <div class="ai-preview-header">🤖 AI が整理した内容</div>
         <div class="ai-preview-body">
           <div class="ai-field">
             <div class="ai-field-label">タイトル</div>
@@ -290,7 +290,7 @@ header {
           </div>
         </div>
       </div>
-      <button class="voice-save-btn" id="aiSaveBtn">?? この内容で保存</button>
+      <button class="voice-save-btn" id="aiSaveBtn">💾 この内容で保存</button>
     </div>
 
     <button class="voice-cancel-btn" id="voiceCancelBtn">キャンセル</button>
@@ -347,16 +347,16 @@ header {
         <button type="button" onclick="fmtCmd('italic')"><em>I</em></button>
         <button type="button" onclick="fmtCmd('underline')"><u>U</u></button>
         <span class="sep"></span>
-        <button type="button" onclick="fmtMark('yellow')">??</button>
-        <button type="button" onclick="fmtMark('green')">??</button>
-        <button type="button" onclick="fmtMark('pink')">??</button>
-        <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">?fmt</button>
+        <button type="button" onclick="fmtMark('yellow')">🟡</button>
+        <button type="button" onclick="fmtMark('green')">🟢</button>
+        <button type="button" onclick="fmtMark('pink')">🩷</button>
+        <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
       </div>
 
       <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="内容を入力"
         autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 
-      <button type="button" class="expand-btn" id="expandMemoBtn">? 全画面</button>
+      <button type="button" class="expand-btn" id="expandMemoBtn">⛶ 全画面</button>
     </div>
     <!-- 構造化フィールド -->
     <label class="field-label" style="margin-top:18px;">構造化項目</label>
@@ -366,19 +366,19 @@ header {
     <!-- 画像添付 -->
     <label class="field-label" style="margin-top:18px;">画像</label>
     <div class="img-btn-row">
-      <button type="button" id="imgPickBtn">?? 選択</button>
-      <button type="button" id="imgCameraBtn">?? カメラ</button>
-      <button type="button" id="imgSelfieBtn">?? 自撮り</button>
-      <button type="button" id="imgIllustBtn">?? illust-studio</button>
+      <button type="button" id="imgPickBtn">📁 選択</button>
+      <button type="button" id="imgCameraBtn">📷 カメラ</button>
+      <button type="button" id="imgSelfieBtn">🤳 自撮り</button>
+      <button type="button" id="imgIllustBtn">🎨 illust-studio</button>
     </div>
     <div id="imgThumbs" class="img-thumbs"></div>
 
     <!-- 音声添付 -->
     <label class="field-label" style="margin-top:18px;">音声</label>
     <div class="audio-btn-row">
-      <button type="button" id="recStartBtn">?? 録音開始</button>
-      <button type="button" id="recStopBtn">? 停止</button>
-      <button type="button" id="musicSuiteBtn">?? music-suite</button>
+      <button type="button" id="recStartBtn">🎙 録音開始</button>
+      <button type="button" id="recStopBtn">⏹ 停止</button>
+      <button type="button" id="musicSuiteBtn">🎼 music-suite</button>
     </div>
     <div id="recStatus" class="rec-status">
       <span id="recTimer">00:00</span>
@@ -388,19 +388,19 @@ header {
     <!-- 動画添付 -->
     <label class="field-label" style="margin-top:18px;">動画</label>
     <div class="video-btn-row">
-      <button type="button" id="videoCamBtn">?? カメラ</button>
-      <button type="button" id="videoPickBtn">?? 選択</button>
+      <button type="button" id="videoCamBtn">📹 カメラ</button>
+      <button type="button" id="videoPickBtn">📁 選択</button>
     </div>
     <div id="videoList" class="video-list"></div>
 
     <!-- 関連項目 -->
     <label class="field-label" style="margin-top:18px;">関連項目</label>
     <div id="relatedSection" class="related-section"></div>
-    <button id="aiRelatedBtn" class="ai-related-btn">? AIでさらに探す</button>
+    <button id="aiRelatedBtn" class="ai-related-btn">✨ AIでさらに探す</button>
 
     <!-- 危険ゾーン -->
     <div id="dangerZone" class="danger-zone" style="display:none;">
-      <button id="deleteBtn" class="danger-btn">?? 削除する</button>
+      <button id="deleteBtn" class="danger-btn">🗑 削除する</button>
     </div>
   </div>
 </div>
@@ -408,7 +408,7 @@ header {
 <!-- 画像プレビュー -->
 <div id="imgPreviewOverlay" class="img-preview-overlay">
   <img id="imgPreviewImg" class="img-preview-img">
-  <button id="imgPreviewClose" class="img-preview-close">?</button>
+  <button id="imgPreviewClose" class="img-preview-close">✕</button>
 </div>
 
 <!-- 設定 / AI連携 -->
@@ -466,7 +466,7 @@ header {
     <button id="memoPopupClose">完了</button>
     <h2>メモ編集</h2>
     <div class="memo-popup-actions">
-      <button id="memoAiBtn">? AI</button>
+      <button id="memoAiBtn">✦ AI</button>
       <button id="memoPopupClear">書式クリア</button>
     </div>
   </div>
@@ -476,11 +476,11 @@ header {
     <button type="button" onclick="popupFmt('italic')"><em>I</em></button>
     <button type="button" onclick="popupFmt('underline')"><u>U</u></button>
     <span class="sep"></span>
-    <button type="button" onclick="popupMark('yellow')">??</button>
-    <button type="button" onclick="popupMark('green')">??</button>
-    <button type="button" onclick="popupMark('pink')">??</button>
+    <button type="button" onclick="popupMark('yellow')">🟡</button>
+    <button type="button" onclick="popupMark('green')">🟢</button>
+    <button type="button" onclick="popupMark('pink')">🩷</button>
     <span class="sep"></span>
-    <button type="button" onclick="popupFmt('insertUnorderedList')">?</button>
+    <button type="button" onclick="popupFmt('insertUnorderedList')">☰</button>
   </div>
 
   <div class="memo-popup-editor" id="memoPopupEditor"
@@ -493,8 +493,8 @@ header {
   <div class="review-sheet">
     <div class="review-header">
       <div class="review-header-top">
-        <span class="review-title">?? デイリーレビュー</span>
-        <button class="review-close-btn" id="reviewCloseBtn">?</button>
+        <span class="review-title">📋 デイリーレビュー</span>
+        <button class="review-close-btn" id="reviewCloseBtn">✕</button>
       </div>
       <div class="review-progress-track">
         <div class="review-progress-fill" id="reviewProgressFill"></div>
@@ -515,7 +515,7 @@ header {
   <h3>データ管理</h3>
 
   <button type="button" class="action-btn" id="icloudMenuBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">☁️</span>
     <span class="action-btn-inner">
       <span class="action-label">iCloud Driveに保存</span>
       <span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バックアップ</span>
@@ -523,7 +523,7 @@ header {
   </button>
 
   <button type="button" class="action-btn" id="exportBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">📤</span>
     <span class="action-btn-inner">
       <span class="action-label">JSONエクスポート</span>
       <span class="action-desc">全データをファイルに書き出す</span>
@@ -531,7 +531,7 @@ header {
   </button>
 
   <button type="button" class="action-btn" id="importBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">📥</span>
     <span class="action-btn-inner">
       <span class="action-label">JSONインポート</span>
       <span class="action-desc">バックアップから復元・マージ</span>
@@ -539,7 +539,7 @@ header {
   </button>
 
   <button type="button" class="action-btn" id="tagBridgeBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">🔗</span>
     <span class="action-btn-inner">
       <span class="action-label">タグを他アプリと共有</span>
       <span class="action-desc">illust-studio / music-suite などに同期</span>
@@ -547,7 +547,7 @@ header {
   </button>
 
   <button type="button" class="action-btn" id="kanseiExportBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">📝</span>
     <span class="action-btn-inner">
       <span class="action-label">素材を kansei に送る</span>
       <span class="action-desc">表示中の項目を執筆支援生成ツールへ</span>
@@ -555,7 +555,7 @@ header {
   </button>
 
   <button type="button" class="action-btn" id="iconGenBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">🎨</span>
     <span class="action-btn-inner">
       <span class="action-label">アイコンを生成・ダウンロード</span>
       <span class="action-desc">ホーム画面用 icon-192.png / icon-512.png</span>
@@ -563,7 +563,7 @@ header {
   </button>
 
   <button type="button" class="action-btn" id="themeUrlBtn">
-    <span class="action-icon">??</span>
+    <span class="action-icon">🌐</span>
     <span class="action-btn-inner">
       <span class="action-label">テーマ別URL一覧を表示</span>
       <span class="action-desc">タグごとのホーム画面追加用URL</span>
@@ -575,7 +575,7 @@ header {
 <div id="iconModal" class="icon-modal">
   <div class="icon-modal-header">
     <h3>アイコン生成</h3>
-    <button id="iconModalClose">?</button>
+    <button id="iconModalClose">✕</button>
   </div>
 
   <div class="icon-config">
@@ -601,8 +601,8 @@ header {
   </div>
 
   <div class="icon-download-row">
-    <button id="iconDl192">?? 192px</button>
-    <button id="iconDl512">?? 512px</button>
+    <button id="iconDl192">⬇️ 192px</button>
+    <button id="iconDl512">⬇️ 512px</button>
   </div>
 </div>
 
@@ -614,8 +614,8 @@ header {
     <span id="themeBannerSub"></span>
   </div>
   <div class="theme-banner-actions">
-    <button id="themeBannerIconBtn">?? アイコン</button>
-    <button id="themeBannerKanseiBtn">?? kansei</button>
+    <button id="themeBannerIconBtn">🎨 アイコン</button>
+    <button id="themeBannerKanseiBtn">📝 kansei</button>
     <button id="themeBannerAddBtn">＋ ホーム追加</button>
   </div>
 </div>
@@ -635,7 +635,7 @@ header {
 <!-- iCloud ガイド -->
 <div id="icloudGuide" class="add-guide">
   <div class="add-guide-sheet">
-    <h3>?? iCloud Drive に保存する方法</h3>
+    <h3>☁️ iCloud Drive に保存する方法</h3>
     <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
       ダウンロードされた JSON を「ファイル」アプリで iCloud Drive に移動してください。
     </p>
@@ -654,7 +654,7 @@ header {
 <!-- バックアップバナー -->
 <div id="backupBanner" class="backup-banner" style="display:none;">
   <span id="backupBannerText"></span>
-  <button id="backupBannerBtn">?? エクスポート</button>
+  <button id="backupBannerBtn">📤 エクスポート</button>
 </div>
 
 <!-- PIN モーダル -->
@@ -872,10 +872,10 @@ function lockSession() {
 function updateLockButton() {
   const btn = document.getElementById('lockToggleBtn');
   if (sessionKey) {
-    btn.textContent = '??';
+    btn.textContent = '🔓';
     btn.title = 'タップでロック';
   } else {
-    btn.textContent = '??';
+    btn.textContent = '🔒';
     btn.title = 'タップでロック解除';
   }
 }
@@ -1074,7 +1074,7 @@ function renderTagFilter() {
 
   row.innerHTML =
     chips.join('') +
-    `<button class="filter-chip${linkFilterActive ? ' active' : ''}" id="linkFilterBtn">?? リンク集</button>`;
+    `<button class="filter-chip${linkFilterActive ? ' active' : ''}" id="linkFilterBtn">🔗 リンク集</button>`;
 
   row.querySelectorAll('.filter-chip[data-tag]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1133,8 +1133,8 @@ function renderAll() {
           <div class="card-snippet">${highlightText(snippet, searchQuery)}</div>
           <div class="chips">${tagsHtml}</div>
           <div class="card-meta">
-            <span>${item.url ? '?? URLあり' : ''}</span>
-            <span>${item.sensitive ? '?? 保護' : ''}</span>
+            <span>${item.url ? '🔗 URLあり' : ''}</span>
+            <span>${item.sensitive ? '🔒 保護' : ''}</span>
           </div>
         </div>`;
     })
@@ -1284,7 +1284,7 @@ function closeSheet() {
 function renderTagChips() {
   const el = document.getElementById('tagChips');
   el.innerHTML = draftTags
-    .map(t => `<span class="chip" data-tag="${escapeHtml(t)}">#${escapeHtml(t)} <button class="chip-del">?</button></span>`)
+    .map(t => `<span class="chip" data-tag="${escapeHtml(t)}">#${escapeHtml(t)} <button class="chip-del">✕</button></span>`)
     .join('');
 
   el.querySelectorAll('.chip-del').forEach(btn => {
@@ -1339,7 +1339,7 @@ function renderFieldRows() {
       <div class="field-row" data-i="${i}">
         <input type="text" class="field-key" placeholder="項目名" value="${escapeHtml(f.key)}">
         <input type="text" class="field-value" placeholder="値" value="${escapeHtml(f.value)}">
-        <button class="field-del">?</button>
+        <button class="field-del">✕</button>
       </div>
     `)
     .join('');
@@ -1539,7 +1539,7 @@ function renderAudioList() {
 
     const play = document.createElement('button');
     play.className = 'audio-play-btn';
-    play.textContent = '??';
+    play.textContent = '▶︎';
     play.addEventListener('click', () => {
       if (!aud.url) {
         alert('music-suite素材はJSONのため再生できません');
@@ -1551,7 +1551,7 @@ function renderAudioList() {
 
     const del = document.createElement('button');
     del.className = 'audio-del-btn';
-    del.textContent = '?';
+    del.textContent = '✕';
     del.addEventListener('click', () => {
       if (aud.isExisting && aud.attId) pendingDeleteAttIds.push(aud.attId);
       if (aud.url) URL.revokeObjectURL(aud.url);
@@ -1619,7 +1619,7 @@ function renderVideoList() {
 
     const play = document.createElement('button');
     play.className = 'video-play-btn';
-    play.textContent = '??';
+    play.textContent = '▶︎';
     play.addEventListener('click', () => {
       const video = document.createElement('video');
       video.src = vid.url;
@@ -1635,7 +1635,7 @@ function renderVideoList() {
 
     const del = document.createElement('button');
     del.className = 'video-del-btn';
-    del.textContent = '?';
+    del.textContent = '✕';
     del.addEventListener('click', () => {
       if (vid.isExisting && vid.attId) pendingDeleteAttIds.push(vid.attId);
       URL.revokeObjectURL(vid.url);
@@ -1940,7 +1940,7 @@ function updateAutoToggleBtn() {
   const btn = document.getElementById('icloudAutoToggleBtn');
   if (!btn) return;
   const on = !!localStorage.getItem(ICLOUD_AUTO_KEY);
-  btn.textContent = on ? '? 自動保存ON' : '? 自動保存設定';
+  btn.textContent = on ? '✅ 自動保存ON' : '⏰ 自動保存設定';
   btn.style.background = on ? 'rgba(52,199,89,0.12)' : '';
   btn.style.color = on ? '#1A8C3A' : '';
   btn.style.borderColor = on ? 'rgba(52,199,89,0.3)' : '';
@@ -1959,7 +1959,7 @@ function showSiriShortcutGuide() {
     '③「URLを開く」を追加',
     '④ 以下のURLを入力：',
     '',
-    '  ? 即保存(推奨): ' +
+    '  ⚡ 即保存(推奨): ' +
       base +
       '?shortcut=quicksave&text=[ここに「テキストを入力」変数を挿入]',
     '  音声追加: ' + base + '?shortcut=voice',
@@ -1971,7 +1971,7 @@ function showSiriShortcutGuide() {
     '',
     '設定後「Hey Siri、参照に追加」で即起動します。',
     '',
-    '【?即保存の作り方】',
+    '【⚡即保存の作り方】',
     'ショートカット手順を「テキストを入力」→「URLエンコード」',
     '→「URLを開く」の順に組むと、確認画面なしで一発保存できます。'
   ].join('\n');
@@ -2034,7 +2034,7 @@ async function quickSaveText(text) {
   window.QuickRefBridge?.onItemSaved(item);
   await reload();
   syncEcosystemTags();
-  showToast('? 保存しました: ' + item.title);
+  showToast('⚡ 保存しました: ' + item.title);
 }
 
 /* ─────────────────────────────
@@ -2137,7 +2137,7 @@ function renderRelatedItems(item) {
   const mkCard = (relItem, score, isConf) => {
     const cached = decryptedCache.get(relItem.id);
     const snippet = relItem.sensitive
-      ? '?? 保護中'
+      ? '🔒 保護中'
       : ((cached ? cached.body : relItem.body || '').replace(/<[^>]+>/g, '').slice(0, 45));
 
     const tagsHtml = (relItem.tags || [])
@@ -2148,7 +2148,7 @@ function renderRelatedItems(item) {
       <div class="related-card${isConf ? ' confirmed' : ''}" data-id="${relItem.id}">
         <div class="related-main">
           <div class="related-header">
-            <span class="related-icon">${isConf ? '??' : '??'}</span>
+            <span class="related-icon">${isConf ? '🔗' : '💭'}</span>
             <span class="related-title">${escapeHtml(relItem.title || '(無題)')}</span>
             ${score != null ? `<span class="related-score">${score}%</span>` : ''}
           </div>
@@ -2160,7 +2160,7 @@ function renderRelatedItems(item) {
           ${
             isConf
               ? `<button class="related-unlink-btn" data-id="${relItem.id}">×</button>`
-              : `<button class="related-link-btn" data-id="${relItem.id}">??</button>`
+              : `<button class="related-link-btn" data-id="${relItem.id}">🔗</button>`
           }
         </div>
       </div>`;
@@ -2211,12 +2211,12 @@ function setupAiRelatedBtn(item) {
     const openaiKey = localStorage.getItem('ml_openai');
 
     if (!geminiKey && !claudeKey && !proxyUrl && !openaiKey) {
-      alert('APIキーが設定されていません。??設定から入力してください。');
+      alert('APIキーが設定されていません。⚙️設定から入力してください。');
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = '? 検索中…';
+    btn.textContent = '✨ 検索中…';
 
     try {
       const candidates = allItems
@@ -2282,10 +2282,10 @@ IDプレフィックス(8文字)を最大5つ、JSON配列のみ返してくだ�
       renderRelatedItems(item);
       renderAll();
 
-      btn.textContent = added > 0 ? `? ${added}件のつながりを発見` : '? 新たなつながりなし';
+      btn.textContent = added > 0 ? `✨ ${added}件のつながりを発見` : '✨ 新たなつながりなし';
     } catch (e) {
       alert(`AI検索失敗: ${e.message}`);
-      btn.textContent = '? AIでさらに探す';
+      btn.textContent = '✨ AIでさらに探す';
     } finally {
       btn.disabled = false;
     }
@@ -2401,7 +2401,7 @@ async function callStructureAPI(text) {
 
 ルール:
 - title 15字以内
-- tags 2?4個
+- tags 2〜4個
 - fields は構造化できるものだけ（なければ空配列）
 
 既存タグ候補: ${getAllTagsSorted().slice(0, 10).join(',')}
@@ -3085,7 +3085,7 @@ function wireEvents() {
     if (!text) return;
 
     document.getElementById('voiceAnalyzeBtn').disabled = true;
-    document.getElementById('voiceAnalyzeBtn').textContent = '? 解析中…';
+    document.getElementById('voiceAnalyzeBtn').textContent = '✨ 解析中…';
     stopVoiceRec();
 
     try {
@@ -3094,7 +3094,7 @@ function wireEvents() {
     } catch (e) {
       alert(`AI解析に失敗しました:\n${e.message}`);
       document.getElementById('voiceAnalyzeBtn').disabled = false;
-      document.getElementById('voiceAnalyzeBtn').textContent = '? AI で整理する';
+      document.getElementById('voiceAnalyzeBtn').textContent = '✨ AI で整理する';
     }
   });
 
@@ -3383,7 +3383,7 @@ function wireEvents() {
     const tag = themeTag || '';
     const url = `${location.origin + location.pathname}?tag=${encodeURIComponent(tag)}`;
     document.getElementById('addGuideUrl').textContent = url;
-    document.getElementById('addGuideTitle').textContent = `?? 「${tag}」をホーム画面に追加`;
+    document.getElementById('addGuideTitle').textContent = `🌐 「${tag}」をホーム画面に追加`;
     document.getElementById('addGuide').classList.add('open');
   });
 
