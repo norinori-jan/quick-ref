@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -192,6 +192,28 @@ header {
 </style>
 </head>
 <body>
+<div id="debugLog" style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#c00;color:#fff;font-size:11px;padding:10px;white-space:pre-wrap;max-height:50vh;overflow:auto;display:none;"></div>
+<script>
+(function(){
+  var log = document.getElementById('debugLog');
+  function show(msg){
+    log.style.display = 'block';
+    log.textContent += msg + '
+
+';
+  }
+  window.addEventListener('error', function(e){
+    show('ERROR: ' + e.message + ' @行' + e.lineno);
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    show('PROMISE REJECTED: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+  });
+  window.addEventListener('click', function(e){
+    var t = e.target.closest('button');
+    if (t) show('クリック検知: #' + (t.id || '(id無し)') + ' class=' + t.className);
+  }, true);
+})();
+</script>
 
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
 
