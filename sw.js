@@ -6,23 +6,19 @@
    - Share Target / Shortcut連携補助
 ───────────────────────────── */
 
-const CACHE_VERSION = 'qr-cache-v4';
+const CACHE_VERSION = 'qr-cache-v5';
+const BASE_URL = self.registration.scope;
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/sw.js',
-  '/shared/senders/flow-mind.js',
-  '/shared/senders/flowchart-lab.js',
-  '/shared/senders/creative-apps.js',
-  '/shared/senders/security-apps.js',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
-];
-
-const STATIC_ASSETS = [
-  '/styles.css',
-  '/manifest.json'
-];
+  'index.html',
+  'sw.js',
+  'manifest.json',
+  'shared/senders/flow-mind.js',
+  'shared/senders/flowchart-lab.js',
+  'shared/senders/creative-apps.js',
+  'shared/senders/security-apps.js',
+  'icon-192.png',
+  'icon-512.png'
+].map(path => new URL(path, BASE_URL).href);
 
 const CACHE_WHITELIST = [CACHE_VERSION];
 
@@ -33,7 +29,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_VERSION);
-      await cache.addAll([...APP_SHELL, ...STATIC_ASSETS].filter(Boolean));
+      await cache.addAll(APP_SHELL);
       self.skipWaiting();
     })()
   );
@@ -85,7 +81,28 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App Shell / 静的ファイルは cache-first
+  // HTMLは常にネットワークを優先し、公開後の更新を即時反映する。
+  if (req.mode === 'navigate' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      (async () => {
+        try {
+          const res = await fetch(req);
+          if (res.ok) {
+            const cache = await caches.open(CACHE_VERSION);
+            await cache.put(req, res.clone());
+          }
+          return res;
+        } catch (_) {
+          const cache = await caches.open(CACHE_VERSION);
+          const cached = await cache.match(req);
+          return cached || Response.error();
+        }
+      })()
+    );
+    return;
+  }
+
+  // 画像・JavaScriptなどの静的ファイルは cache-first。
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE_VERSION);
