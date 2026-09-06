@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -998,6 +998,38 @@ async function dbDeleteAttachmentsByItemId(itemId) {
 const PIN_META_KEY = 'qr_pin_meta';
 let sessionKey = null;
 let decryptedCache = new Map();
+let pinMode = null;
+let pinModalResolve = null;
+
+function openPinModal(mode) {
+  pinMode = mode;
+  const in1 = document.getElementById('pinInput1');
+  const in2 = document.getElementById('pinInput2');
+  const err = document.getElementById('pinError');
+  if (in1) in1.value = '';
+  if (in2) in2.value = '';
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+  document.getElementById('pinOverlay').classList.add('open');
+  document.getElementById('pinModal').classList.add('open');
+  if (in1) in1.focus();
+}
+
+function closePinModal(success) {
+  document.getElementById('pinOverlay').classList.remove('open');
+  document.getElementById('pinModal').classList.remove('open');
+  if (pinModalResolve) {
+    const resolve = pinModalResolve;
+    pinModalResolve = null;
+    resolve(success);
+  }
+}
+
+function ensureUnlocked() {
+  return new Promise(resolve => {
+    pinModalResolve = resolve;
+    openPinModal(hasPinSetup() ? 'unlock' : 'setup');
+  });
+}
 
 function bytesToBase64(bytes) {
   let s = '';
