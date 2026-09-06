@@ -633,6 +633,12 @@ header {
       <button id="icloudAutoToggleBtn" style="flex:1;">自動保存設定</button>
     </div>
     <div id="icloudStatus" style="font-size:12px;color:var(--text-secondary);"></div>
+    <label class="field-label" style="margin-top:20px;">☁️ クラウド同期</label>
+    <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:4px 0 8px;">Safariタブとホーム画面PWA間でメモ（添付ファイルを除く）を同期します。</p>
+    <input type="url" id="sSyncEndpoint" placeholder="https://sync-worker.arielfortuneoffice.workers.dev" autocomplete="off">
+    <input type="password" id="sSyncToken" placeholder="同期トークン" autocomplete="off" style="margin-top:8px;">
+    <button id="syncNowBtn" style="width:100%;margin-top:8px;">今すぐ同期</button>
+    <div id="cloudSyncStatus" style="font-size:12px;color:var(--text-secondary);margin-top:6px;"></div>
     <button id="siriShortcutBtn" style="width:100%;margin-top:12px;">Shortcuts設定ガイド</button>
     <button id="sendToEcoBtn" style="width:100%;margin-top:8px;">全データを他アプリへ送信</button>
   </div>
@@ -1912,6 +1918,7 @@ async function saveItem() {
   await reload();
   closeSheet();
   showToast('保存しました');
+  void syncCloudNow(false);
 }
 
 /* ─────────────────────────────
@@ -2493,7 +2500,9 @@ const LS = {
   GEMINI: 'ml_gemini',
   OPENAI: 'ml_openai',
   PROXY: 'kansei_proxy_url',
-  MODEL: 'kansei_model'
+  MODEL: 'kansei_model',
+  SYNC_ENDPOINT: 'qr_sync_endpoint',
+  SYNC_TOKEN: 'qr_sync_token'
 };
 
 const MODELS = {
@@ -2516,6 +2525,107 @@ const MODELS = {
 
 let activeModel = localStorage.getItem(LS.MODEL) || 'claude';
 let lastAiResult = '';
+let cloudSyncBusy = false;
+
+function getCloudSyncConfig() {
+  return {
+    endpoint: (localStorage.getItem(LS.SYNC_ENDPOINT) || '').trim().replace(/\/$/, ''),
+    token: (localStorage.getItem(LS.SYNC_TOKEN) || '').trim()
+  };
+}
+
+function saveCloudSyncConfig() {
+  const endpoint = document.getElementById('sSyncEndpoint').value.trim().replace(/\/$/, '');
+  const token = document.getElementById('sSyncToken').value.trim();
+  localStorage.setItem(LS.SYNC_ENDPOINT, endpoint);
+  localStorage.setItem(LS.SYNC_TOKEN, token);
+  updateCloudSyncStatus('同期設定を保存しました');
+}
+
+function updateCloudSyncStatus(message = '') {
+  const status = document.getElementById('cloudSyncStatus');
+  if (!status) return;
+  const config = getCloudSyncConfig();
+  status.textContent = message || (config.endpoint && config.token ? '設定済み（保存時に同期）' : '未設定');
+}
+
+function cloudSyncUrl() {
+  const { endpoint } = getCloudSyncConfig();
+  return endpoint ? `${endpoint}/sync/quick-ref` : '';
+}
+
+async function syncCloudNow(showResult = true) {
+  const config = getCloudSyncConfig();
+  const url = cloudSyncUrl();
+  if (!url || !config.token || cloudSyncBusy) {
+    if (showResult && (!url || !config.token)) updateCloudSyncStatus('エンドポイントとトークンを設定してください');
+    return false;
+  }
+
+  cloudSyncBusy = true;
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.token}`
+      },
+      body: JSON.stringify({ data: { items: allItems } })
+    });
+    if (!response.ok) throw new Error(`同期PUT失敗 (${response.status})`);
+    updateCloudSyncStatus(`最終同期: ${new Date().toLocaleTimeString('ja-JP')}`);
+    return true;
+  } catch (error) {
+    updateCloudSyncStatus(`同期失敗: ${error.message}`);
+    return false;
+  } finally {
+    cloudSyncBusy = false;
+  }
+}
+
+async function pullCloudSync(showResult = false) {
+  const config = getCloudSyncConfig();
+  const url = cloudSyncUrl();
+  if (!url || !config.token || cloudSyncBusy) return false;
+
+  cloudSyncBusy = true;
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${config.token}` }
+    });
+    if (response.status === 404) return false;
+    if (!response.ok) throw new Error(`同期GET失敗 (${response.status})`);
+    const remote = await response.json();
+    const remoteItems = Array.isArray(remote.data) ? remote.data : remote.data?.items;
+    if (!Array.isArray(remoteItems)) return false;
+
+    const localItems = allItems;
+    const merged = new Map(localItems.map(item => [item.id, item]));
+    let localWins = false;
+    for (const remoteItem of remoteItems) {
+      const localItem = merged.get(remoteItem.id);
+      if (!localItem || (remoteItem.updatedAt || 0) > (localItem.updatedAt || 0)) {
+        merged.set(remoteItem.id, remoteItem);
+      } else if ((localItem.updatedAt || 0) > (remoteItem.updatedAt || 0)) {
+        localWins = true;
+      }
+    }
+    if (localItems.some(item => !remoteItems.some(remoteItem => remoteItem.id === item.id))) {
+      localWins = true;
+    }
+    const mergedItems = [...merged.values()];
+    for (const item of mergedItems) await dbPut(item);
+    await reload();
+    if (showResult) updateCloudSyncStatus(`受信・統合: ${new Date().toLocaleTimeString('ja-JP')}`);
+    if (localWins) void syncCloudNow(false);
+    return true;
+  } catch (error) {
+    if (showResult) updateCloudSyncStatus(`受信失敗: ${error.message}`);
+    return false;
+  } finally {
+    cloudSyncBusy = false;
+  }
+}
 
 const AI_PROMPTS = {
   summarize: t => `以下のメモを3行で要約してください。\n\n${t}`,
@@ -2813,8 +2923,11 @@ function loadSettings() {
     localStorage.getItem(LS.PROXY) || '';
 
   activeModel = localStorage.getItem(LS.MODEL) || 'claude';
+  document.getElementById('sSyncEndpoint').value = localStorage.getItem(LS.SYNC_ENDPOINT) || '';
+  document.getElementById('sSyncToken').value = localStorage.getItem(LS.SYNC_TOKEN) || '';
   renderModelSelect();
   updateAIBadge();
+  updateCloudSyncStatus();
 }
 
 function saveSettings() {
@@ -2829,6 +2942,7 @@ function saveSettings() {
   else localStorage.removeItem(LS.PROXY);
 
   localStorage.setItem(LS.MODEL, activeModel);
+  saveCloudSyncConfig();
   updateAIBadge();
   closeSettingsSheet();
   showToast('設定を保存しました');
@@ -3435,6 +3549,12 @@ function wireEvents() {
     closeSettingsSheet();
   });
 
+  document.getElementById('syncNowBtn').addEventListener('click', async () => {
+    saveCloudSyncConfig();
+    await pullCloudSync(true);
+    await syncCloudNow(true);
+  });
+
   /* AIパネル */
   document.getElementById('memoAiBtn').addEventListener('click', openAIPanel);
   document.getElementById('aiPanelClose').addEventListener('click', closeAIPanel);
@@ -3616,6 +3736,7 @@ async function init() {
     setupSWMessages();
     updateBackupBanner();
     updateReviewBadge();
+    void pullCloudSync();
 
     /* flow-mind attractor indicator */
     const indicator = window.QuickRefBridge?.createAttractorIndicator();
@@ -3646,6 +3767,13 @@ if ('serviceWorker' in navigator) {
    アプリ起動
 ───────────────────────────── */
 init();
+
+window.addEventListener('pageshow', () => {
+  void pullCloudSync();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void pullCloudSync();
+});
 </script>
 
 <!-- 送信モジュール -->
