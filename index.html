@@ -1939,6 +1939,7 @@ async function saveItem() {
   }
 
   await dbPut(item);
+  window.QuickRefBridge?.onItemSaved(item);
 
   for (const attId of pendingDeleteAttIds) await dbDeleteAttachment(attId);
   pendingDeleteAttIds = [];
