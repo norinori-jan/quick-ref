@@ -2901,7 +2901,7 @@ function closeMenu() {
   document.getElementById('menuOverlay').classList.remove('open');
 }
 
-function sendToKansei(targetTag) {
+async function sendToKansei(targetTag) {
   const items = allItems.filter(item =>
     (!targetTag || (item.tags || []).includes(targetTag)) && !item.sensitive
   );
@@ -2909,12 +2909,30 @@ function sendToKansei(targetTag) {
     alert('送れる素材がありません。');
     return;
   }
-  localStorage.setItem('kansei_materials', JSON.stringify({
+  const payload = {
     source: 'quick-ref',
     tag: targetTag || null,
     materials: items,
     exportedAt: Date.now()
-  }));
+  };
+  localStorage.setItem('kansei_materials', JSON.stringify(payload));
+
+  const config = getCloudSyncConfig();
+  if (config.endpoint && config.token) {
+    try {
+      await fetch(`${config.endpoint}/sync/kansei-materials`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.token}`
+        },
+        body: JSON.stringify({ data: payload })
+      });
+    } catch (e) {
+      console.error('kansei cloud sync failed', e);
+    }
+  }
+
   showToast(`${items.length}件の素材をkanseiに送りました`);
 }
 
