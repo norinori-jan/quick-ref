@@ -1010,7 +1010,10 @@ async function dbDeleteAttachment(attId) {
 
 async function dbDeleteAttachmentsByItemId(itemId) {
   const atts = await dbGetAttachments(itemId);
-  for (const a of atts) await dbDeleteAttachment(a.id);
+  for (const a of atts) {
+    await dbDeleteAttachment(a.id);
+    void deleteAttachmentFromCloud(a.id);
+  }
 }
 
 /* ─────────────────────────────
@@ -1075,37 +1078,28 @@ function hasPinSetup() {
   return !!getPinMeta();
 }
 
-async function deriveKeyFromPin(pin, saltB64) {
-  const salt = base64ToBytes(saltB64);
-  const km = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(pin),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveKey']
-  );
-  return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
-    km,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
+async function deriveKeyFromPin(pin, saltB64, iterations) {
+  // 旧データ（iterations未保存）は150000として扱う
+  return CryptoCore.KDF_HANDLERS.pin.deriveKey(pin, {
+    salt: saltB64,
+    iterations: iterations || 150000
+  });
 }
 
 async function setupPin(pin) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const saltB64 = bytesToBase64(salt);
-  const key = await deriveKeyFromPin(pin, saltB64);
+  const iterations = CryptoCore.DEFAULT_ITERATIONS; // 新規は20万回（crypto-vaultに合わせる）
+  const key = await deriveKeyFromPin(pin, saltB64, iterations);
   sessionKey = key;
-  setPinMeta({ salt: saltB64 });
+  setPinMeta({ salt: saltB64, iterations });
 }
 
 async function tryUnlockWithPin(pin) {
   const meta = getPinMeta();
   if (!meta) return false;
   try {
-    const key = await deriveKeyFromPin(pin, meta.salt);
+    const key = await deriveKeyFromPin(pin, meta.salt, meta.iterations);
     sessionKey = key;
     return true;
   } catch (_) {
@@ -1134,24 +1128,21 @@ function updateLockButton() {
 /* ─────────────────────────────
    暗号化された項目の復号
 ───────────────────────────── */
+async function decryptOneField(enc) {
+  // 新形式（envelope: iv/ciphertextがbase64文字列）と
+  // 旧形式（iv/dataが生バイト、ivを使い回していたデータ）の両方に対応
+  const isEnvelope = typeof enc.iv === 'string';
+  const iv = isEnvelope ? base64ToBytes(enc.iv) : enc.iv;
+  const data = isEnvelope ? base64ToBytes(enc.ciphertext) : enc.data;
+  const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, sessionKey, data);
+  return new TextDecoder().decode(buf);
+}
+
 async function decryptItemContent(item) {
   if (!sessionKey) return null;
   try {
-    const iv = item.encBody.iv;
-    const data = item.encBody.data;
-    const bodyBuf = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      sessionKey,
-      data
-    );
-    const body = new TextDecoder().decode(bodyBuf);
-
-    const fieldsBuf = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: item.encFields.iv },
-      sessionKey,
-      item.encFields.data
-    );
-    const fieldsJson = new TextDecoder().decode(fieldsBuf);
+    const body = await decryptOneField(item.encBody);
+    const fieldsJson = await decryptOneField(item.encFields);
     const fields = JSON.parse(fieldsJson);
 
     const out = { body, fields };
@@ -1172,26 +1163,31 @@ async function refreshDecryptedCache() {
 /* ─────────────────────────────
    暗号化して保存
 ───────────────────────────── */
-async function encryptToItemFields(body, fields) {
+async function encryptField(plaintext) {
+  const meta = getPinMeta() || {};
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const bodyBuf = new TextEncoder().encode(body);
-  const fieldsBuf = new TextEncoder().encode(JSON.stringify(fields));
-
-  const encBody = await crypto.subtle.encrypt(
+  const buf = new TextEncoder().encode(plaintext);
+  const cipherBuf = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     sessionKey,
-    bodyBuf
+    buf
   );
-  const encFields = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    sessionKey,
-    fieldsBuf
-  );
-
   return {
-    encBody: { iv, data: new Uint8Array(encBody) },
-    encFields: { iv, data: new Uint8Array(encFields) }
+    v: 1,
+    keySource: 'pin',
+    alg: 'AES-GCM',
+    kdf: 'PBKDF2',
+    iterations: meta.iterations || 150000,
+    salt: meta.salt,
+    iv: bytesToBase64(iv),
+    ciphertext: bytesToBase64(new Uint8Array(cipherBuf))
   };
+}
+
+async function encryptToItemFields(body, fields) {
+  const encBody = await encryptField(body);
+  const encFields = await encryptField(JSON.stringify(fields));
+  return { encBody, encFields };
 }
 
 /* ─────────────────────────────
@@ -1682,7 +1678,7 @@ async function loadExistingImages(itemId) {
 async function saveImageAttachments(itemId) {
   for (const img of draftImages) {
     if (!img.isExisting) {
-      await dbPutAttachment({
+      const att = {
         id: crypto.randomUUID(),
         itemId,
         type: 'image',
@@ -1690,7 +1686,9 @@ async function saveImageAttachments(itemId) {
         mimeType: img.blob.type || 'image/jpeg',
         name: img.name,
         createdAt: Date.now()
-      });
+      };
+      await dbPutAttachment(att);
+      void pushAttachmentToCloud(att);
     }
   }
 }
@@ -1760,7 +1758,7 @@ async function loadExistingAudios(itemId) {
 async function saveAudioAttachments(itemId) {
   for (const aud of draftAudios) {
     if (!aud.isExisting) {
-      await dbPutAttachment({
+      const att = {
         id: crypto.randomUUID(),
         itemId,
         type: aud.type,
@@ -1769,7 +1767,9 @@ async function saveAudioAttachments(itemId) {
         name: aud.name,
         meta: aud.meta,
         createdAt: Date.now()
-      });
+      };
+      await dbPutAttachment(att);
+      void pushAttachmentToCloud(att);
     }
   }
 }
@@ -1904,7 +1904,7 @@ function renderVideoList() {
 async function saveVideoAttachments(itemId) {
   for (const vid of draftVideos) {
     if (!vid.isExisting) {
-      await dbPutAttachment({
+      const att = {
         id: crypto.randomUUID(),
         itemId,
         type: 'video',
@@ -1912,7 +1912,9 @@ async function saveVideoAttachments(itemId) {
         mimeType: vid.blob.type || 'video/mp4',
         name: vid.name,
         createdAt: Date.now()
-      });
+      };
+      await dbPutAttachment(att);
+      void pushAttachmentToCloud(att);
     }
   }
 }
@@ -1962,7 +1964,10 @@ async function saveItem() {
   await dbPut(item);
   window.QuickRefBridge?.onItemSaved(item);
 
-  for (const attId of pendingDeleteAttIds) await dbDeleteAttachment(attId);
+  for (const attId of pendingDeleteAttIds) {
+    await dbDeleteAttachment(attId);
+    void deleteAttachmentFromCloud(attId);
+  }
   pendingDeleteAttIds = [];
 
   await saveImageAttachments(item.id);
@@ -3786,6 +3791,95 @@ function wireEvents() {
 /* ─────────────────────────────
    INIT（アプリ初期化）
 ───────────────────────────── */
+function attachmentListUrl() {
+  const { endpoint } = getCloudSyncConfig();
+  return endpoint ? `${endpoint}/attachments/quick-ref` : '';
+}
+function attachmentSyncUrl(attId) {
+  const { endpoint } = getCloudSyncConfig();
+  return endpoint ? `${endpoint}/attachments/quick-ref/${attId}` : '';
+}
+
+async function pushAttachmentToCloud(att) {
+  const { token } = getCloudSyncConfig();
+  const url = attachmentSyncUrl(att.id);
+  if (!url || !token) return false;
+  try {
+    await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        Authorization: `Bearer ${token}`,
+        'X-Item-Id': att.itemId,
+        'X-Mime-Type': att.mimeType || 'application/octet-stream',
+        'X-File-Name': encodeURIComponent(att.name || ''),
+        'X-Updated-At': String(att.createdAt || Date.now())
+      },
+      body: att.blob
+    });
+    return true;
+  } catch (e) {
+    console.warn('添付ファイルのアップロード失敗:', e);
+    return false;
+  }
+}
+
+async function deleteAttachmentFromCloud(attId) {
+  const { token } = getCloudSyncConfig();
+  const url = attachmentSyncUrl(attId);
+  if (!url || !token) return;
+  try {
+    await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  } catch (e) {
+    console.warn('添付ファイルのクラウド削除失敗:', e);
+  }
+}
+
+async function pullAttachments() {
+  const { token } = getCloudSyncConfig();
+  const listUrl = attachmentListUrl();
+  if (!listUrl || !token) return;
+
+  try {
+    const res = await fetch(listUrl, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return;
+    const { attachments: remoteList } = await res.json();
+
+    const localMeta = await dbGetAllAttachmentMeta();
+    const localIds = new Set(localMeta.map(a => a.id));
+
+    for (const remote of remoteList) {
+      if (localIds.has(remote.id)) continue;
+
+      const fileRes = await fetch(attachmentSyncUrl(remote.id), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!fileRes.ok) continue;
+      const blob = await fileRes.blob();
+
+      const typeFromMime = remote.mimeType.startsWith('image/')
+        ? 'image'
+        : remote.mimeType.startsWith('video/')
+        ? 'video'
+        : 'audio';
+
+      await dbPutAttachment({
+        id: remote.id,
+        itemId: remote.itemId,
+        type: typeFromMime,
+        blob,
+        mimeType: remote.mimeType,
+        name: remote.name,
+        createdAt: remote.updatedAt
+      });
+    }
+
+    attachmentMeta = await dbGetAllAttachmentMeta();
+  } catch (e) {
+    console.warn('添付ファイルの同期受信に失敗:', e);
+  }
+}
+
 async function init() {
   try {
     await openDB();
@@ -3809,6 +3903,7 @@ async function init() {
     updateBackupBanner();
     updateReviewBadge();
     void pullCloudSync();
+    void pullAttachments();
 
     /* flow-mind attractor indicator */
     const indicator = window.QuickRefBridge?.createAttractorIndicator();
@@ -3842,11 +3937,18 @@ init();
 
 window.addEventListener('pageshow', () => {
   void pullCloudSync();
+  void pullAttachments();
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') void pullCloudSync();
+  if (document.visibilityState === 'visible') {
+    void pullCloudSync();
+    void pullAttachments();
+  }
 });
 </script>
+
+<!-- 暗号化コア（shared-core） -->
+<script src="https://norinori-jan.github.io/shared-core/crypto/crypto-core.v1.js"></script>
 
 <!-- 送信モジュール -->
 <script src="shared/emotion-physics.js"></script>
@@ -3859,5 +3961,3 @@ document.addEventListener('visibilitychange', () => {
 
 </body>
 </html>
-
-
