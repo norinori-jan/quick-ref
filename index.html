@@ -773,6 +773,14 @@ header {
     </span>
   </button>
 
+  <button type="button" class="action-btn" id="musicSuiteExportBtn">
+    <span class="action-icon">🎵</span>
+    <span class="action-btn-inner">
+      <span class="action-label">素材を music-suite に送る</span>
+      <span class="action-desc">表示中の項目を楽曲分析ツールへ</span>
+    </span>
+  </button>
+
   <button type="button" class="action-btn" id="iconGenBtn">
     <span class="action-icon">🎨</span>
     <span class="action-btn-inner">
@@ -2941,6 +2949,41 @@ async function sendToKansei(targetTag) {
   showToast(`${items.length}件の素材をkanseiに送りました`);
 }
 
+async function sendToMusicSuite(targetTag) {
+  const items = allItems.filter(item =>
+    (!targetTag || (item.tags || []).includes(targetTag)) && !item.sensitive
+  );
+  if (!items.length) {
+    alert('送れる素材がありません。');
+    return;
+  }
+  const payload = {
+    source: 'quick-ref',
+    tag: targetTag || null,
+    materials: items,
+    exportedAt: Date.now()
+  };
+  localStorage.setItem('msuite_materials', JSON.stringify(payload));
+
+  const config = getCloudSyncConfig();
+  if (config.endpoint && config.token) {
+    try {
+      await fetch(`${config.endpoint}/sync/music-suite-materials`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.token}`
+        },
+        body: JSON.stringify({ data: payload })
+      });
+    } catch (e) {
+      console.error('music-suite cloud sync failed', e);
+    }
+  }
+
+  showToast(`${items.length}件の素材をmusic-suiteに送りました`);
+}
+
 function openIconModal() {
   document.getElementById('iconOverlay').classList.add('open');
   document.getElementById('iconModal').classList.add('open');
@@ -3710,6 +3753,11 @@ function wireEvents() {
   document.getElementById('kanseiExportBtn').addEventListener('click', () => {
     closeMenu();
     sendToKansei(themeTag);
+  });
+
+  document.getElementById('musicSuiteExportBtn').addEventListener('click', () => {
+    closeMenu();
+    sendToMusicSuite(themeTag);
   });
 
   document.getElementById('iconGenBtn').addEventListener('click', () => {
