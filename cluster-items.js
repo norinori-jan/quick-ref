@@ -5,14 +5,14 @@
  */
 (function (root) {
   'use strict';
-  var P = { head: 4000, gapMin: 45, near: 0.08, merge: 0.30 };
+  var P = { head: 4000, gapMin: 45, near: 0.08, merge: 0.22, code: 0.52 };   // merge: 設計の議論を1つの流れにまとめるため0.30→0.22
 
   function plain(h) {
     return String(h || '').replace(/<(br|\/p|\/div|\/li)[^>]*>/gi, ' ').replace(/<[^>]+>/g, '')
       .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
   }
-  function grams(x) {
-    var t = (((x.title || '') + ' ').repeat(3) + plain(x.body).slice(0, P.head)).toLowerCase().replace(/\s+/g, ' ');
+  function grams(x, code) {
+    var t = (((x.title || '') + ' ').repeat(3) + (code ? '' : plain(x.body).slice(0, P.head))).toLowerCase().replace(/\s+/g, ' ');
     var m = new Map();
     function add(k, w) { m.set(k, (m.get(k) || 0) + w); }
     for (var i = 0; i + 3 <= t.length; i++) add(t.substr(i, 3), 1);
@@ -36,7 +36,7 @@
     var xs = (items || []).filter(function (x) { return x && !x.sensitive; })
       .sort(function (a, b) { return a.createdAt - b.createdAt; });
     var n = xs.length; if (!n) return [];
-    var docs = xs.map(grams), df = new Map();
+    var docs = xs.map(function (x) { return grams(x, codeRatio(x.body) < o.code); }), df = new Map();
     docs.forEach(function (d) { d.forEach(function (_, k) { df.set(k, (df.get(k) || 0) + 1); }); });
     var V = docs.map(function (d) {
       var v = new Map();
@@ -84,13 +84,25 @@
   // ---- まとまりの「意味」を出す（AI不使用・外部送信なし）----
   var STOP = /^(こと|もの|ため|よう|これ|それ|場合|以下|以上|今回|確認|必要|対応|追加|使用|利用|実装|修正|問題|状態|部分|内容|結果|方法|理由|前提|現在|自分|ユーザー|可能|目的|処理|機能|設定|表示|変更|保存|既存|新規|作成|実行|全体|一つ|最後|最初|同じ|全部|重要|最小|最大|通常|基本|実際|本当|以外|場所|場面|情報|データ|ファイル|コード|アプリ|メモ|画面|操作|入力|出力|項目|一覧|次回|今後|現状|結論|理解|説明|質問|回答|意味|仕組み|方向|考え|ポイント|ここまで|ところ|ほう|わけ|はず)$/;
   var CODE = /^(span|style|font|color|size|line|height|margin|padding|width|solid|class|none|true|false|null|this|that|with|from|have|will|your|file|text|const|function|return|string|data|items|item|index|html|json|console|error|value|name|type|button|input|div|http|https|docs)$/;
-  var NEXT = /(次に|次の一手|次のステップ|確認したい|確認すべき|やるべき|未解決|課題|TODO|決めるべき)/;
+  var NEXT = /(次に|次の一手|次のステップ|確認したい|確認すべき|やるべき|未解決|課題|TODO|決めるべき|見せて(もらえますか|ください)|貼って(ください|もらえますか)|教えてください|次どうする|どれに進める|進めますか)/;
+  function lead(t) { return t.replace(/^(はい|うん|了解|承知|なるほど|OK)[、。！!\s]*/, '').replace(/^.{0,8}さん[、。！!\s]*/, ''); }
   var SECRET = /[0-9a-f]{20,}|bearer|token|secret|api[-_]?key|password/i;
 
-  function lines(body) {
-    var t = String(body || '').replace(/<(br|\/p|\/div|\/li|\/tr)[^>]*>/gi, '\n')
+  function textOf(body) {
+    return String(body || '').replace(/<(br|\/p|\/div|\/li|\/tr)[^>]*>/gi, '\n')
       .replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, '').replace(/<[^>]+>/g, '')
       .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  }
+  // 本文のうち「読める文章」の割合。低いものはコードを貼っただけのメモ
+  function codeRatio(body) {
+    var t = textOf(body); if (!t.length) return 1;
+    var keep = t.split('\n').map(function (s) { return s.trim(); }).filter(function (s) {
+      return s && !/^(PS [A-Z]:|const |let |var |function |import |export |if \(|for \(|return |<|\.|#|@|\}|\{)/.test(s);
+    }).join('').length;
+    return keep / t.length;
+  }
+  function lines(body) {
+    var t = textOf(body);
     return t.split('\n').map(function (s) { return s.trim(); }).filter(function (s) {
       if (!s) return false;
       var sym = 0; for (var i = 0; i < s.length; i++) if ('{}();=<>[]$\\/;:"\'`|&*#'.indexOf(s[i]) >= 0) sym++;
@@ -115,7 +127,8 @@
     var by = new Map(), info = new Map(), df = new Map();
     (items || []).forEach(function (x) { if (x && !x.sensitive) by.set(x.id, x); });
     by.forEach(function (x, id) {
-      var ls = lines(x.body), ts = termSet((x.title || '') + '\n' + ls.join('\n').slice(0, 8000));
+      var ls = lines(x.body), code = codeRatio(x.body) < P.code;
+      var ts = termSet((x.title || '') + '\n' + (code ? '' : ls.join('\n').slice(0, 8000)));
       info.set(id, { lines: ls, terms: ts });
       ts.forEach(function (w) { df.set(w, (df.get(w) || 0) + 1); });
     });
@@ -137,12 +150,16 @@
       });
       // 現在地: 最後のメモの冒頭と、直近のメモにある「次に〜」「確認したい〜」などの行
       var lastLines = info.get(g.ids[g.ids.length - 1]).lines;
-      var head = ''; for (var i = 0; i < lastLines.length; i++) if (lastLines[i].length >= 15 && !SECRET.test(lastLines[i])) { head = lastLines[i].slice(0, 90); break; }
+      var head = ''; for (var i = 0; i < lastLines.length; i++) { var h = lead(lastLines[i]); if (h.length >= 15 && !SECRET.test(h)) { head = h.slice(0, 90); break; } }
       var next = [];
       for (var k2 = g.ids.length - 1; k2 >= 0 && k2 >= g.ids.length - 3 && next.length < 2; k2--) {
         var ls2 = info.get(g.ids[k2]).lines;
         for (var j = ls2.length - 1; j >= 0 && next.length < 2; j--) {
           var s = ls2[j];
+          if (/^(次どうする|次はどうする|どれに進める)[？?]?$/.test(s) && ls2[j + 1]) {   // 「次どうする？」の後ろの選択肢を拾う
+            var opt = ls2.slice(j + 1, j + 3).map(function (t) { return t.replace(/^[•・\-*]\s*/, ''); }).join(' / ').slice(0, 90);
+            if (!SECRET.test(opt)) { next.push('選択肢: ' + opt); continue; }
+          }
           if (s.length >= 14 && s.length <= 120 && !/^["'`(]|[,;{、]$/.test(s) && NEXT.test(s) && !SECRET.test(s) && next.indexOf(s.slice(0, 90)) < 0) next.push(s.slice(0, 90));
         }
       }
