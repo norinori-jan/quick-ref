@@ -404,6 +404,7 @@ header {
   transform: translateX(-50%) translateY(0);
 }
 </style>
+  <script src="flow-render.js"></script>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
@@ -575,6 +576,7 @@ header {
     <label class="field-label" style="margin-top:18px;">構造化項目</label>
     <div id="fieldRows"></div>
     <button type="button" id="addFieldBtn" class="add-field-btn">＋ 項目を追加</button>
+    <button type="button" id="addFlowBtn" class="add-field-btn">🔀 フローを追加</button>
 
     <!-- 画像添付 -->
     <label class="field-label" style="margin-top:18px;">画像</label>
@@ -1587,13 +1589,28 @@ function commitTagInput() {
 /* ─────────────────────────────
    構造化項目
 ───────────────────────────── */
+const FLOW_KEY = 'フロー';
+function isFlowField(f) { return String(f && f.key || '').trim() === FLOW_KEY; }
+function updateFlowPreview(row, text) {
+  const pv = row.querySelector('.flow-preview');
+  if (!pv) return;
+  try {
+    const r = window.FlowRender ? window.FlowRender.render(text) : null;
+    pv.innerHTML = (r && r.svg) ? r.svg : '<span style="color:#8E8E93;font-size:12px;">図がここに表示されます</span>';
+  } catch (err) {
+    pv.textContent = '図を作れませんでした';
+  }
+}
+
 function renderFieldRows() {
   const el = document.getElementById('fieldRows');
   el.innerHTML = draftFields
     .map((f, i) => `
-      <div class="field-row" data-i="${i}">
+      <div class="field-row" data-i="${i}"${isFlowField(f) ? ' style="flex-wrap:wrap"' : ''}>
         <input type="text" class="field-key" placeholder="項目名" value="${escapeHtml(f.key)}">
-        <input type="text" class="field-value" placeholder="値" value="${escapeHtml(f.value)}">
+        ${isFlowField(f)
+          ? `<textarea class="field-value" rows="5" style="width:100%;flex:1 1 100%;font-family:monospace;" placeholder="(開始) -> 入力 -> {OK?}&#10;{OK?} -> 保存 : はい&#10;{OK?} -> 入力 : いいえ&#10;保存 -> (終了)">${escapeHtml(f.value)}</textarea><div class="flow-preview" style="width:100%;overflow-x:auto;padding:8px 0;"></div>`
+          : `<input type="text" class="field-value" placeholder="値" value="${escapeHtml(f.value)}">`}
         <button class="field-del">✕</button>
       </div>
     `)
@@ -1604,9 +1621,14 @@ function renderFieldRows() {
     row.querySelector('.field-key').addEventListener('input', e => {
       draftFields[i].key = e.target.value;
     });
+    row.querySelector('.field-key').addEventListener('change', () => {
+      renderFieldRows();   // 項目名が「フロー」かどうかで入力欄の種類が変わる
+    });
     row.querySelector('.field-value').addEventListener('input', e => {
       draftFields[i].value = e.target.value;
+      if (isFlowField(draftFields[i])) updateFlowPreview(row, e.target.value);
     });
+    if (isFlowField(draftFields[i])) updateFlowPreview(row, draftFields[i].value);
     row.querySelector('.field-del').addEventListener('click', () => {
       draftFields.splice(i, 1);
       renderFieldRows();
@@ -3283,6 +3305,11 @@ function wireEvents() {
   /* Fields */
   document.getElementById('addFieldBtn').addEventListener('click', () => {
     draftFields.push({ key: '', value: '' });
+    renderFieldRows();
+  });
+
+  document.getElementById('addFlowBtn').addEventListener('click', () => {
+    draftFields.push({ key: FLOW_KEY, value: '(開始) -> 処理 -> (終了)' });
     renderFieldRows();
   });
 
