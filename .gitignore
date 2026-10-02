@@ -1,0 +1,7 @@
+
+# personal data and scratch files
+exports/
+quick-ref_*.json
+_chk*.js
+_check.js
+__pycache__/
