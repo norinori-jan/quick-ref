@@ -81,7 +81,76 @@
     }).sort(function (x, y) { return y.size - x.size || x.from - y.from; });
   }
 
-  var api = { cluster: cluster, params: P };
+  // ---- まとまりの「意味」を出す（AI不使用・外部送信なし）----
+  var STOP = /^(こと|もの|ため|よう|これ|それ|場合|以下|以上|今回|確認|必要|対応|追加|使用|利用|実装|修正|問題|状態|部分|内容|結果|方法|理由|前提|現在|自分|ユーザー|可能|目的|処理|機能|設定|表示|変更|保存|既存|新規|作成|実行|全体|一つ|最後|最初|同じ|全部|重要|最小|最大|通常|基本|実際|本当|以外|場所|場面|情報|データ|ファイル|コード|アプリ|メモ|画面|操作|入力|出力|項目|一覧|次回|今後|現状|結論|理解|説明|質問|回答|意味|仕組み|方向|考え|ポイント|ここまで|ところ|ほう|わけ|はず)$/;
+  var CODE = /^(span|style|font|color|size|line|height|margin|padding|width|solid|class|none|true|false|null|this|that|with|from|have|will|your|file|text|const|function|return|string|data|items|item|index|html|json|console|error|value|name|type|button|input|div|http|https|docs)$/;
+  var NEXT = /(次に|次の一手|次のステップ|確認したい|確認すべき|やるべき|未解決|課題|TODO|決めるべき)/;
+  var SECRET = /[0-9a-f]{20,}|bearer|token|secret|api[-_]?key|password/i;
+
+  function lines(body) {
+    var t = String(body || '').replace(/<(br|\/p|\/div|\/li|\/tr)[^>]*>/gi, '\n')
+      .replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, '').replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+    return t.split('\n').map(function (s) { return s.trim(); }).filter(function (s) {
+      if (!s) return false;
+      var sym = 0; for (var i = 0; i < s.length; i++) if ('{}();=<>[]$\\/;:"\'`|&*#'.indexOf(s[i]) >= 0) sym++;
+      if (sym / s.length > 0.18) return false;
+      var ascii = 0; for (var q = 0; q < s.length; q++) if (s.charCodeAt(q) < 128) ascii++;
+      if (s.length >= 8 && ascii / s.length >= 0.9) return false;   // 英数字だけの行（コード・コマンド・CSS）は読まない
+      return !/^(PS [A-Z]:|const |let |var |function |import |export |if \(|for \(|return |<|\.|#|@|\}|\{)/.test(s);
+    });
+  }
+  function termSet(text) {
+    var set = new Set();
+    (text.match(/[ァ-ヶー]{3,}|[一-龥]{2,}|[A-Za-z][A-Za-z0-9_\-\.]{3,}/g) || []).forEach(function (w) {
+      if (/^[A-Za-z]/.test(w)) { w = w.toLowerCase(); if (CODE.test(w) || /^[0-9a-f]{8,}$/.test(w)) return; }
+      else if (STOP.test(w)) return;
+      set.add(w);
+    });
+    return set;
+  }
+
+  // groups: cluster() の結果のうち2件以上のもの。戻り値は groups と同じ並びの説明
+  function describeAll(groups, items) {
+    var by = new Map(), info = new Map(), df = new Map();
+    (items || []).forEach(function (x) { if (x && !x.sensitive) by.set(x.id, x); });
+    by.forEach(function (x, id) {
+      var ls = lines(x.body), ts = termSet((x.title || '') + '\n' + ls.join('\n').slice(0, 8000));
+      info.set(id, { lines: ls, terms: ts });
+      ts.forEach(function (w) { df.set(w, (df.get(w) || 0) + 1); });
+    });
+    var N = by.size;
+    return groups.map(function (g) {
+      var gdf = new Map(), sc = [], minDf = Math.min(2, g.ids.length);
+      g.ids.forEach(function (id) { var o = info.get(id); if (o) o.terms.forEach(function (w) { gdf.set(w, (gdf.get(w) || 0) + 1); }); });
+      gdf.forEach(function (c, w) { if (c >= minDf) sc.push([c * Math.log(1 + N / df.get(w)) * Math.sqrt(c / df.get(w)), w]); });
+      sc.sort(function (a, b) { return b[0] - a[0]; });
+      // 連番の版（同じ題名の幹が3件以上）は1つにたたむ
+      var stems = new Map(), entries = [], runs = {};
+      g.ids.forEach(function (id) { var k = stem(by.get(id).title); if (k.length >= 3) stems.set(k, (stems.get(k) || 0) + 1); });
+      g.ids.forEach(function (id) {
+        var x = by.get(id), k = stem(x.title);
+        if (k.length >= 3 && stems.get(k) >= 3) {
+          if (!runs[k]) { runs[k] = { type: 'run', label: (x.title || '').replace(/[0-9０-９\s]+$/, '') || x.title, ids: [] }; entries.push(runs[k]); }
+          runs[k].ids.push(id);
+        } else entries.push({ type: 'item', id: id });
+      });
+      // 現在地: 最後のメモの冒頭と、直近のメモにある「次に〜」「確認したい〜」などの行
+      var lastLines = info.get(g.ids[g.ids.length - 1]).lines;
+      var head = ''; for (var i = 0; i < lastLines.length; i++) if (lastLines[i].length >= 15 && !SECRET.test(lastLines[i])) { head = lastLines[i].slice(0, 90); break; }
+      var next = [];
+      for (var k2 = g.ids.length - 1; k2 >= 0 && k2 >= g.ids.length - 3 && next.length < 2; k2--) {
+        var ls2 = info.get(g.ids[k2]).lines;
+        for (var j = ls2.length - 1; j >= 0 && next.length < 2; j--) {
+          var s = ls2[j];
+          if (s.length >= 14 && s.length <= 120 && !/^["'`(]|[,;{、]$/.test(s) && NEXT.test(s) && !SECRET.test(s) && next.indexOf(s.slice(0, 90)) < 0) next.push(s.slice(0, 90));
+        }
+      }
+      return { keywords: sc.slice(0, 4).map(function (a) { return a[1]; }), entries: entries, head: head, next: next };
+    });
+  }
+
+  var api = { cluster: cluster, describeAll: describeAll, params: P };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);
