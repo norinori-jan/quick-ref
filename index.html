@@ -1609,7 +1609,7 @@ function renderFieldRows() {
       <div class="field-row" data-i="${i}"${isFlowField(f) ? ' style="flex-wrap:wrap"' : ''}>
         <input type="text" class="field-key" placeholder="項目名" value="${escapeHtml(f.key)}">
         ${isFlowField(f)
-          ? `<textarea class="field-value" rows="5" style="width:100%;flex:1 1 100%;font-family:monospace;" placeholder="(開始) -> 入力 -> {OK?}&#10;{OK?} -> 保存 : はい&#10;{OK?} -> 入力 : いいえ&#10;保存 -> (終了)">${escapeHtml(f.value)}</textarea><div class="flow-preview" style="width:100%;overflow-x:auto;padding:8px 0;"></div>`
+          ? `<textarea class="field-value" rows="5" style="width:100%;flex:1 1 100%;font-family:monospace;" placeholder="1行に1ステップ、上から順に書くだけ&#10;（分岐やループは「A -> B」と矢印で書く）">${escapeHtml(f.value)}</textarea><div class="flow-preview" style="width:100%;overflow-x:auto;padding:8px 0;"></div>`
           : `<input type="text" class="field-value" placeholder="値" value="${escapeHtml(f.value)}">`}
         <button class="field-del">✕</button>
       </div>
@@ -3309,7 +3309,7 @@ function wireEvents() {
   });
 
   document.getElementById('addFlowBtn').addEventListener('click', () => {
-    draftFields.push({ key: FLOW_KEY, value: '(開始) -> 処理 -> (終了)' });
+    draftFields.push({ key: FLOW_KEY, value: '朝起きる\n準備する\n出発する' });
     renderFieldRows();
   });
 

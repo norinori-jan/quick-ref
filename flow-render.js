@@ -34,7 +34,22 @@
       else if (n.shape !== 'box' && nodes[n.id].shape === 'box') nodes[n.id].shape = n.shape;
       return n.id;
     }
-    String(src || '').split(/\r?\n/).forEach(function (line) {
+    var lines = String(src || '').split(/\r?\n/);
+    // かんたん書き: 矢印が1つも無ければ「1行=1ステップ」として上から順に繋ぐ
+    var hasArrow = lines.some(function (l) { return /->|→/.test(l) && l.trim().charAt(0) !== '#'; });
+    if (!hasArrow) {
+      var seen = {}, steps = [];
+      lines.forEach(function (l) {
+        l = l.trim().replace(/^(?:[-*・●○]|\d+[.．)）])\s*/, '').replace(/\s*[:：]\s*/g, '\u2236');
+        if (!l || l.charAt(0) === '#') return;
+        // 同じ文言が複数回出ても、別のステップとして扱う（ゼロ幅スペースで区別）
+        seen[l] = (seen[l] || 0) + 1;
+        for (var k = 1; k < seen[l]; k++) l += '\u200b';
+        steps.push(l);
+      });
+      lines = steps.length > 1 ? steps.slice(1).map(function (s, i) { return steps[i] + ' -> ' + s; }) : steps;
+    }
+    lines.forEach(function (line) {
       line = line.trim();
       if (!line || line.charAt(0) === '#') return;
       var label = '', mm = line.match(/^(.*)(?:\s+:\s+|\s*：\s*)(.+)$/);
