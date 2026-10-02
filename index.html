@@ -674,10 +674,11 @@ header {
     <button class="ai-action-btn" data-action="organize">整理</button>
     <button class="ai-action-btn" data-action="expand">補足</button>
     <button class="ai-action-btn" data-action="question">質問生成</button>
+    <button class="ai-action-btn" data-action="flow">🔀 流れにする</button>
   </div>
   <div style="display:flex;gap:8px;"><input id="aiCustomPrompt" style="flex:1" placeholder="カスタム指示を入力"><button id="aiCustomSend">送信</button></div>
   <div id="aiResult" style="display:none;margin-top:10px;"></div>
-  <div id="aiResultActions" style="display:none;gap:8px;margin-top:8px;"><button id="aiInsertBtn">メモに挿入</button><button id="aiReplaceBtn">置換</button></div>
+  <div id="aiResultActions" style="display:none;gap:8px;margin-top:8px;"><button id="aiFlowBtn" style="display:none">🔀 フローとして追加</button><button id="aiInsertBtn">メモに挿入</button><button id="aiReplaceBtn">置換</button></div>
   <div id="aiLoading" style="display:none;text-align:center;padding:12px;">生成中…</div>
 </div>
 
@@ -2717,6 +2718,18 @@ async function pullCloudSync(showResult = false) {
 }
 
 const AI_PROMPTS = {
+  flow: (t) => `次のメモの「流れ」を、フローチャート用のテキストに変換してください。
+
+出力ルール:
+- フローチャート用のテキストだけを出力する（前置き・説明・コードブロックは不要）
+- 1行に1つの接続。「->」で繋ぐ。例: 起きる -> 準備する -> {天気は?}
+- 判断（分岐）は {質問?} と書き、分岐先は「{質問?} -> 次の手順 : 答え」のように行末に「 : ラベル」を付ける
+- やり直しやループは、前の手順へ戻る接続で表す
+- 各ステップは短く（15字以内が目安）。メモに書かれていない手順は足さない
+- 最初と最後は (開始) (終了) と書く
+
+メモ:
+${t}`,
   summarize: t => `以下のメモを3行で要約してください。\n\n${t}`,
   organize: t => `以下のメモを見出しと箇条書きで整理してください。\n\n${t}`,
   expand:   t => `以下のメモを補足して理解を深める内容にしてください。\n\n${t}`,
@@ -3161,7 +3174,12 @@ function closeMemoPopup() {
 /* ─────────────────────────────
    AI実行
 ───────────────────────────── */
+let lastAiAction = '';
 async function runAIAction(action, customPrompt) {
+  if (action === 'flow' && document.getElementById('sensitiveToggle')?.checked) {
+    showToast('保護メモの内容はAIに送れません');
+    return;
+  }
   const editorText = getEditorText();
   if (!editorText.trim() && !customPrompt) {
     showToast('メモにテキストを入力してください');
@@ -3182,6 +3200,9 @@ async function runAIAction(action, customPrompt) {
   try {
     const result = await callAI(prompt);
     lastAiResult = result;
+    lastAiAction = action;
+    const flowBtn = document.getElementById('aiFlowBtn');
+    if (flowBtn) flowBtn.style.display = (action === 'flow') ? '' : 'none';
 
     const el = document.getElementById('aiResult');
     el.textContent = result;
@@ -3202,6 +3223,22 @@ async function runAIAction(action, customPrompt) {
 /* ─────────────────────────────
    AI結果挿入
 ───────────────────────────── */
+function cleanFlowText(s) {
+  const lines = String(s || '').replace(/```[a-z]*/gi, '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const withArrow = lines.filter(l => /->|→/.test(l));
+  return (withArrow.length ? withArrow : lines).join('\n');
+}
+
+function addAIFlowToFields() {
+  const text = cleanFlowText(lastAiResult);
+  if (!text) { showToast('流れを作れませんでした'); return; }
+  draftFields.push({ key: FLOW_KEY, value: text });
+  renderFieldRows();
+  closeAIPanel();
+  closeMemoPopup();
+  showToast('フローを追加しました');
+}
+
 function insertAIResult(replace = false) {
   const editor = document.getElementById('memoPopupEditor');
   editor.focus();
@@ -3705,6 +3742,7 @@ function wireEvents() {
   /* AIパネル */
   document.getElementById('memoAiBtn').addEventListener('click', openAIPanel);
   document.getElementById('aiPanelClose').addEventListener('click', closeAIPanel);
+  document.getElementById('aiFlowBtn').addEventListener('click', addAIFlowToFields);
 
   document.querySelectorAll('.ai-action-btn').forEach(btn =>
     btn.addEventListener('click', () => runAIAction(btn.dataset.action))
