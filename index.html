@@ -405,6 +405,7 @@ header {
 }
 </style>
   <script src="flow-render.js"></script>
+  <script src="cluster-items.js"></script>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
@@ -731,6 +732,10 @@ header {
 </div>
 
 <!-- メニュー -->
+<div id="clusterView" style="display:none;position:fixed;inset:0;z-index:80;background:var(--card-bg,#fff);color:inherit;overflow-y:auto;padding:max(12px,env(safe-area-inset-top)) 16px 28px;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" id="clusterClose">‹ 戻る</button><strong style="flex:1;text-align:center;">まとまり</strong><span style="width:56px;"></span></div>
+  <div id="clusterBody"></div>
+</div>
 <div class="overlay" id="menuOverlay"></div>
 <div class="action-sheet" id="menuSheet">
   <div class="action-sheet-handle"></div>
@@ -741,6 +746,14 @@ header {
     <span class="action-btn-inner">
       <span class="action-label">iCloud Driveに保存</span>
       <span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バックアップ</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="clusterMenuBtn">
+    <span class="action-icon">🧩</span>
+    <span class="action-btn-inner">
+      <span class="action-label">まとまり</span>
+      <span class="action-desc">メモの集まりと流れを自動で見つける</span>
     </span>
   </button>
 
@@ -1297,6 +1310,25 @@ let voiceFullText = '';
 
 function haptic() {
   if (navigator.vibrate) navigator.vibrate(8);
+}
+
+/* ── まとまり（メモの集まりを自動で見つける） ── */
+function closeClusters() { document.getElementById('clusterView').style.display = 'none'; }
+function openClusterItem(id) { closeClusters(); openEdit(id); }
+function openClusters() {
+  closeMenu();
+  const view = document.getElementById('clusterView'), body = document.getElementById('clusterBody');
+  const items = allItems.filter(i => !i.sensitive);   // 保護メモは読まない
+  const prot = allItems.length - items.length;
+  const gs = window.ClusterItems ? window.ClusterItems.cluster(items) : [];
+  const byId = new Map(items.map(i => [i.id, i]));
+  const d = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
+  const row = id => { const i = byId.get(id); return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${d(i.createdAt)} ${escapeHtml(i.title || '(無題)')}</button>`; };
+  const multi = gs.filter(g => g.size > 1), single = gs.filter(g => g.size === 1);
+  body.innerHTML = `<p style="color:#8e8e93;font-size:12px">${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外です。` : '') + '</p>' +
+    multi.map((g, k) => `<details${k < 3 ? ' open' : ''} style="margin:8px 0"><summary><b>${escapeHtml(g.title || '(無題)')}</b>　${g.size}件・${d(g.from)}${g.from === g.to ? '' : '〜' + d(g.to)} ${g.tags.map(t => '#' + escapeHtml(t)).join(' ')}</summary>${g.ids.map(row).join('')}</details>`).join('') +
+    (single.length ? `<details style="margin:8px 0"><summary>単独のメモ（${single.length}件）</summary>${single.map(g => row(g.ids[0])).join('')}</details>` : '');
+  view.style.display = 'block'; view.scrollTop = 0;
 }
 
 async function reload() {
@@ -3781,6 +3813,11 @@ function wireEvents() {
 
   /* メニュー */
   document.getElementById('menuBtn').addEventListener('click', openMenu);
+  document.getElementById('clusterMenuBtn').addEventListener('click', openClusters);
+  document.getElementById('clusterClose').addEventListener('click', closeClusters);
+  document.getElementById('clusterBody').addEventListener('click', e => {
+    const b = e.target.closest('[data-cid]'); if (b) openClusterItem(b.dataset.cid);
+  });
   document.getElementById('menuOverlay').addEventListener('click', closeMenu);
 
   document.getElementById('exportBtn').addEventListener('click', async () => {

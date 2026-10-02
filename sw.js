@@ -6,12 +6,13 @@
    - Share Target / Shortcut連携補助
 ───────────────────────────── */
 
-const CACHE_VERSION = 'qr-cache-v7';
+const CACHE_VERSION = 'qr-cache-v8';
 const BASE_URL = self.registration.scope;
 const APP_SHELL = [
   'index.html',
   'sw.js',
   'flow-render.js',
+  'cluster-items.js',
   'manifest.json',
   'shared/senders/flow-mind.js',
   'shared/senders/flowchart-lab.js',
