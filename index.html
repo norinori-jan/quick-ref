@@ -3176,7 +3176,7 @@ function closeMemoPopup() {
 ───────────────────────────── */
 let lastAiAction = '';
 async function runAIAction(action, customPrompt) {
-  if (action === 'flow' && document.getElementById('sensitiveToggle')?.checked) {
+  if (document.getElementById('sensitiveToggle')?.checked) {
     showToast('保護メモの内容はAIに送れません');
     return;
   }
