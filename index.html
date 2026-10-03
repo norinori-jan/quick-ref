@@ -2889,6 +2889,7 @@ async function callAI(userPrompt) {
   if (!proxyUrl && apiKey) {
     headers['x-api-key'] = apiKey;
     headers['anthropic-version'] = '2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true';   // ブラウザから直接呼ぶのに必要（利用者自身のキーを使う前提）
   }
 
   const res = await fetch(ep, {
