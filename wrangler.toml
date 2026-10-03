@@ -9,9 +9,7 @@ kv_namespaces = [
 
 # 環境変数（Cloudflare Dashboard の Variables に設定）
 [vars]
-AUTH_TOKEN = "quick-ref-secret-2026-nori-xyz"
-VAPID_PUBLIC_KEY = "BIYDS1WrYB4coViec9AnOG2NswgsAaGzPeq6whmRKdzt_VUOHRoWN2Pc5CTQOVMcBQGFXtP4k4n1KbbMrOADtUk"
-VAPID_PRIVATE_KEY = "otz-Br2S81bahqhr7uOzt4C96Do4T5sQXqvwrTSgeaM"
+VAPID_PUBLIC_KEY = "BFWV7e43wQrVaVUVJppNDYSfFPDFkfKZS2gFqCJrGNSsrGd46nMBxgUo2xmM3Ou6hW8lxMW3JKdGv7itRuteoG4"
 VAPID_SUBJECT = "mailto:arielfortuneoffice@gmail.com"
 CORS_ORIGIN = "*"
 
