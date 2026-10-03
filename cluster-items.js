@@ -167,7 +167,36 @@
     });
   }
 
-  var api = { cluster: cluster, describeAll: describeAll, params: P };
+  // ---- AI要約用のプロンプトを作る（外部送信の直前に使う）----
+  // 送るのは、保護メモを除き、コード行・秘密らしい行（トークン・長い英数字列など）を除いた本文だけ
+  function safeLines(body) {
+    return lines(body).filter(function (s) { return !SECRET.test(s) && !/[A-Za-z0-9_\-]{32,}/.test(s); });
+  }
+  var PROMPT_HEAD = '以下は、同じテーマで書かれた一連のメモです（古い順）。本人の言葉とAIの返答が混ざっています。\n' +
+    '次の3項目だけを、日本語で各1〜2文、合計3行で書いてください。前置き・記号・箇条書きは不要です。\n' +
+    '何について: （このメモ群の主題）\n結論・現在地: （どこまで決まった／分かったか）\n未解決・次の一手: （残っていること）\n' +
+    '本文に書かれていないことは足さないでください。分からない項目は「不明」と書いてください。\n';
+  function summaryPrompt(items, opts) {
+    var o = Object.assign({ total: 12000, per: 1500 }, opts || {});
+    var xs = (items || []).filter(function (x) { return x && !x.sensitive; }).sort(function (a, b) { return a.createdAt - b.createdAt; });
+    var cnt = {}, seen = {}, pick = [], omitted = 0;
+    xs.forEach(function (x) { var k = stem(x.title); if (k.length >= 3) cnt[k] = (cnt[k] || 0) + 1; });
+    xs.forEach(function (x) {   // 連番の版（同じ題名の幹が3件以上）は最初と最後だけ送る
+      var k = stem(x.title);
+      if (k.length >= 3 && cnt[k] >= 3) { seen[k] = (seen[k] || 0) + 1; if (seen[k] !== 1 && seen[k] !== cnt[k]) { omitted++; return; } }
+      pick.push(x);
+    });
+    var per = Math.max(300, Math.min(o.per, Math.floor(o.total / Math.max(1, pick.length))));
+    var parts = pick.map(function (x, i) {
+      var t = safeLines(x.body).join('\n');
+      if (t.length > per) t = t.slice(0, Math.floor(per * 0.6)) + '\n…\n' + t.slice(-Math.floor(per * 0.4));
+      var d = new Date(x.createdAt);
+      return '【' + (i + 1) + '】' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (x.title || '(無題)') + '\n' + t;
+    });
+    return PROMPT_HEAD + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n');
+  }
+
+  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, params: P };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);

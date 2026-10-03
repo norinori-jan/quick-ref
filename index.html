@@ -1315,7 +1315,64 @@ function haptic() {
 /* ── まとまり（メモの集まりを自動で見つける） ── */
 function closeClusters() { document.getElementById('clusterView').style.display = 'none'; }
 function openClusterItem(id) { closeClusters(); openEdit(id); }
+/* ── まとまりのAI要約（押したときだけ送信。AI作成の枠に出し、採用・修正・却下は利用者が選ぶ） ── */
+const clusterGroups = new Map();
+function clusterRow(id) {
+  const i = allItems.find(x => x.id === id); if (!i) return '';
+  const d = new Date(i.createdAt);
+  return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${d.getMonth() + 1}/${d.getDate()} ${escapeHtml(i.title || '(無題)')}</button>`;
+}
+function clusterSumKey(g) {
+  const ts = g.ids.map(id => allItems.find(i => i.id === id)).filter(Boolean).map(i => i.updatedAt || i.createdAt || 0);
+  return 'qr_clsum:' + g.ids[0] + ':' + g.size + ':' + Math.max(0, ...ts);
+}
+function sumGet(g) { try { return JSON.parse(localStorage.getItem(clusterSumKey(g)) || 'null'); } catch (_) { return null; } }
+function sumSet(g, v) {
+  try {
+    const k = clusterSumKey(g), p = 'qr_clsum:' + g.ids[0] + ':';
+    Object.keys(localStorage).filter(x => x.startsWith(p) && x !== k).forEach(x => localStorage.removeItem(x));
+    if (v) localStorage.setItem(k, JSON.stringify(v)); else localStorage.removeItem(k);
+  } catch (_) {}
+}
+function sumInner(g, msg) {
+  const st = sumGet(g), id = escapeHtml(g.ids[0]);
+  if (msg) return `<div style="font-size:13px;color:#8e8e93;margin-top:6px">${escapeHtml(msg)}</div>`;
+  if (!st) return '';
+  const label = st.status === 'adopted' ? 'AI作成・採用済み' + (st.edited ? '（修正あり）' : '') : 'AI作成・未採用（修正して採用／却下を選んでください）';
+  return `<div style="font-size:11px;color:#8e8e93;margin:6px 0 2px">✦ ${label}</div>` +
+    `<textarea data-sumtext="${id}" rows="5" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea>` +
+    `<div><button type="button" data-sumok="${id}">採用</button> <button type="button" data-sumng="${id}">却下</button></div>` +
+    `<details><summary style="font-size:12px;color:#8e8e93">根拠（共通する語・送ったメモ）</summary><div style="font-size:12px;margin:4px 0">共通する語：${(st.kw || []).map(escapeHtml).join(' · ') || '（なし）'}</div>${(st.ids || []).map(clusterRow).join('')}</details>`;
+}
+function clusterSumBox(g, kw) {
+  clusterGroups.set(g.ids[0], { g, kw: kw || [] });
+  const id = escapeHtml(g.ids[0]);
+  return `<div style="border:1px dashed #8e8e93;border-radius:8px;padding:8px;margin:6px 0"><button type="button" data-sum="${id}">✦ AI要約を作る</button> <span style="font-size:11px;color:#8e8e93">押すと、このまとまりの本文をAIに送ります（保護メモ・コード行・秘密らしい行は除く）</span><div id="sum-${id}">${sumInner(g)}</div></div>`;
+}
+async function summarizeCluster(key) {
+  const c = clusterGroups.get(key), box = document.getElementById('sum-' + key);
+  if (!c || !box || !window.ClusterItems || !ClusterItems.summaryPrompt) return;
+  const items = c.g.ids.map(id => allItems.find(i => i.id === id)).filter(i => i && !i.sensitive);   // 保護メモは送らない
+  if (!items.length) return;
+  box.innerHTML = sumInner(c.g, '要約中…');
+  try {
+    const out = String(await callAI(ClusterItems.summaryPrompt(items)) || '').trim();
+    if (!out) throw new Error('AIから返事がありませんでした');
+    sumSet(c.g, { text: out, ids: items.map(i => i.id), kw: c.kw, status: 'draft', edited: false, at: Date.now() });
+    box.innerHTML = sumInner(c.g);
+  } catch (e) { box.innerHTML = sumInner(c.g, '要約できませんでした：' + e.message); }
+}
+function adoptClusterSum(key, ok) {
+  const c = clusterGroups.get(key), box = document.getElementById('sum-' + key), st = c && sumGet(c.g);
+  if (!c || !box || !st) return;
+  if (ok) {
+    const ta = box.querySelector('textarea'), text = ta ? ta.value : st.text;
+    sumSet(c.g, Object.assign({}, st, { text, edited: st.edited || text !== st.text, status: 'adopted', at: Date.now() }));
+  } else sumSet(c.g, null);
+  box.innerHTML = sumInner(c.g);
+}
 function openClusters() {
+  clusterGroups.clear();
   closeMenu();
   const view = document.getElementById('clusterView'), body = document.getElementById('clusterBody');
   const items = allItems.filter(i => !i.sensitive);   // 保護メモは読まない
@@ -1340,6 +1397,7 @@ function openClusters() {
       const s = desc[k] || { keywords: [], entries: g.ids.map(id => ({ type: 'item', id })), head: '', next: [] };
       const title = s.keywords.length ? s.keywords.map(escapeHtml).join(' · ') : escapeHtml(g.title || '(無題)');
       return `<details${k < 3 ? ' open' : ''} style="margin:10px 0"><summary><b>${title}</b>　${g.size}件・${d(g.from)}${g.from === g.to ? '' : '〜' + d(g.to)} ${g.tags.map(t => '#' + escapeHtml(t)).join(' ')}</summary>` +
+        clusterSumBox(g, s.keywords) +
         (s.head ? note('最後のメモ：' + escapeHtml(s.head)) : '') +
         (s.next.length ? note('次の一手・未解決：<br>' + s.next.map(escapeHtml).join('<br>')) : '') +
         s.entries.map(entry).join('') + '</details>';
@@ -3833,6 +3891,9 @@ function wireEvents() {
   document.getElementById('clusterMenuBtn').addEventListener('click', openClusters);
   document.getElementById('clusterClose').addEventListener('click', closeClusters);
   document.getElementById('clusterBody').addEventListener('click', e => {
+    const s = e.target.closest('[data-sum]'); if (s) { summarizeCluster(s.dataset.sum); return; }
+    const ok = e.target.closest('[data-sumok]'); if (ok) { adoptClusterSum(ok.dataset.sumok, true); return; }
+    const ng = e.target.closest('[data-sumng]'); if (ng) { adoptClusterSum(ng.dataset.sumng, false); return; }
     const b = e.target.closest('[data-cid]'); if (b) openClusterItem(b.dataset.cid);
   });
   document.getElementById('menuOverlay').addEventListener('click', closeMenu);
