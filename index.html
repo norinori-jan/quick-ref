@@ -757,6 +757,14 @@ header {
     </span>
   </button>
 
+  <button type="button" class="action-btn" id="pushMenuBtn">
+    <span class="action-icon">🔔</span>
+    <span class="action-btn-inner">
+      <span class="action-label">通知設定</span>
+      <span class="action-desc">デイリーレビューの通知サーバーと購読を設定します</span>
+    </span>
+  </button>
+
   <button type="button" class="action-btn" id="exportBtn">
     <span class="action-icon">📤</span>
     <span class="action-btn-inner">
@@ -2628,6 +2636,11 @@ function setupAiRelatedBtn(item) {
   if (!btn) return;
 
   btn.onclick = async () => {
+    // 保護メモの題名・タグはAIに送らない（編集中のトグルも見る）
+    if (item.sensitive || document.getElementById('sensitiveToggle')?.checked) {
+      showToast('保護メモの内容はAIに送れません');
+      return;
+    }
     const geminiKey = localStorage.getItem('ml_gemini');
     const claudeKey = localStorage.getItem('ml_claude');
     const proxyUrl = localStorage.getItem('kansei_proxy_url');
@@ -2656,40 +2669,9 @@ ${candidates}
 IDプレフィックス(8文字)を最大5つ、JSON配列のみ返してください:
 ["xxxxxxxx"]`;
 
-      let raw = '';
-
-      if (geminiKey) {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }]
-            })
-          }
-        );
-        const d = await res.json();
-        raw = d.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-      } else {
-        const ep = proxyUrl || 'https://api.anthropic.com/v1/messages';
-        const headers = { 'Content-Type': 'application/json' };
-        if (!proxyUrl && claudeKey) {
-          headers['x-api-key'] = claudeKey;
-          headers['anthropic-version'] = '2023-06-01';
-        }
-        const res = await fetch(ep, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5',
-            max_tokens: 256,
-            messages: [{ role: 'user', content: prompt }]
-          })
-        });
-        const d = await res.json();
-        raw = d.content?.[0]?.text || '[]';
-      }
+      // 送信は callAI に一本化（キー・エンドポイント・CORSヘッダーの重複をなくす）
+      const model = geminiKey ? 'gemini' : (claudeKey || proxyUrl) ? 'claude' : 'openai';
+      const raw = (await callAI(prompt, { model, maxTokens: 256 })) || '[]';
 
       const ids = JSON.parse(raw.replace(/```json|```/g, '').trim());
       let added = 0;
@@ -2871,19 +2853,22 @@ ${t}`,
 /* ─────────────────────────────
    AI呼び出し
 ───────────────────────────── */
-async function callAI(userPrompt) {
+async function callAI(userPrompt, opts = {}) {
   const proxyUrl = localStorage.getItem(LS.PROXY) || '';
-  const m = MODELS[activeModel];
-  const apiKey = localStorage.getItem(LS[activeModel.toUpperCase()]) || '';
+  const model = opts.model || activeModel;
+  const m = MODELS[model];
+  const apiKey = localStorage.getItem(LS[model.toUpperCase()]) || '';
+  const maxTokens = opts.maxTokens || 1000;
 
   if (!apiKey && !proxyUrl) {
     throw new Error(`${m.label}のAPIキーが未設定です`);
   }
 
-  if (activeModel === 'gemini') {
-    const res = await fetch(`${m.endpoint}?key=${apiKey}`, {
+  if (model === 'gemini') {
+    // キーはURLに入れず、ヘッダーで渡す（履歴・ログに残さない）
+    const res = await fetch(m.endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         contents: [{ parts: [{ text: userPrompt }] }]
       })
@@ -2892,7 +2877,7 @@ async function callAI(userPrompt) {
     return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 
-  if (activeModel === 'openai') {
+  if (model === 'openai') {
     const res = await fetch(m.endpoint, {
       method: 'POST',
       headers: {
@@ -2901,7 +2886,7 @@ async function callAI(userPrompt) {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        max_tokens: 1000,
+        max_tokens: maxTokens,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
@@ -2922,7 +2907,7 @@ async function callAI(userPrompt) {
     headers,
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
+      max_tokens: maxTokens,
       messages: [{ role: 'user', content: userPrompt }]
     })
   });
@@ -3915,6 +3900,7 @@ function wireEvents() {
   /* メニュー */
   document.getElementById('menuBtn').addEventListener('click', openMenu);
   document.getElementById('clusterMenuBtn').addEventListener('click', openClusters);
+  document.getElementById('pushMenuBtn').addEventListener('click', () => { location.href = './settings.html'; });
   document.getElementById('clusterClose').addEventListener('click', clusterBack);
   document.getElementById('clusterBody').addEventListener('click', e => {
     const q = sel => e.target.closest(sel); let t;
