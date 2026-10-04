@@ -1322,7 +1322,10 @@ function haptic() {
 
 /* ── まとまり（メモの集まりを自動で見つける） ── */
 function closeClusters() { document.getElementById('clusterView').style.display = 'none'; }
-function openClusterItem(id) { closeClusters(); openEdit(id); }
+function openClusterItem(id) {
+  if (clusterDirty(clusterOpenKey) && !confirm('修正中の要約があります。保存せずにメモを開きますか？')) return;
+  closeClusters(); openEdit(id);
+}
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
 let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0;
@@ -1446,14 +1449,21 @@ function renderClusterDetail(key) {
     (s.next.length ? note('次の一手・未解決：<br>' + s.next.map(escapeHtml).join('<br>')) : '') +
     s.entries.map(clusterEntry).join('');
 }
-function renderCluster(keepY) {
+// 編集中の要約（textarea）を再描画で失わない
+function clusterTextarea(key) { return [...document.querySelectorAll('#clusterBody textarea[data-sumtext]')].find(t => t.dataset.sumtext === key) || null; }
+function clusterDirty(key) { const ta = key && key !== '__single' ? clusterTextarea(key) : null; return !!ta && ta.value !== ta.defaultValue; }
+function renderCluster(keepY, discard) {
   const view = document.getElementById('clusterView'), body = document.getElementById('clusterBody'), y = view.scrollTop;
+  let draft = null;
+  if (!discard && clusterOpenKey && clusterDirty(clusterOpenKey)) draft = clusterTextarea(clusterOpenKey).value;
   body.innerHTML = clusterOpenKey ? renderClusterDetail(clusterOpenKey) : renderClusterList();
+  if (draft !== null) { const ta = clusterTextarea(clusterOpenKey); if (ta) ta.value = draft; }
   view.scrollTop = keepY ? y : 0;
 }
 function openClusterDetail(key) { clusterListY = document.getElementById('clusterView').scrollTop; clusterOpenKey = key; renderCluster(false); }
 function clusterBack() {
   if (!clusterOpenKey) { closeClusters(); return; }
+  if (clusterDirty(clusterOpenKey) && !confirm('修正中の要約があります。保存せずに戻りますか？（「採用」を押すと保存されます）')) return;
   clusterOpenKey = null; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY;
 }
 async function summarizeCluster(key) {
@@ -1467,7 +1477,7 @@ async function summarizeCluster(key) {
     if (!out) throw new Error('AIから返事がありませんでした');
     sumSet(c.g, { text: out, ids: items.map(i => i.id), kw: c.s.keywords, status: 'draft', edited: false, at: Date.now() });
   } catch (e) { showToast('要約できませんでした：' + e.message); }
-  renderCluster(true);
+  renderCluster(true, true);
 }
 async function summarizeAll() {
   const todo = [...clusterGroups.keys()].filter(k => !sumGet(clusterGroups.get(k).g));
@@ -1478,10 +1488,10 @@ async function summarizeAll() {
 function adoptClusterSum(key, ok) {
   const c = clusterGroups.get(key), st = c && sumGet(c.g); if (!c || !st) return;
   if (ok) {
-    const ta = document.getElementById('clusterBody').querySelector('textarea'), text = ta ? ta.value : st.text;
+    const ta = clusterTextarea(key), text = ta ? ta.value : st.text;
     sumSet(c.g, Object.assign({}, st, { text, edited: st.edited || text !== st.text, status: 'adopted', at: Date.now() }));
   } else sumSet(c.g, null);
-  renderCluster(true);
+  renderCluster(true, true);
 }
 function openClusters() {
   closeMenu(); clusterGroups.clear(); clusterOpenKey = null; sumMatchCache = null; sum2Cache = null;
@@ -3979,7 +3989,10 @@ function wireEvents() {
   document.getElementById('clusterClose').addEventListener('click', clusterBack);
   document.getElementById('clusterBody').addEventListener('click', e => {
     const q = sel => e.target.closest(sel); let t;
-    if ((t = q('[data-sum]'))) { summarizeCluster(t.dataset.sum); return; }
+    if ((t = q('[data-sum]'))) {
+      if (clusterDirty(t.dataset.sum) && !confirm('修正中の要約があります。作り直すと、修正は消えます。続けますか？')) return;
+      summarizeCluster(t.dataset.sum); return;
+    }
     if (q('[data-sumall]')) { summarizeAll(); return; }
     if ((t = q('[data-sumkeep]'))) { sumKeep(t.dataset.sumkeep); return; }
     if ((t = q('[data-sumok]'))) { adoptClusterSum(t.dataset.sumok, true); return; }
