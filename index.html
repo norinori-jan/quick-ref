@@ -1407,7 +1407,7 @@ async function summarizeCluster(key) {
   const box = document.getElementById('sum-' + key);
   if (box) box.innerHTML = '<div style="font-size:13px;color:#8e8e93">要約中…</div>';
   try {
-    const out = String(await callAI(ClusterItems.summaryPrompt(items)) || '').trim();
+    const out = String(await callAI(ClusterItems.summaryPrompt(items), { redact: true }) || '').trim();
     if (!out) throw new Error('AIから返事がありませんでした');
     sumSet(c.g, { text: out, ids: items.map(i => i.id), kw: c.s.keywords, status: 'draft', edited: false, at: Date.now() });
   } catch (e) { showToast('要約できませんでした：' + e.message); }
@@ -2660,11 +2660,11 @@ function setupAiRelatedBtn(item) {
       const candidates = allItems
         .filter(it => it.id !== item.id && !it.sensitive)
         .slice(0, 60)
-        .map(it => `${it.id.slice(0, 8)}: ${it.title} [${(it.tags || []).join(',')}]`)
+        .map(it => `${it.id.slice(0, 8)}: ${ClusterItems.redactTitle(it.title)} [${(it.tags || []).join(',')}]`)
         .join('\n');
 
       const prompt = `以下の「対象項目」と意味的に関連する項目を「候補一覧」から選んでください。
-対象: タイトル: ${item.title} タグ: ${(item.tags || []).join(', ')}
+対象: タイトル: ${ClusterItems.redactTitle(item.title)} タグ: ${(item.tags || []).join(', ')}
 候補:
 ${candidates}
 
@@ -2673,7 +2673,7 @@ IDプレフィックス(8文字)を最大5つ、JSON配列のみ返してくだ�
 
       // 送信は callAI に一本化（キー・エンドポイント・CORSヘッダーの重複をなくす）
       const model = geminiKey ? 'gemini' : (claudeKey || proxyUrl) ? 'claude' : 'openai';
-      const raw = (await callAI(prompt, { model, maxTokens: 256 })) || '[]';
+      const raw = (await callAI(prompt, { model, maxTokens: 256, redact: true })) || '[]';
 
       const ids = JSON.parse(raw.replace(/```json|```/g, '').trim());
       let added = 0;
@@ -3313,6 +3313,11 @@ async function runAIAction(action, customPrompt) {
   if (!editorText.trim() && !customPrompt) {
     showToast('メモにテキストを入力してください');
     return;
+  }
+  // 利用者が書いた本文は除外せず、秘密らしい行があるときは送る前に確認する
+  if (window.ClusterItems && ClusterItems.redact) {
+    const sec = ClusterItems.redact(editorText).removed;
+    if (sec && !confirm('秘密らしい行が' + sec + '行あります（トークン・キー・パスワードなど）。このままAIに送りますか？')) return;
   }
 
   const prompt = customPrompt
