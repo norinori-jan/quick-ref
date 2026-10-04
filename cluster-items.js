@@ -200,8 +200,10 @@
     '次の3項目だけを、日本語で各1〜2文、合計3行で書いてください。前置き・記号・箇条書きは不要です。\n' +
     '何について: （このメモ群の主題）\n結論・現在地: （どこまで決まった／分かったか）\n未解決・次の一手: （残っていること）\n' +
     '本文に書かれていないことは足さないでください。分からない項目は「不明」と書いてください。\n';
-  function summaryPrompt(items, opts) {
-    var o = Object.assign({ total: 12000, per: 1500 }, opts || {});
+  var PROMPT_CITE = '各文の終わりに、根拠にしたメモの番号を【1】【3】のように付けてください（番号は下のメモの【n】と同じです）。\n';
+  // 戻り値 { prompt, ids }。ids[n-1] が、プロンプト内の【n】のメモID（要約の番号→元メモに使う）
+  function summaryPlan(items, opts) {
+    var o = Object.assign({ total: 12000, per: 1500, cite: true }, opts || {});
     var xs = eligible(items).sort(function (a, b) { return a.createdAt - b.createdAt; });
     var cnt = {}, seen = {}, pick = [], omitted = 0;
     xs.forEach(function (x) { var k = stem(x.title); if (k.length >= 3) cnt[k] = (cnt[k] || 0) + 1; });
@@ -217,10 +219,52 @@
       var d = new Date(x.createdAt);
       return '【' + (i + 1) + '】' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + redactTitle(x.title || '(無題)') + '\n' + t;
     });
-    return PROMPT_HEAD + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n');
+    return {
+      prompt: PROMPT_HEAD + (o.cite ? PROMPT_CITE : '') + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n'),
+      ids: pick.map(function (x) { return x.id; })
+    };
+  }
+  function summaryPrompt(items, opts) { return summaryPlan(items, Object.assign({}, opts || {}, { cite: false })).prompt; }
+
+  // ---- 語の出所：その語が出てくる箇所の抜粋（秘密らしい行は読まない・出さない）----
+  // 戻り値は古い順（最初に出てきたメモが先頭）。{ id, title, createdAt, count, pre, hit, post }
+  function findTerm(items, term, opts) {
+    var o = Object.assign({ max: 12, pre: 24, post: 36 }, opts || {});
+    term = String(term || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!term || isSecret(term)) return [];
+    var q = term.toLowerCase(), out = [];
+    eligible(items).forEach(function (x) {
+      var cnt = 0, first = null;
+      if (!isSecret(x.title) && String(x.title || '').toLowerCase().indexOf(q) >= 0) cnt++;
+      textOf(x.body).split('\n').forEach(function (raw) {
+        var l = raw.replace(/\s+/g, ' ').trim(); if (!l || isSecret(l)) return;
+        var low = l.toLowerCase(), p = 0, k;
+        while ((k = low.indexOf(q, p)) >= 0) {
+          cnt++;
+          if (!first) first = { pre: l.slice(Math.max(0, k - o.pre), k), hit: l.substr(k, q.length), post: l.slice(k + q.length, k + q.length + o.post) };
+          p = k + q.length;
+        }
+      });
+      if (cnt) out.push({ id: x.id, title: redactTitle(x.title || ''), createdAt: x.createdAt, count: cnt, pre: first ? first.pre : '', hit: first ? first.hit : '', post: first ? first.post : '' });
+    });
+    out.sort(function (a, b) { return a.createdAt - b.createdAt; });
+    return out.slice(0, o.max);
+  }
+  // 語の意味をAIに聞くためのプロンプト。hits は findTerm の結果（抜粋は秘密除外済み）。ids[n-1] が【n】のメモID
+  function definePrompt(term, hits) {
+    term = String(term || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    var hs = (hits || []).slice(0, 12);
+    var parts = hs.map(function (h, i) { return '【' + (i + 1) + '】' + h.title + (h.hit ? '\n…' + h.pre + h.hit + h.post + '…' : ''); });
+    return {
+      prompt: '次の語の意味を、日本語で2〜4文で説明してください。前置きや記号は不要です。\n' +
+        '・まず、下のメモの文脈での意味を、根拠にしたメモの番号【n】を付けて書く。\n' +
+        '・メモに書かれていない一般的な説明は、「一般には」で始めて区別する。\n・分からなければ「不明」と書く。\n\n語: ' + term +
+        '\n\n--- この語が出てくるメモの抜粋（' + hs.length + '件）---\n' + (parts.join('\n\n') || '（メモには見つかりませんでした）'),
+      ids: hs.map(function (h) { return h.id; })
+    };
   }
 
-  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
+  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, summaryPlan: summaryPlan, findTerm: findTerm, definePrompt: definePrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);
