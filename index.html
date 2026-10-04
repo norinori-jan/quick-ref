@@ -1327,9 +1327,11 @@ function openClusterItem(id) { closeClusters(); openEdit(id); }
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
 let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0;
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
+// 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
+const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
 function clusterRow(id) {
   const i = allItems.find(x => x.id === id); if (!i) return '';
-  return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${cdate(i.createdAt)} ${escapeHtml(i.title || '(無題)')}</button>`;
+  return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${cdate(i.createdAt)} ${escapeHtml(qrSafeTitle(i.title || '(無題)'))}</button>`;
 }
 function clusterSumKey(g) {
   const ts = g.ids.map(id => allItems.find(i => i.id === id)).filter(Boolean).map(i => i.updatedAt || i.createdAt || 0);
@@ -1343,7 +1345,7 @@ function sumSet(g, v) {
     if (v) localStorage.setItem(k, JSON.stringify(v)); else localStorage.removeItem(k);
   } catch (_) {}
 }
-const ctitle = c => c.s.keywords.length ? c.s.keywords.map(escapeHtml).join(' · ') : escapeHtml(c.g.title || '(無題)');
+const ctitle = c => c.s.keywords.length ? c.s.keywords.map(escapeHtml).join(' · ') : escapeHtml(qrSafeTitle(c.g.title || '(無題)'));
 const cmeta = g => `${g.size}件 · ${cdate(g.from)}${g.from === g.to ? '' : '〜' + cdate(g.to)} ${g.tags.map(t => '#' + escapeHtml(t)).join(' ')}`;
 const cbr = t => escapeHtml(t).replace(/\n/g, '<br>');
 
@@ -2862,6 +2864,15 @@ async function callAI(userPrompt, opts = {}) {
 
   if (!apiKey && !proxyUrl) {
     throw new Error(`${m.label}のAPIキーが未設定です`);
+  }
+  // 送信直前の秘密除外（fail closed：除外の部品が無ければ送らない）
+  if (opts.redact) {
+    const CI = window.ClusterItems;
+    if (!CI || !CI.redact) throw new Error('秘密除外の部品が読み込めないため、送信しませんでした');
+    const r = CI.redact(String(userPrompt));
+    userPrompt = r.text;
+    if (r.removed) console.info('[redact] 除外した行数:', r.removed);   // 値はログに出さない
+    if (typeof opts.onRedact === 'function') opts.onRedact(r.removed);
   }
 
   if (model === 'gemini') {

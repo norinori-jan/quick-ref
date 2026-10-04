@@ -1,4 +1,4 @@
-/*! cluster-items.js — Quick-ref メモの「まとまり」自動検出（DOM非依存・依存ライブラリなし）
+/* cluster-items.js — Quick-ref メモの「まとまり」自動検出（DOM非依存・依存ライブラリなし）
  *  使い方: ClusterItems.cluster(items) => [{ ids, size, from, to, tags, title }]（件数の多い順）
  *  方針: ①連番の題名 ②45分以内かつ内容が近い ③まとまり同士の内容が近ければ日をまたいで統合。タグは使わない。
  *  保護メモ(sensitive=true)は題名・本文とも読まず、対象外にする。
@@ -86,7 +86,19 @@
   var CODE = /^(span|style|font|color|size|line|height|margin|padding|width|solid|class|none|true|false|null|this|that|with|from|have|will|your|file|text|const|function|return|string|data|items|item|index|html|json|console|error|value|name|type|button|input|div|http|https|docs)$/;
   var NEXT = /(次に|次の一手|次のステップ|確認したい|確認すべき|やるべき|未解決|課題|TODO|決めるべき|見せて(もらえますか|ください)|貼って(ください|もらえますか)|教えてください|次どうする|どれに進める|進めますか)/;
   function lead(t) { return t.replace(/^(はい|うん|了解|承知|なるほど|OK)[、。！!\s]*/, '').replace(/^.{0,8}さん[、。！!\s]*/, ''); }
-  var SECRET = /[0-9a-f]{20,}|bearer|token|secret|api[-_]?key|password/i;
+  // 秘密らしい行の判定は、ここ1か所に集める（まとまり・AI送信・一覧表示のすべてがこれを通す）
+  var SECRET = /[0-9a-f]{20,}|bearer|token|secret|api[-_]?key|password|passwd|private[-_ ]?key|authorization|sk-[A-Za-z0-9_\-]{10,}|ghp_|github_pat_|AIza[0-9A-Za-z_\-]{20,}|-----BEGIN/i;
+  // 英字と数字が混ざった24文字以上の連続（base64の + / = も含む）
+  var LONGTOK = /(?=[A-Za-z0-9_\-+\/=]*[A-Za-z])(?=[A-Za-z0-9_\-+\/=]*\d)[A-Za-z0-9_\-+\/=]{24,}/;
+  var HIDDEN = '（秘密らしい行のため非表示）';
+  function isSecret(s) { s = String(s || ''); return SECRET.test(s) || LONGTOK.test(s) || /[A-Za-z0-9_\-]{32,}/.test(s); }   // 末尾は従来の「32文字以上」の規則
+  // 複数行の文字列から、秘密らしい行を置き換える。戻り値 { text, removed }（値は返さない）
+  function redact(text) {
+    var removed = 0;
+    var out = String(text || '').split('\n').map(function (l) { if (isSecret(l)) { removed++; return HIDDEN; } return l; }).join('\n');
+    return { text: out, removed: removed };
+  }
+  function redactTitle(t) { t = String(t || ''); return isSecret(t) ? '（秘密らしい題名のため非表示）' : t; }
 
   function textOf(body) {
     return String(body || '').replace(/<(br|\/p|\/div|\/li|\/tr)[^>]*>/gi, '\n')
@@ -150,7 +162,7 @@
       });
       // 現在地: 最後のメモの冒頭と、直近のメモにある「次に〜」「確認したい〜」などの行
       var lastLines = info.get(g.ids[g.ids.length - 1]).lines;
-      var head = ''; for (var i = 0; i < lastLines.length; i++) { var h = lead(lastLines[i]); if (h.length >= 15 && !SECRET.test(h)) { head = h.slice(0, 90); break; } }
+      var head = ''; for (var i = 0; i < lastLines.length; i++) { var h = lead(lastLines[i]); if (h.length >= 15 && !isSecret(h)) { head = h.slice(0, 90); break; } }
       var next = [];
       for (var k2 = g.ids.length - 1; k2 >= 0 && k2 >= g.ids.length - 3 && next.length < 2; k2--) {
         var ls2 = info.get(g.ids[k2]).lines;
@@ -158,9 +170,9 @@
           var s = ls2[j];
           if (/^(次どうする|次はどうする|どれに進める)[？?]?$/.test(s) && ls2[j + 1]) {   // 「次どうする？」の後ろの選択肢を拾う
             var opt = ls2.slice(j + 1, j + 3).map(function (t) { return t.replace(/^[•・\-*]\s*/, ''); }).join(' / ').slice(0, 90);
-            if (!SECRET.test(opt)) { next.push('選択肢: ' + opt); continue; }
+            if (!isSecret(opt)) { next.push('選択肢: ' + opt); continue; }
           }
-          if (s.length >= 14 && s.length <= 120 && !/^["'`(]|[,;{、]$/.test(s) && NEXT.test(s) && !SECRET.test(s) && next.indexOf(s.slice(0, 90)) < 0) next.push(s.slice(0, 90));
+          if (s.length >= 14 && s.length <= 120 && !/^["'`(]|[,;{、]$/.test(s) && NEXT.test(s) && !isSecret(s) && next.indexOf(s.slice(0, 90)) < 0) next.push(s.slice(0, 90));
         }
       }
       return { keywords: sc.slice(0, 4).map(function (a) { return a[1]; }), entries: entries, head: head, next: next };
@@ -170,7 +182,7 @@
   // ---- AI要約用のプロンプトを作る（外部送信の直前に使う）----
   // 送るのは、保護メモを除き、コード行・秘密らしい行（トークン・長い英数字列など）を除いた本文だけ
   function safeLines(body) {
-    return lines(body).filter(function (s) { return !SECRET.test(s) && !/[A-Za-z0-9_\-]{32,}/.test(s); });
+    return lines(body).filter(function (s) { return !isSecret(s); });
   }
   var PROMPT_HEAD = '以下は、同じテーマで書かれた一連のメモです（古い順）。本人の言葉とAIの返答が混ざっています。\n' +
     '次の3項目だけを、日本語で各1〜2文、合計3行で書いてください。前置き・記号・箇条書きは不要です。\n' +
@@ -191,12 +203,12 @@
       var t = safeLines(x.body).join('\n');
       if (t.length > per) t = t.slice(0, Math.floor(per * 0.6)) + '\n…\n' + t.slice(-Math.floor(per * 0.4));
       var d = new Date(x.createdAt);
-      return '【' + (i + 1) + '】' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (x.title || '(無題)') + '\n' + t;
+      return '【' + (i + 1) + '】' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + redactTitle(x.title || '(無題)') + '\n' + t;
     });
     return PROMPT_HEAD + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n');
   }
 
-  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, params: P };
+  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);
