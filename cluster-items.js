@@ -1,10 +1,19 @@
 /* cluster-items.js — Quick-ref メモの「まとまり」自動検出（DOM非依存・依存ライブラリなし）
  *  使い方: ClusterItems.cluster(items) => [{ ids, size, from, to, tags, title }]（件数の多い順）
  *  方針: ①連番の題名 ②45分以内かつ内容が近い ③まとまり同士の内容が近ければ日をまたいで統合。タグは使わない。
- *  保護メモ(sensitive=true)は題名・本文とも読まず、対象外にする。
+ *  保護メモ(sensitive=true)と、タグ AI作成／まとまり／用語 のメモは、読まず・対象外にする。
  */
 (function (root) {
   'use strict';
+  // AIが作ったメモ・まとまり・用語のメモは、まとまり検出・要約・語の抽出の対象から除く（ここ1か所）
+  var EXCLUDE_TAGS = ['AI作成', 'まとまり', '用語'];
+  function eligibleOne(x) {
+    if (!x || x.sensitive) return false;
+    var t = x.tags || [];
+    for (var i = 0; i < EXCLUDE_TAGS.length; i++) if (t.indexOf(EXCLUDE_TAGS[i]) >= 0) return false;
+    return true;
+  }
+  function eligible(items) { return (items || []).filter(eligibleOne); }
   var P = { head: 4000, gapMin: 45, near: 0.08, merge: 0.22, code: 0.52 };   // merge: 設計の議論を1つの流れにまとめるため0.30→0.22
 
   function plain(h) {
@@ -33,7 +42,7 @@
 
   function cluster(items, opts) {
     var o = Object.assign({}, P, opts || {});
-    var xs = (items || []).filter(function (x) { return x && !x.sensitive; })
+    var xs = eligible(items)
       .sort(function (a, b) { return a.createdAt - b.createdAt; });
     var n = xs.length; if (!n) return [];
     var docs = xs.map(function (x) { return grams(x, codeRatio(x.body) < o.code); }), df = new Map();
@@ -137,7 +146,7 @@
   // groups: cluster() の結果のうち2件以上のもの。戻り値は groups と同じ並びの説明
   function describeAll(groups, items) {
     var by = new Map(), info = new Map(), df = new Map();
-    (items || []).forEach(function (x) { if (x && !x.sensitive) by.set(x.id, x); });
+    (items || []).forEach(function (x) { if (eligibleOne(x)) by.set(x.id, x); });
     by.forEach(function (x, id) {
       var ls = lines(x.body), code = codeRatio(x.body) < P.code;
       var ts = termSet((x.title || '') + '\n' + (code ? '' : ls.join('\n').slice(0, 8000)));
@@ -145,7 +154,10 @@
       ts.forEach(function (w) { df.set(w, (df.get(w) || 0) + 1); });
     });
     var N = by.size;
-    return groups.map(function (g) {
+    return groups.map(function (g0) {
+      // 対象外になったメモのIDが混ざっていても落ちないようにする
+      var g = Object.assign({}, g0, { ids: (g0.ids || []).filter(function (id) { return by.has(id); }) });
+      if (!g.ids.length) return { keywords: [], entries: [], head: '', next: [] };
       var gdf = new Map(), sc = [], minDf = Math.min(2, g.ids.length);
       g.ids.forEach(function (id) { var o = info.get(id); if (o) o.terms.forEach(function (w) { gdf.set(w, (gdf.get(w) || 0) + 1); }); });
       gdf.forEach(function (c, w) { if (c >= minDf) sc.push([c * Math.log(1 + N / df.get(w)) * Math.sqrt(c / df.get(w)), w]); });
@@ -190,7 +202,7 @@
     '本文に書かれていないことは足さないでください。分からない項目は「不明」と書いてください。\n';
   function summaryPrompt(items, opts) {
     var o = Object.assign({ total: 12000, per: 1500 }, opts || {});
-    var xs = (items || []).filter(function (x) { return x && !x.sensitive; }).sort(function (a, b) { return a.createdAt - b.createdAt; });
+    var xs = eligible(items).sort(function (a, b) { return a.createdAt - b.createdAt; });
     var cnt = {}, seen = {}, pick = [], omitted = 0;
     xs.forEach(function (x) { var k = stem(x.title); if (k.length >= 3) cnt[k] = (cnt[k] || 0) + 1; });
     xs.forEach(function (x) {   // 連番の版（同じ題名の幹が3件以上）は最初と最後だけ送る
@@ -208,7 +220,7 @@
     return PROMPT_HEAD + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n');
   }
 
-  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle };
+  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);

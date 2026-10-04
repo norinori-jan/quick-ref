@@ -1402,7 +1402,7 @@ function clusterBack() {
 }
 async function summarizeCluster(key) {
   const c = clusterGroups.get(key); if (!c || !window.ClusterItems || !ClusterItems.summaryPrompt) return;
-  const items = c.g.ids.map(id => allItems.find(i => i.id === id)).filter(i => i && !i.sensitive);   // 保護メモは送らない
+  const items = c.g.ids.map(id => allItems.find(i => i.id === id)).filter(i => i && (ClusterItems.eligibleOne ? ClusterItems.eligibleOne(i) : !i.sensitive));   // 保護メモ・除外タグは送らない
   if (!items.length) return;
   const box = document.getElementById('sum-' + key);
   if (box) box.innerHTML = '<div style="font-size:13px;color:#8e8e93">要約中…</div>';
@@ -1429,14 +1429,15 @@ function adoptClusterSum(key, ok) {
 }
 function openClusters() {
   closeMenu(); clusterGroups.clear(); clusterOpenKey = null;
-  const items = allItems.filter(i => !i.sensitive);   // 保護メモは読まない
-  const prot = allItems.length - items.length, CI = window.ClusterItems;
+  const CI = window.ClusterItems;
+  const items = CI && CI.eligible ? CI.eligible(allItems) : allItems.filter(i => !i.sensitive);   // 保護メモ・AI作成/まとまり/用語タグは読まない
+  const prot = allItems.filter(i => i.sensitive).length, excl = allItems.length - prot - items.length;
   const gs = CI ? CI.cluster(items) : [];
   const multi = gs.filter(g => g.size > 1), single = gs.filter(g => g.size === 1);
   const desc = CI && CI.describeAll ? CI.describeAll(multi, items) : [];
   multi.forEach((g, k) => clusterGroups.set(g.ids[0], { g, s: desc[k] || { keywords: [], entries: g.ids.map(id => ({ type: 'item', id })), head: '', next: [] } }));
   clusterSingles = single.map(g => g.ids[0]);
-  clusterMeta = `${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外。` : '');
+  clusterMeta = `${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外。` : '') + (excl ? `AI作成・まとまり・用語タグ${excl}件は対象外。` : '');
   const view = document.getElementById('clusterView');
   renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
 }
