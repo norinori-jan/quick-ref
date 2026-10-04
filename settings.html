@@ -1,33 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#007AFF">
+<link rel="manifest" href="manifest.json">
+<title>通知サーバー設定</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, system-ui, sans-serif; line-height: 1.6; margin: 0;
+         padding: max(16px, env(safe-area-inset-top)) 16px 32px; max-width: 560px; }
+  a.back { display: inline-block; padding: 8px 0; text-decoration: none; }
+  label { display: block; margin-top: 16px; font-weight: 600; }
+  input { width: 100%; box-sizing: border-box; font-size: 16px; padding: 10px; margin-top: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  button { font-size: 16px; padding: 10px 16px; min-height: 44px; }
+  .note { font-size: 13px; opacity: .75; margin-top: 8px; }
+  #push-ios { display: none; padding: 8px 12px; border: 1px solid #ff9500; border-radius: 8px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<a class="back" href="./index.html">← クイック参照に戻る</a>
 <h2>通知サーバー設定</h2>
 
-<label>Push Worker Endpoint:</label>
-<input id="push-endpoint" type="text" placeholder="https://quick-ref-push-worker.arielfortuneoffice.workers.dev">
+<div id="push-ios">iPhone では、ホーム画面に追加したアプリから開いたときだけ、通知を登録できます（Safari のタブでは登録できません）。</div>
 
-<label>AUTH_TOKEN:</label>
-<input id="push-token" type="text" placeholder="quick-ref-secret-2026-nori-xyz">
+<label for="push-endpoint">Push Worker Endpoint</label>
+<input id="push-endpoint" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"
+       placeholder="https://quick-ref-push-worker.～.workers.dev">
 
-<button id="push-save">保存</button>
-<button id="push-subscribe">購読登録</button>
-<button id="push-unsubscribe">購読解除</button>
+<label for="push-token">AUTH_TOKEN</label>
+<input id="push-token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"
+       placeholder="ここに貼り付け">
+<p class="note">保存した値は画面に表示されません。入れ替えるときは、貼り直して「保存」を押してください。</p>
+
+<div class="row">
+  <button id="push-save">保存</button>
+  <button id="push-subscribe">購読登録</button>
+  <button id="push-unsubscribe">購読解除</button>
+</div>
 
 <p id="push-status"></p>
+
 <script>
+  // index.html と同じ sw.js・同じ範囲で登録する（別のscopeを指定すると失敗する）
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
       .then(() => console.log('Service Worker registered'))
       .catch(err => console.error('SW registration failed:', err));
   }
-</script>
 
+  // iPhone のSafariタブで開いたときの案内
+  (function () {
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const standalone = window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+    if (ios && !standalone) document.getElementById('push-ios').style.display = 'block';
+  })();
+</script>
 
 <script src="./shared/push-client.js"></script>
 <script>
   const pc = window.PushClient;
 
   document.getElementById('push-save').onclick = () => {
-    const endpoint = document.getElementById('push-endpoint').value;
-    const token = document.getElementById('push-token').value;
+    const endpoint = document.getElementById('push-endpoint').value.trim();
+    const token = document.getElementById('push-token').value.trim();   // 前後の空白・改行を除く
+    if (!endpoint || !token) { alert('Endpoint と AUTH_TOKEN の両方を入力してください'); return; }
     pc.setConfig(endpoint, token);
+    document.getElementById('push-token').value = '';                   // 画面に残さない
     alert('保存しました');
   };
 
@@ -36,8 +76,10 @@
       await pc.subscribe('quick-ref');
       alert('購読登録が完了しました');
     } catch (e) {
-      alert('エラー: ' + e.message);
+      const m = String(e && e.message || e);
+      alert('エラー: ' + m + (/401/.test(m) ? '\n（AUTH_TOKEN が Worker と一致していません。貼り直して「保存」を押してください）' : ''));
     }
+    updateStatus();
   };
 
   document.getElementById('push-unsubscribe').onclick = async () => {
@@ -47,6 +89,7 @@
     } catch (e) {
       alert('エラー: ' + e.message);
     }
+    updateStatus();
   };
 
   async function updateStatus() {
@@ -56,3 +99,5 @@
 
   updateStatus();
 </script>
+</body>
+</html>

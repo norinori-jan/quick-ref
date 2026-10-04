@@ -6,7 +6,7 @@
    - Share Target / Shortcut連携補助
 ───────────────────────────── */
 
-const CACHE_VERSION = 'qr-cache-v13';
+const CACHE_VERSION = 'qr-cache-v14';
 const BASE_URL = self.registration.scope;
 const APP_SHELL = [
   'index.html',
@@ -158,11 +158,40 @@ self.addEventListener('message', event => {
 });
 
 /* ─────────────────────────────
-   Push / Periodic Sync の拡張余地
+   Push通知（push-worker から届く）
+   ・iOSは、pushを受けたら必ず通知を出す必要がある（出さないと購読が取り消される）
+   ・Worker は { title, body, url } を送る（urlは '/quick-ref/?shortcut=review' など）
 ───────────────────────────── */
-// ここでは実装しないが、必要なら:
-// self.addEventListener('periodicsync', ...);
-// self.addEventListener('push', ...);
+self.addEventListener('push', event => {
+  event.waitUntil((async () => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; }
+    catch (_) { data = { body: event.data ? event.data.text() : '' }; }
+    await self.registration.showNotification(data.title || 'クイック参照', {
+      body: data.body || '',
+      icon: new URL('icon-192.png', BASE_URL).href,
+      badge: new URL('icon-192.png', BASE_URL).href,
+      tag: 'qr-daily-review',
+      data: { url: data.url || './index.html' }
+    });
+  })());
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || './index.html', BASE_URL).href;
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of wins) {
+      if (c.url.startsWith(BASE_URL)) {
+        try { await c.focus(); if ('navigate' in c) await c.navigate(target); return; } catch (_) {}
+      }
+    }
+    await self.clients.openWindow(target);
+  })());
+});
+
+// self.addEventListener('periodicsync', ...);   // 必要になったら
 
 /* ─────────────────────────────
    クライアント一斉通知
@@ -214,3 +243,4 @@ self.addEventListener('fetch', event => {
     })()
   );
 });
+
