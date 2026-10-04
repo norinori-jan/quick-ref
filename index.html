@@ -1328,13 +1328,13 @@ function openClusterItem(id) {
 }
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
-let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0;
+let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '';
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
 // 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
 const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
-function clusterRow(id) {
+function clusterRow(id, pre) {
   const i = allItems.find(x => x.id === id); if (!i) return '';
-  return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${cdate(i.createdAt)} ${escapeHtml(qrSafeTitle(i.title || '(無題)'))}</button>`;
+  return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${pre || ''}${cdate(i.createdAt)} ${escapeHtml(qrSafeTitle(i.title || '(無題)'))}</button>`;
 }
 // 要約の保存（qr_clsum2）。まとまりとはメモIDの重なり(Jaccard 0.6以上・1対1)で結びつける。自動では消さない。
 const SUM2_KEY = 'qr_clsum2';
@@ -1405,6 +1405,13 @@ function sumMigrate() {   // 旧形式(qr_clsum:…)を1回だけ引き継ぐ。
 const ctitle = c => c.s.keywords.length ? c.s.keywords.map(escapeHtml).join(' · ') : escapeHtml(qrSafeTitle(c.g.title || '(無題)'));
 const cmeta = g => `${g.size}件 · ${cdate(g.from)}${g.from === g.to ? '' : '〜' + cdate(g.to)} ${g.tags.map(t => '#' + escapeHtml(t)).join(' ')}`;
 const cbr = t => escapeHtml(t).replace(/\n/g, '<br>');
+// 文中の【n】を、根拠のメモを開く番号チップにする
+function ccite(text, ids) {
+  return cbr(text).replace(/【(\d+)】/g, (m, k) => {
+    const id = (ids || [])[+k - 1], it = id && allItems.find(x => x.id === id);
+    return it ? `<button type="button" data-cid="${escapeHtml(id)}" title="${escapeHtml(qrSafeTitle(it.title || ''))}" style="font-size:11px;padding:0 6px;margin:0 1px;border-radius:9px">${k}</button>` : m;
+  });
+}
 
 const staleNote = id => `<div style="font-size:12px;color:#ff9500;margin:4px 0">⚠ 元メモが更新されています。<button type="button" data-sumkeep="${id}">このまま使う</button> <button type="button" data-sum="${id}">作り直す</button></div>`;
 function cardSum(key) {
@@ -1413,7 +1420,7 @@ function cardSum(key) {
   const adopted = st.status === 'adopted';
   return `<div style="font-size:11px;margin-bottom:2px">${adopted ? '<b style="color:#34c759">✓ 採用済み</b>' : '<b style="color:#ff9500">AI案（未採用）</b>'}` +
     (adopted ? '' : `<span style="float:right"><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕</button></span>`) +
-    `</div>` + (sumIsStale(c.g, st) ? staleNote(id) : '') + `<div style="font-size:13px;line-height:1.5;clear:both">${cbr(st.text)}</div>`;
+    `</div>` + (sumIsStale(c.g, st) ? staleNote(id) : '') + `<div style="font-size:13px;line-height:1.5;clear:both">${cbr(st.text.replace(/【\d+】/g, ''))}</div>`;
 }
 function clusterCard(key) {
   const c = clusterGroups.get(key), id = escapeHtml(key);
@@ -1423,7 +1430,7 @@ function clusterEntry(e) {
   if (e.type === 'item') return clusterRow(e.id);
   const a = allItems.find(x => x.id === e.ids[0]), z = allItems.find(x => x.id === e.ids[e.ids.length - 1]);
   return `<button type="button" data-cid="${escapeHtml(e.ids[e.ids.length - 1])}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">🗂 ${escapeHtml(e.label)} ×${e.ids.length}版（${cdate(a.createdAt)}〜${cdate(z.createdAt)}）— 最新を開く</button>` +
-    `<details style="margin-left:12px"><summary style="font-size:12px;color:#8e8e93">全${e.ids.length}版</summary>${e.ids.map(clusterRow).join('')}</details>`;
+    `<details style="margin-left:12px"><summary style="font-size:12px;color:#8e8e93">全${e.ids.length}版</summary>${e.ids.map(i => clusterRow(i)).join('')}</details>`;
 }
 function renderClusterList() {
   const keys = [...clusterGroups.keys()], todo = keys.filter(k => !sumGet(clusterGroups.get(k).g));
@@ -1433,18 +1440,28 @@ function renderClusterList() {
     (clusterSingles.length ? `<div data-open="__single" style="border:1px solid #c7c7cc;border-radius:10px;padding:10px;margin:8px 0;cursor:pointer">単独のメモ（${clusterSingles.length}件） ›</div>` : '');
 }
 function renderClusterDetail(key) {
-  if (key === '__single') return `<h3 style="margin:4px 0">単独のメモ</h3>` + clusterSingles.map(clusterRow).join('');
+  if (key === '__single') return `<h3 style="margin:4px 0">単独のメモ</h3>` + clusterSingles.map(i => clusterRow(i)).join('');
   const c = clusterGroups.get(key), s = c.s, st = sumGet(c.g), id = escapeHtml(key);
   const note = t => `<div style="font-size:13px;margin:6px 0;color:#8e8e93">${t}</div>`;
-  const sum = st
-    ? `<div style="font-size:11px;color:#8e8e93;margin-top:6px">✦ ${st.status === 'adopted' ? '<b style="color:#34c759">AI作成・採用済み</b>' + (st.edited ? '（修正あり）' : '') : '<b style="color:#ff9500">AI作成・未採用</b>（直して採用／却下）'}　※この端末のみに保存</div>` +
-      (sumIsStale(c.g, st) ? staleNote(id) : '') +
-      `<textarea data-sumtext="${id}" rows="6" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea>` +
-      `<div><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕ 却下</button> <button type="button" data-sum="${id}">作り直す</button>${st.noteId && allItems.some(i => i.id === st.noteId) ? ` <button type="button" data-cid="${escapeHtml(st.noteId)}">📝 メモを開く</button>` : ''}</div>` +
-      `<details><summary style="font-size:12px;color:#8e8e93">根拠（共通する語・送ったメモ）</summary><div style="font-size:12px;margin:4px 0">共通する語：${(st.kw || []).map(escapeHtml).join(' · ') || '（なし）'}</div>${(st.ids || []).map(clusterRow).join('')}</details>`
-    : `<button type="button" data-sum="${id}">✦ AI要約を作る</button> <span style="font-size:11px;color:#8e8e93">押すと、このまとまりの本文をAIに送ります（保護メモ・コード行・秘密らしい行は除く）</span>`;
+  let sum;
+  if (!st) {
+    sum = `<button type="button" data-sum="${id}">✦ AI要約を作る</button> <span style="font-size:11px;color:#8e8e93">押すと、このまとまりの本文をAIに送ります（保護メモ・コード行・秘密らしい行は除く）</span>`;
+  } else {
+    const adopted = st.status === 'adopted', cite = st.cite || st.ids || [];
+    const label = `<div style="font-size:11px;color:#8e8e93;margin-top:6px">✦ ${adopted ? '<b style="color:#34c759">AI作成・採用済み</b>' + (st.edited ? '（修正あり）' : '') : '<b style="color:#ff9500">AI作成・未採用</b>'}　番号＝根拠のメモ　※この端末のみに保存</div>`;
+    const noteBtn = st.noteId && allItems.some(i => i.id === st.noteId) ? ` <button type="button" data-cid="${escapeHtml(st.noteId)}">📝 メモを開く</button>` : '';
+    const body = clusterEdit === key
+      ? `<textarea data-sumtext="${id}" rows="7" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea><div><button type="button" data-sumok="${id}">保存して採用</button> <button type="button" data-sumcancel="1">キャンセル</button></div>`
+      : `<div style="font-size:14px;line-height:1.8;margin:4px 0">${ccite(st.text, cite)}</div><div>` +
+        (adopted ? '' : `<button type="button" data-sumok="${id}">✓ 採用</button> `) +
+        `<button type="button" data-sumedit="${id}">✎ 修正</button> <button type="button" data-sum="${id}">作り直す</button> <button type="button" data-sumng="${id}">${adopted ? '✕ 取り消し' : '✕ 却下'}</button>${noteBtn}</div>`;
+    sum = label + (sumIsStale(c.g, st) ? staleNote(id) : '') + body +
+      `<details><summary style="font-size:12px;color:#8e8e93">根拠（共通する語・送ったメモ）</summary><div style="font-size:12px;margin:4px 0">共通する語：${(st.kw || []).map(escapeHtml).join(' · ') || '（なし）'}</div>${cite.map((i, k) => clusterRow(i, (k + 1) + '. ')).join('')}</details>`;
+  }
+  const lookup = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><input id="lookupQ" value="${escapeHtml(clusterTerm)}" placeholder="分からない語を選択、または入力" style="flex:1;min-width:150px;font-size:14px;padding:4px"><button type="button" data-lk="src">出所</button><button type="button" data-lk="def">意味</button><button type="button" data-lk="web">Web</button></div>` +
+    `<div style="font-size:11px;color:#8e8e93">「意味」は、語とその周りの抜粋をAIに送ります（保護メモ・秘密らしい行は除く）。「Web」は語だけをブラウザで検索します。</div><div id="lookupOut" style="max-height:45vh;overflow-y:auto">${clusterLookupHtml}</div>`;
   return `<h3 style="margin:4px 0">${ctitle(c)}</h3><div style="font-size:12px;color:#8e8e93">${cmeta(c.g)}</div>` +
-    `<div id="sum-${id}" style="border:1px dashed #8e8e93;border-radius:8px;padding:8px;margin:8px 0">${sum}</div>` +
+    `<div id="sum-${id}" style="border:1px dashed #8e8e93;border-radius:8px;padding:8px;margin:8px 0">${sum}</div>` + lookup +
     (s.head ? note('最後のメモ：' + escapeHtml(s.head)) : '') +
     (s.next.length ? note('次の一手・未解決：<br>' + s.next.map(escapeHtml).join('<br>')) : '') +
     s.entries.map(clusterEntry).join('');
@@ -1460,23 +1477,24 @@ function renderCluster(keepY, discard) {
   if (draft !== null) { const ta = clusterTextarea(clusterOpenKey); if (ta) ta.value = draft; }
   view.scrollTop = keepY ? y : 0;
 }
-function openClusterDetail(key) { clusterListY = document.getElementById('clusterView').scrollTop; clusterOpenKey = key; renderCluster(false); }
+function openClusterDetail(key) { clusterListY = document.getElementById('clusterView').scrollTop; clusterOpenKey = key; clusterEdit = null; clusterTerm = ''; clusterLookupHtml = ''; renderCluster(false); }
 function clusterBack() {
   if (!clusterOpenKey) { closeClusters(); return; }
   if (clusterDirty(clusterOpenKey) && !confirm('修正中の要約があります。保存せずに戻りますか？（「採用」を押すと保存されます）')) return;
-  clusterOpenKey = null; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY;
+  clusterOpenKey = null; clusterEdit = null; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY;
 }
 async function summarizeCluster(key) {
-  const c = clusterGroups.get(key); if (!c || !window.ClusterItems || !ClusterItems.summaryPrompt) return;
+  const c = clusterGroups.get(key); if (!c || !window.ClusterItems || !ClusterItems.summaryPlan) return;
   const items = c.g.ids.map(id => allItems.find(i => i.id === id)).filter(i => i && (ClusterItems.eligibleOne ? ClusterItems.eligibleOne(i) : !i.sensitive));   // 保護メモ・除外タグは送らない
   if (!items.length) return;
   const box = document.getElementById('sum-' + key);
   if (box) box.innerHTML = '<div style="font-size:13px;color:#8e8e93">要約中…</div>';
   try {
-    const out = String(await callAI(ClusterItems.summaryPrompt(items), { redact: true }) || '').trim();
+    const plan = ClusterItems.summaryPlan(items);
+    const out = String(await callAI(plan.prompt, { redact: true }) || '').trim();
     if (!out) throw new Error('AIから返事がありませんでした');
     const prev = sumGet(c.g);
-    sumSet(c.g, { text: out, ids: items.map(i => i.id), kw: c.s.keywords, status: 'draft', edited: false, at: Date.now(), noteId: prev && prev.noteId }); // 作り直しても同じメモにつなぐ
+    sumSet(c.g, { text: out, ids: items.map(i => i.id), cite: plan.ids, kw: c.s.keywords, status: 'draft', edited: false, at: Date.now(), noteId: prev && prev.noteId }); // 作り直しても同じメモにつなぐ
   } catch (e) { showToast('要約できませんでした：' + e.message); }
   renderCluster(true, true);
 }
@@ -1495,7 +1513,7 @@ async function saveSummaryNote(key) {
   const now = Date.now(), ex = st.noteId ? allItems.find(i => i.id === st.noteId) : null;
   if (ex && ex.sensitive) { showToast('そのメモは保護メモになっているため、更新しませんでした'); return; }
   if (ex && ex.ai && ex.updatedAt > (ex.ai.adoptedAt || 0) && !confirm('このメモは、要約を採用したあとに編集されています。要約の内容で上書きしますか？')) return;
-  const r = CI.redact(st.text);
+  const r = CI.redact(st.text.replace(/【\d+】/g, ''));
   const kw = (c.s.keywords || []).slice(0, 3).join('・');
   const tags = [...new Set([...(ex ? ex.tags || [] : []), 'AI作成', 'まとまり'])];
   const item = {
@@ -1517,13 +1535,57 @@ async function adoptClusterSum(key, ok) {
   if (ok) {
     const ta = clusterTextarea(key), text = ta ? ta.value : st.text;
     sumSet(c.g, Object.assign({}, st, { text, edited: st.edited || text !== st.text, status: 'adopted', at: Date.now() }));
-    renderCluster(true, true);
+    clusterEdit = null; renderCluster(true, true);
     try { await saveSummaryNote(key); } catch (e) { showToast('メモにできませんでした：' + e.message); }
   } else sumSet(c.g, null);
-  renderCluster(true, true);
+  clusterEdit = null; renderCluster(true, true);
 }
+/* ── 分からない語の調べ物（出所／意味／Web）。対象は保護メモ・除外タグを除いたメモだけ ── */
+function lkTerm() { const el = document.getElementById('lookupQ'); clusterTerm = String((el ? el.value : clusterTerm) || '').replace(/\s+/g, ' ').trim().slice(0, 40); return clusterTerm; }
+function lkItems(key) {
+  const CI = window.ClusterItems, all = CI && CI.eligible ? CI.eligible(allItems) : [];   // 部品が無ければ何も探さない
+  const inIds = new Set(clusterGroups.get(key).g.ids);
+  return { inside: all.filter(i => inIds.has(i.id)), outside: all.filter(i => !inIds.has(i.id)) };
+}
+function hitHtml(h) {
+  return `<button type="button" data-cid="${escapeHtml(h.id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px;font-size:12px"><b>${cdate(h.createdAt)} ${escapeHtml(h.title || '(無題)')}</b>${h.count > 1 ? ` <span style="color:#8e8e93">×${h.count}</span>` : ''}<br>` +
+    (h.hit ? '…' + escapeHtml(h.pre) + '<mark>' + escapeHtml(h.hit) + '</mark>' + escapeHtml(h.post) + '…' : '<span style="color:#8e8e93">（題名に含まれる）</span>') + '</button>';
+}
+function lkReady(term) {
+  if (!window.ClusterItems || !ClusterItems.findTerm || !ClusterItems.definePrompt) { showToast('調べる部品が読み込めていません'); return false; }
+  if (term.length < 2) { showToast('2文字以上の語を入れてください'); return false; }
+  if (ClusterItems.isSecret(term)) { showToast('秘密らしい語は調べません'); return false; }
+  return true;
+}
+function lookupSource(key) {
+  const term = lkTerm(); if (!lkReady(term)) return;
+  const s = lkItems(key), a = ClusterItems.findTerm(s.inside, term, { max: 12 }), b = ClusterItems.findTerm(s.outside, term, { max: 12 });
+  clusterLookupHtml = `<div style="font-size:12px;color:#8e8e93;margin-top:4px">「${escapeHtml(term)}」の出所：このまとまり ${a.length}件／他のメモ ${b.length}件（古い順。タップで元のメモを開く）</div>` + a.map(hitHtml).join('') +
+    (b.length ? `<details><summary style="font-size:12px;color:#8e8e93">他のまとまり・単独のメモ（${b.length}件）</summary>${b.map(hitHtml).join('')}</details>` : '') +
+    (a.length + b.length ? '' : '<div style="font-size:13px">メモには見つかりませんでした。「意味」か「Web」で調べてください。</div>');
+  renderCluster(true);
+}
+async function lookupDefine(key) {
+  const term = lkTerm(); if (!lkReady(term)) return;
+  const s = lkItems(key), hits = ClusterItems.findTerm(s.inside, term, { max: 8 }).concat(ClusterItems.findTerm(s.outside, term, { max: 4 }));
+  const plan = ClusterItems.definePrompt(term, hits);
+  clusterLookupHtml = '<div style="font-size:13px;color:#8e8e93;margin-top:6px">調べています…</div>'; renderCluster(true);
+  let html;
+  try {
+    const out = String(await callAI(plan.prompt, { redact: true }) || '').trim(); if (!out) throw new Error('AIから返事がありませんでした');
+    html = `<div style="border:1px dashed #8e8e93;border-radius:8px;padding:8px;margin-top:6px"><div style="font-size:11px;color:#ff9500"><b>✦ AI作成（意味）</b>　番号＝根拠のメモ。「一般には」はメモ以外の知識です</div><div style="font-size:14px;line-height:1.8">${ccite(out, plan.ids)}</div></div>`;
+  } catch (e) { html = `<div style="font-size:13px;margin-top:6px">調べられませんでした：${escapeHtml(e.message)}</div>`; }
+  if (clusterOpenKey !== key) return;   // 待っている間に画面を移動していたら反映しない
+  clusterLookupHtml = html; renderCluster(true);
+}
+function lookupWeb() {
+  const term = lkTerm(); if (term.length < 1) { showToast('語を入れてください'); return; }
+  if (window.ClusterItems && ClusterItems.isSecret && ClusterItems.isSecret(term)) { showToast('秘密らしい語は検索しません'); return; }
+  window.open('https://www.google.com/search?q=' + encodeURIComponent(term), '_blank', 'noopener');
+}
+
 function openClusters() {
-  closeMenu(); clusterGroups.clear(); clusterOpenKey = null; sumMatchCache = null; sum2Cache = null;
+  closeMenu(); clusterGroups.clear(); clusterOpenKey = null; sumMatchCache = null; sum2Cache = null; clusterEdit = null; clusterTerm = ''; clusterLookupHtml = '';
   sumMigrate();
   const CI = window.ClusterItems;
   const items = CI && CI.eligible ? CI.eligible(allItems) : allItems.filter(i => !i.sensitive);   // 保護メモ・AI作成/まとまり/用語タグは読まない
@@ -4024,10 +4086,26 @@ function wireEvents() {
     }
     if (q('[data-sumall]')) { summarizeAll(); return; }
     if ((t = q('[data-sumkeep]'))) { sumKeep(t.dataset.sumkeep); return; }
+    if ((t = q('[data-sumedit]'))) { clusterEdit = t.dataset.sumedit; renderCluster(true); return; }
+    if (q('[data-sumcancel]')) {
+      if (clusterDirty(clusterOpenKey) && !confirm('修正を破棄しますか？')) return;
+      clusterEdit = null; renderCluster(true, true); return;
+    }
+    if ((t = q('[data-lk]'))) { const k = clusterOpenKey; if (t.dataset.lk === 'src') lookupSource(k); else if (t.dataset.lk === 'def') lookupDefine(k); else lookupWeb(); return; }
     if ((t = q('[data-sumok]'))) { adoptClusterSum(t.dataset.sumok, true); return; }
     if ((t = q('[data-sumng]'))) { adoptClusterSum(t.dataset.sumng, false); return; }
     if ((t = q('[data-open]'))) { openClusterDetail(t.dataset.open); return; }
     if ((t = q('[data-cid]'))) openClusterItem(t.dataset.cid);
+  });
+  document.getElementById('clusterBody').addEventListener('input', e => { if (e.target && e.target.id === 'lookupQ') clusterTerm = e.target.value; });
+  // 画面内の文字を選ぶと、調べる欄に入る（スマホは長押しで選択）
+  document.addEventListener('selectionchange', () => {
+    if (!clusterOpenKey || document.getElementById('clusterView').style.display === 'none') return;
+    const sel = window.getSelection ? window.getSelection() : null; if (!sel || sel.isCollapsed) return;
+    const node = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+    if (!node || !document.getElementById('clusterBody').contains(node) || node.closest('input,textarea')) return;
+    const t = sel.toString().replace(/\s+/g, ' ').trim().slice(0, 40); if (!t) return;
+    clusterTerm = t; const el = document.getElementById('lookupQ'); if (el) el.value = t;
   });
   document.getElementById('menuOverlay').addEventListener('click', closeMenu);
 

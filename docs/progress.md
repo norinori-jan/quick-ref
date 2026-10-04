@@ -18,8 +18,13 @@
 - QuickRefBridge.onItemSaved は呼ばない（_emotionMeta を書き込み、flow-mind へ送るため）。メモの本文も redact を通す。採用後にメモが編集されていたら、上書き前に確認。
 - 却下で消えるのは要約だけ。メモは残る（手で消す）。
 
+## 第4便 — 出所・語の調べ物
+- 要約の各文に根拠の番号【n】（番号チップ→元メモ）。読む表示と✎修正の表示を切り替え。cluster-items.js に summaryPlan / findTerm / definePrompt。
+- 語の「出所」（古い順に抜粋）／「意味」（メモの文脈。メモ外は「一般には」）／「Web」。抜粋とAIへ送る文は eligible（保護メモ・除外タグを除く）と redact を通す。秘密らしい語は調べない・検索しない。
+- sw.js を qr-cache-v17 に。v4パッチ（tools/patch_clusters_v4.py）は使わない。
+
 ## 次
-- Phase 4（第4便）: 出所・語の調べ物。v4パッチはそのまま当てない（v3の保存方式に戻してしまう）。第2便・第3便の上に組み直す。cluster-items.js に findTerm / definePrompt / summaryPlan（番号＝根拠）を追加し、抜粋・定義プロンプトは redact と eligible を通す。
+- 実機確認（要約の番号・出所・意味）。必要なら語を「用語」タグのメモにする機能（未着手）。
 
 ## 注意
 - 値（鍵・トークン）は書かない。確認結果はファイル名・行番号・種類だけ。
