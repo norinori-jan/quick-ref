@@ -1333,29 +1333,84 @@ function clusterRow(id) {
   const i = allItems.find(x => x.id === id); if (!i) return '';
   return `<button type="button" data-cid="${escapeHtml(id)}" style="display:block;width:100%;text-align:left;margin:2px 0;padding:6px 8px">${cdate(i.createdAt)} ${escapeHtml(qrSafeTitle(i.title || '(無題)'))}</button>`;
 }
-function clusterSumKey(g) {
-  const ts = g.ids.map(id => allItems.find(i => i.id === id)).filter(Boolean).map(i => i.updatedAt || i.createdAt || 0);
-  return 'qr_clsum:' + g.ids[0] + ':' + g.size + ':' + Math.max(0, ...ts);
+// 要約の保存（qr_clsum2）。まとまりとはメモIDの重なり(Jaccard 0.6以上・1対1)で結びつける。自動では消さない。
+const SUM2_KEY = 'qr_clsum2';
+let sum2Cache = null, sumMatchCache = null;
+function sum2Load() {
+  if (sum2Cache) return sum2Cache;
+  try { const o = JSON.parse(localStorage.getItem(SUM2_KEY) || '{}'); sum2Cache = (o && typeof o === 'object' && !Array.isArray(o)) ? o : {}; } catch (_) { sum2Cache = {}; }
+  return sum2Cache;
 }
-function sumGet(g) { try { return JSON.parse(localStorage.getItem(clusterSumKey(g)) || 'null'); } catch (_) { return null; } }
-function sumSet(g, v) {
+function sum2Save() {
+  try { localStorage.setItem(SUM2_KEY, JSON.stringify(sum2Cache || {})); return true; }
+  catch (_) { showToast('要約を保存できませんでした（端末の保存容量）'); return false; }
+}
+function clusterMaxUpdated(g) {
+  let m = 0; g.ids.forEach(id => { const i = allItems.find(x => x.id === id); if (i) m = Math.max(m, i.updatedAt || i.createdAt || 0); });
+  return m;
+}
+function sumMatchAll() {   // 先頭メモID(まとまりのキー) → 保存エントリのキー
+  if (sumMatchCache) return sumMatchCache;
+  const db = sum2Load(), pairs = [];
+  clusterGroups.forEach((c, key) => {
+    const a = new Set(c.g.ids);
+    Object.keys(db).forEach(k => {
+      const e = db[k]; if (!e || !Array.isArray(e.ids)) return;
+      const b = new Set(e.ids); let inter = 0; a.forEach(x => { if (b.has(x)) inter++; });
+      const uni = a.size + b.size - inter, s = uni ? inter / uni : 0;
+      if (s >= 0.6) pairs.push([s, key, k]);
+    });
+  });
+  pairs.sort((x, y) => y[0] - x[0]);
+  const usedC = new Set(), usedE = new Set(), res = new Map();
+  pairs.forEach(([s, key, k]) => { if (usedC.has(key) || usedE.has(k)) return; usedC.add(key); usedE.add(k); res.set(key, k); });
+  sumMatchCache = res; return res;
+}
+function sumGet(g) { const k = sumMatchAll().get(g.ids[0]); return k ? (sum2Load()[k] || null) : null; }
+function sumIsStale(g, st) {
+  if (!st) return false;
+  const a = g.ids.slice().sort().join('|'), b = (st.ids || []).slice().sort().join('|');
+  return a !== b || clusterMaxUpdated(g) !== (st.maxUpdated || 0);
+}
+function sumSet(g, v) {   // v が null のときは、このまとまりに結びついた1件だけを消す
+  const db = sum2Load(), mk = sumMatchAll().get(g.ids[0]);
+  if (!v) { if (mk) delete db[mk]; }
+  else {
+    const k = mk || (db[g.ids[0]] ? g.ids[0] + '~' + Date.now() : g.ids[0]);
+    db[k] = Object.assign({}, v, { v: 2, ids: g.ids.slice(), maxUpdated: clusterMaxUpdated(g) });
+  }
+  sumMatchCache = null; sum2Save();
+}
+function sumKeep(key) { const c = clusterGroups.get(key), st = c && sumGet(c.g); if (st) { sumSet(c.g, st); renderCluster(true); } }
+function sumMigrate() {   // 旧形式(qr_clsum:…)を1回だけ引き継ぐ。旧キーは消さない
   try {
-    const k = clusterSumKey(g), p = 'qr_clsum:' + g.ids[0] + ':';
-    Object.keys(localStorage).filter(x => x.startsWith(p) && x !== k).forEach(x => localStorage.removeItem(x));
-    if (v) localStorage.setItem(k, JSON.stringify(v)); else localStorage.removeItem(k);
+    if (localStorage.getItem('qr_clsum2_migrated')) return;
+    const db = sum2Load(); let cnt = 0;
+    Object.keys(localStorage).filter(k => k.startsWith('qr_clsum:')).forEach(k => {
+      let v = null; try { v = JSON.parse(localStorage.getItem(k)); } catch (_) {}
+      if (!v || typeof v.text !== 'string' || !Array.isArray(v.ids) || !v.ids.length) return;
+      const p = k.split(':'), mu = Number(p[p.length - 1]) || 0, nk = v.ids[0] + '~m' + mu;
+      if (db[nk]) return;
+      db[nk] = { v: 2, ids: v.ids.slice(), maxUpdated: mu, text: v.text, status: v.status || 'draft', edited: !!v.edited, kw: v.kw || [], at: v.at || 0 };
+      cnt++;
+    });
+    if (cnt && !sum2Save()) return;
+    localStorage.setItem('qr_clsum2_migrated', '1');
+    if (cnt) showToast('以前の要約' + cnt + '件を引き継ぎました');
   } catch (_) {}
 }
 const ctitle = c => c.s.keywords.length ? c.s.keywords.map(escapeHtml).join(' · ') : escapeHtml(qrSafeTitle(c.g.title || '(無題)'));
 const cmeta = g => `${g.size}件 · ${cdate(g.from)}${g.from === g.to ? '' : '〜' + cdate(g.to)} ${g.tags.map(t => '#' + escapeHtml(t)).join(' ')}`;
 const cbr = t => escapeHtml(t).replace(/\n/g, '<br>');
 
+const staleNote = id => `<div style="font-size:12px;color:#ff9500;margin:4px 0">⚠ 元メモが更新されています。<button type="button" data-sumkeep="${id}">このまま使う</button> <button type="button" data-sum="${id}">作り直す</button></div>`;
 function cardSum(key) {
   const c = clusterGroups.get(key), st = sumGet(c.g), id = escapeHtml(key);
   if (!st) return `<button type="button" data-sum="${id}" style="padding:2px 10px">✦ 要約</button>`;
   const adopted = st.status === 'adopted';
   return `<div style="font-size:11px;margin-bottom:2px">${adopted ? '<b style="color:#34c759">✓ 採用済み</b>' : '<b style="color:#ff9500">AI案（未採用）</b>'}` +
     (adopted ? '' : `<span style="float:right"><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕</button></span>`) +
-    `</div><div style="font-size:13px;line-height:1.5;clear:both">${cbr(st.text)}</div>`;
+    `</div>` + (sumIsStale(c.g, st) ? staleNote(id) : '') + `<div style="font-size:13px;line-height:1.5;clear:both">${cbr(st.text)}</div>`;
 }
 function clusterCard(key) {
   const c = clusterGroups.get(key), id = escapeHtml(key);
@@ -1380,6 +1435,7 @@ function renderClusterDetail(key) {
   const note = t => `<div style="font-size:13px;margin:6px 0;color:#8e8e93">${t}</div>`;
   const sum = st
     ? `<div style="font-size:11px;color:#8e8e93;margin-top:6px">✦ ${st.status === 'adopted' ? '<b style="color:#34c759">AI作成・採用済み</b>' + (st.edited ? '（修正あり）' : '') : '<b style="color:#ff9500">AI作成・未採用</b>（直して採用／却下）'}　※この端末のみに保存</div>` +
+      (sumIsStale(c.g, st) ? staleNote(id) : '') +
       `<textarea data-sumtext="${id}" rows="6" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea>` +
       `<div><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕ 却下</button> <button type="button" data-sum="${id}">作り直す</button></div>` +
       `<details><summary style="font-size:12px;color:#8e8e93">根拠（共通する語・送ったメモ）</summary><div style="font-size:12px;margin:4px 0">共通する語：${(st.kw || []).map(escapeHtml).join(' · ') || '（なし）'}</div>${(st.ids || []).map(clusterRow).join('')}</details>`
@@ -1428,7 +1484,8 @@ function adoptClusterSum(key, ok) {
   renderCluster(true);
 }
 function openClusters() {
-  closeMenu(); clusterGroups.clear(); clusterOpenKey = null;
+  closeMenu(); clusterGroups.clear(); clusterOpenKey = null; sumMatchCache = null; sum2Cache = null;
+  sumMigrate();
   const CI = window.ClusterItems;
   const items = CI && CI.eligible ? CI.eligible(allItems) : allItems.filter(i => !i.sensitive);   // 保護メモ・AI作成/まとまり/用語タグは読まない
   const prot = allItems.filter(i => i.sensitive).length, excl = allItems.length - prot - items.length;
@@ -1437,7 +1494,8 @@ function openClusters() {
   const desc = CI && CI.describeAll ? CI.describeAll(multi, items) : [];
   multi.forEach((g, k) => clusterGroups.set(g.ids[0], { g, s: desc[k] || { keywords: [], entries: g.ids.map(id => ({ type: 'item', id })), head: '', next: [] } }));
   clusterSingles = single.map(g => g.ids[0]);
-  clusterMeta = `${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外。` : '') + (excl ? `AI作成・まとまり・用語タグ${excl}件は対象外。` : '');
+  const orphan = Object.keys(sum2Load()).length - sumMatchAll().size;
+  clusterMeta = `${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外。` : '') + (excl ? `AI作成・まとまり・用語タグ${excl}件は対象外。` : '') + (orphan > 0 ? `保存済みの要約${orphan}件は、対応するまとまりが今は見つかりません（消していません）。` : '');
   const view = document.getElementById('clusterView');
   renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
 }
@@ -3923,6 +3981,7 @@ function wireEvents() {
     const q = sel => e.target.closest(sel); let t;
     if ((t = q('[data-sum]'))) { summarizeCluster(t.dataset.sum); return; }
     if (q('[data-sumall]')) { summarizeAll(); return; }
+    if ((t = q('[data-sumkeep]'))) { sumKeep(t.dataset.sumkeep); return; }
     if ((t = q('[data-sumok]'))) { adoptClusterSum(t.dataset.sumok, true); return; }
     if ((t = q('[data-sumng]'))) { adoptClusterSum(t.dataset.sumng, false); return; }
     if ((t = q('[data-open]'))) { openClusterDetail(t.dataset.open); return; }
