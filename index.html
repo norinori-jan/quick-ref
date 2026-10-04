@@ -1440,7 +1440,7 @@ function renderClusterDetail(key) {
     ? `<div style="font-size:11px;color:#8e8e93;margin-top:6px">✦ ${st.status === 'adopted' ? '<b style="color:#34c759">AI作成・採用済み</b>' + (st.edited ? '（修正あり）' : '') : '<b style="color:#ff9500">AI作成・未採用</b>（直して採用／却下）'}　※この端末のみに保存</div>` +
       (sumIsStale(c.g, st) ? staleNote(id) : '') +
       `<textarea data-sumtext="${id}" rows="6" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea>` +
-      `<div><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕ 却下</button> <button type="button" data-sum="${id}">作り直す</button></div>` +
+      `<div><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕ 却下</button> <button type="button" data-sum="${id}">作り直す</button>${st.noteId && allItems.some(i => i.id === st.noteId) ? ` <button type="button" data-cid="${escapeHtml(st.noteId)}">📝 メモを開く</button>` : ''}</div>` +
       `<details><summary style="font-size:12px;color:#8e8e93">根拠（共通する語・送ったメモ）</summary><div style="font-size:12px;margin:4px 0">共通する語：${(st.kw || []).map(escapeHtml).join(' · ') || '（なし）'}</div>${(st.ids || []).map(clusterRow).join('')}</details>`
     : `<button type="button" data-sum="${id}">✦ AI要約を作る</button> <span style="font-size:11px;color:#8e8e93">押すと、このまとまりの本文をAIに送ります（保護メモ・コード行・秘密らしい行は除く）</span>`;
   return `<h3 style="margin:4px 0">${ctitle(c)}</h3><div style="font-size:12px;color:#8e8e93">${cmeta(c.g)}</div>` +
@@ -1475,7 +1475,8 @@ async function summarizeCluster(key) {
   try {
     const out = String(await callAI(ClusterItems.summaryPrompt(items), { redact: true }) || '').trim();
     if (!out) throw new Error('AIから返事がありませんでした');
-    sumSet(c.g, { text: out, ids: items.map(i => i.id), kw: c.s.keywords, status: 'draft', edited: false, at: Date.now() });
+    const prev = sumGet(c.g);
+    sumSet(c.g, { text: out, ids: items.map(i => i.id), kw: c.s.keywords, status: 'draft', edited: false, at: Date.now(), noteId: prev && prev.noteId }); // 作り直しても同じメモにつなぐ
   } catch (e) { showToast('要約できませんでした：' + e.message); }
   renderCluster(true, true);
 }
@@ -1485,11 +1486,39 @@ async function summarizeAll() {
   for (let i = 0; i < todo.length; i++) { showToast('要約中 ' + (i + 1) + '/' + todo.length); await summarizeCluster(todo[i]); }
   showToast('要約が終わりました。内容を見て採用してください');
 }
-function adoptClusterSum(key, ok) {
+// 採用した要約を、タグ「AI作成」「まとまり」付きの通常メモとして保存する（同じ要約は同じメモを更新）。
+// ※ QuickRefBridge.onItemSaved は呼ばない（メモを書き換え、flow-mind へ送信してしまうため。AI作成メモは送らない）
+async function saveSummaryNote(key) {
+  const c = clusterGroups.get(key), st = c && sumGet(c.g); if (!c || !st || st.status !== 'adopted') return;
+  const CI = window.ClusterItems;
+  if (!CI || !CI.redact || !CI.redactTitle) { showToast('秘密除外の部品が読み込めないため、メモにはしませんでした'); return; }
+  const now = Date.now(), ex = st.noteId ? allItems.find(i => i.id === st.noteId) : null;
+  if (ex && ex.sensitive) { showToast('そのメモは保護メモになっているため、更新しませんでした'); return; }
+  if (ex && ex.ai && ex.updatedAt > (ex.ai.adoptedAt || 0) && !confirm('このメモは、要約を採用したあとに編集されています。要約の内容で上書きしますか？')) return;
+  const r = CI.redact(st.text);
+  const kw = (c.s.keywords || []).slice(0, 3).join('・');
+  const tags = [...new Set([...(ex ? ex.tags || [] : []), 'AI作成', 'まとまり'])];
+  const item = {
+    id: ex ? ex.id : crypto.randomUUID(),
+    title: CI.redactTitle('まとまり要約: ' + (kw || c.g.title || '(無題)')).slice(0, 60),
+    tags, url: ex ? ex.url || '' : '', sensitive: false,
+    body: escapeHtml(r.text).replace(/\n/g, '<br>'), fields: ex ? ex.fields || [] : [], encBody: null, encFields: null,
+    createdAt: ex ? ex.createdAt : now, updatedAt: now,
+    ai: { kind: 'cluster-summary', srcIds: c.g.ids.slice(), edited: !!st.edited, adoptedAt: now }
+  };
+  await dbPut(item);
+  sumSet(c.g, Object.assign({}, st, { noteId: item.id }));
+  await reload();
+  showToast((ex ? 'メモを更新しました' : 'メモとして保存しました') + (r.removed ? `（秘密らしい${r.removed}行は伏せました）` : ''));
+  void syncCloudNow(false);
+}
+async function adoptClusterSum(key, ok) {
   const c = clusterGroups.get(key), st = c && sumGet(c.g); if (!c || !st) return;
   if (ok) {
     const ta = clusterTextarea(key), text = ta ? ta.value : st.text;
     sumSet(c.g, Object.assign({}, st, { text, edited: st.edited || text !== st.text, status: 'adopted', at: Date.now() }));
+    renderCluster(true, true);
+    try { await saveSummaryNote(key); } catch (e) { showToast('メモにできませんでした：' + e.message); }
   } else sumSet(c.g, null);
   renderCluster(true, true);
 }

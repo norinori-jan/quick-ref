@@ -13,9 +13,13 @@
 3. 2-2 編集中の保護: 再描画しても textarea の修正を保持。戻る・メモを開く・作り直すは、修正中なら確認。
 4. 2-6 sw.js を qr-cache-v16 に（cluster-items.js の更新を届けるため）。
 
+## 第3便 — 採用した要約をメモにする
+- 「✓ 採用」で、タグ AI作成・まとまり 付きの通常メモを保存（同じ要約は同じメモを更新。作り直しても noteId を引き継ぐ）。追加フィールド ai:{kind,srcIds,edited,adoptedAt}。
+- QuickRefBridge.onItemSaved は呼ばない（_emotionMeta を書き込み、flow-mind へ送るため）。メモの本文も redact を通す。採用後にメモが編集されていたら、上書き前に確認。
+- 却下で消えるのは要約だけ。メモは残る（手で消す）。
+
 ## 次
-- Phase 3（調査のみ）: 採用した要約をメモとして保存する場所（saveItem / QuickRefBridge.onItemSaved）の洗い出し。
-- Phase 4（承認後）: 出所・語の調べ物。
+- Phase 4（第4便）: 出所・語の調べ物。v4パッチはそのまま当てない（v3の保存方式に戻してしまう）。第2便・第3便の上に組み直す。cluster-items.js に findTerm / definePrompt / summaryPlan（番号＝根拠）を追加し、抜粋・定義プロンプトは redact と eligible を通す。
 
 ## 注意
 - 値（鍵・トークン）は書かない。確認結果はファイル名・行番号・種類だけ。
