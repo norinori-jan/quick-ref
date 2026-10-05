@@ -201,6 +201,20 @@
     '何について: （このメモ群の主題）\n結論・現在地: （どこまで決まった／分かったか）\n未解決・次の一手: （残っていること）\n' +
     '本文に書かれていないことは足さないでください。分からない項目は「不明」と書いてください。\n';
   var PROMPT_CITE = '各文の終わりに、根拠にしたメモの番号を【1】【3】のように付けてください（番号は下のメモの【n】と同じです）。\n';
+  // 読みやすさ重視の指示 + 流れ図用の記述（FlowRender の書き方）。番号付き(cite)のときだけ使う
+  var PROMPT_HEAD_FLOW = '以下は、同じテーマで書かれた一連のメモです（古い順）。本人の言葉とAIの返答が混ざっています。\n' +
+    'このテーマを知らない人にも分かる、やさしい日本語で、次の4項目を書いてください。専門用語・略語は、初めて出すときに（）で短く言い換えます。前置きや装飾記号は不要です。\n' +
+    '何について: （主題を1文で）\n結論・現在地: （どこまで決まった／分かったか。1〜2文）\n未解決・次の一手: （残っていること。1〜2文）\n' +
+    '流れ:\n（作業の進み方を、時間順に4〜8段階で。1行に1本、矢印で結ぶ。例: 課題が出た【1】 -> 案を比べた【2】 -> {決まった?}。分かれ目は {問い} と書き、行の最後に「 : はい」「 : いいえ」を付ける。各段階は15文字以内、末尾に根拠の番号。コロン（：）は段階の中に使わない）\n' +
+    '本文に書かれていないことは足さないでください。分からない項目は「不明」と書いてください。\n';
+  // 要約の本文と「流れ:」以降（図にする行だけ）に分ける
+  function splitFlow(text) {
+    var t = String(text || ''), m = /^[ \t]*流れ[ \t]*[:：][ \t]*/m.exec(t);
+    if (!m) return { main: t, flow: '' };
+    var flow = t.slice(m.index + m[0].length).split('\n').map(function (l) { return l.trim().replace(/^[-・*•]\s*/, ''); })
+      .filter(function (l) { return /->|→/.test(l); }).join('\n');
+    return { main: t.slice(0, m.index).replace(/\s+$/, ''), flow: flow };
+  }
   // 戻り値 { prompt, ids }。ids[n-1] が、プロンプト内の【n】のメモID（要約の番号→元メモに使う）
   function summaryPlan(items, opts) {
     var o = Object.assign({ total: 12000, per: 1500, cite: true }, opts || {});
@@ -220,7 +234,7 @@
       return '【' + (i + 1) + '】' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + redactTitle(x.title || '(無題)') + '\n' + t;
     });
     return {
-      prompt: PROMPT_HEAD + (o.cite ? PROMPT_CITE : '') + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n'),
+      prompt: (o.cite ? PROMPT_HEAD_FLOW : PROMPT_HEAD) + (o.cite ? PROMPT_CITE : '') + (omitted ? '（連番の版のうち' + omitted + '件は省略しています）\n' : '') + '\n--- メモ（' + pick.length + '件）---\n' + parts.join('\n\n'),
       ids: pick.map(function (x) { return x.id; })
     };
   }
@@ -264,7 +278,7 @@
     };
   }
 
-  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, summaryPlan: summaryPlan, findTerm: findTerm, definePrompt: definePrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
+  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, summaryPlan: summaryPlan, splitFlow: splitFlow, findTerm: findTerm, definePrompt: definePrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);
