@@ -1322,13 +1322,32 @@ function haptic() {
 
 /* ── まとまり（メモの集まりを自動で見つける） ── */
 function closeClusters() { document.getElementById('clusterView').style.display = 'none'; }
-function openClusterItem(id) {
+async function openClusterItem(id) {
   if (clusterDirty(clusterOpenKey) && !confirm('修正中の要約があります。保存せずにメモを開きますか？')) return;
-  closeClusters(); openEdit(id);
+  const view = document.getElementById('clusterView');
+  clusterReturn = { key: clusterOpenKey, y: view.scrollTop, listY: clusterListY };   // メモを閉じたら、この画面に戻る
+  closeClusters(); await openEdit(id);
+  if (!document.getElementById('editSheet').classList.contains('open')) returnToCluster();   // 開けなかったときも戻る
+}
+function returnToCluster() {
+  const r = clusterReturn; clusterReturn = null; if (!r) return;
+  clusterOpenKey = (r.key === null || r.key === '__single' || clusterGroups.has(r.key)) ? r.key : null;
+  clusterEdit = null; clusterListY = r.listY;
+  const view = document.getElementById('clusterView');
+  renderCluster(false); view.style.display = 'block'; view.scrollTop = r.y;
+}
+// 要約を「本文」と「流れの図」に分けて扱う
+const splitFlowSafe = t => (window.ClusterItems && ClusterItems.splitFlow) ? ClusterItems.splitFlow(t) : { main: String(t || ''), flow: '' };
+function clusterFlowHtml(flow) {
+  if (!flow || !window.FlowRender) return '';
+  try {
+    const r = FlowRender.render(flow);
+    return (r && r.svg) ? `<div style="font-size:11px;color:#8e8e93;margin-top:8px">流れ（番号＝根拠のメモ。下の「根拠」の番号と同じ）</div><div style="overflow-x:auto;border:1px solid #c7c7cc;border-radius:8px;padding:4px;margin:2px 0 6px">${r.svg}</div>` : '';
+  } catch (_) { return ''; }
 }
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
-let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '';
+let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null;
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
 // 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
 const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
@@ -1420,7 +1439,7 @@ function cardSum(key) {
   const adopted = st.status === 'adopted';
   return `<div style="font-size:11px;margin-bottom:2px">${adopted ? '<b style="color:#34c759">✓ 採用済み</b>' : '<b style="color:#ff9500">AI案（未採用）</b>'}` +
     (adopted ? '' : `<span style="float:right"><button type="button" data-sumok="${id}">✓ 採用</button> <button type="button" data-sumng="${id}">✕</button></span>`) +
-    `</div>` + (sumIsStale(c.g, st) ? staleNote(id) : '') + `<div style="font-size:13px;line-height:1.5;clear:both">${cbr(st.text.replace(/【\d+】/g, ''))}</div>`;
+    `</div>` + (sumIsStale(c.g, st) ? staleNote(id) : '') + `<div style="font-size:13px;line-height:1.5;clear:both">${cbr(splitFlowSafe(st.text).main.replace(/【\d+】/g, ''))}</div>`;
 }
 function clusterCard(key) {
   const c = clusterGroups.get(key), id = escapeHtml(key);
@@ -1450,9 +1469,10 @@ function renderClusterDetail(key) {
     const adopted = st.status === 'adopted', cite = st.cite || st.ids || [];
     const label = `<div style="font-size:11px;color:#8e8e93;margin-top:6px">✦ ${adopted ? '<b style="color:#34c759">AI作成・採用済み</b>' + (st.edited ? '（修正あり）' : '') : '<b style="color:#ff9500">AI作成・未採用</b>'}　番号＝根拠のメモ　※この端末のみに保存</div>`;
     const noteBtn = st.noteId && allItems.some(i => i.id === st.noteId) ? ` <button type="button" data-cid="${escapeHtml(st.noteId)}">📝 メモを開く</button>` : '';
+    const sp = splitFlowSafe(st.text);
     const body = clusterEdit === key
       ? `<textarea data-sumtext="${id}" rows="7" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea><div><button type="button" data-sumok="${id}">保存して採用</button> <button type="button" data-sumcancel="1">キャンセル</button></div>`
-      : `<div style="font-size:14px;line-height:1.8;margin:4px 0">${ccite(st.text, cite)}</div><div>` +
+      : `<div style="font-size:14px;line-height:1.8;margin:4px 0">${ccite(sp.main, cite)}</div>${clusterFlowHtml(sp.flow)}<div>` +
         (adopted ? '' : `<button type="button" data-sumok="${id}">✓ 採用</button> `) +
         `<button type="button" data-sumedit="${id}">✎ 修正</button> <button type="button" data-sum="${id}">作り直す</button> <button type="button" data-sumng="${id}">${adopted ? '✕ 取り消し' : '✕ 却下'}</button>${noteBtn}</div>`;
     sum = label + (sumIsStale(c.g, st) ? staleNote(id) : '') + body +
@@ -1837,6 +1857,7 @@ function closeSheet() {
   pendingDeleteAttIds = [];
   document.getElementById('editSheet').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
+  if (clusterReturn) returnToCluster();   // まとまり画面から開いたメモなら、閉じたときにそこへ戻る
 }
 /* ─────────────────────────────
    タグ入力・構造化項目
