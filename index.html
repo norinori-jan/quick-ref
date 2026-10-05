@@ -647,8 +647,12 @@ header {
     <input type="password" id="sClaudeKey" autocomplete="off">
     <label class="field-label">Gemini APIキー</label>
     <input type="password" id="sGeminiKey" autocomplete="off">
+    <label class="field-label">Geminiモデル名（空なら標準）</label>
+    <input type="text" id="sGeminiModel" placeholder="gemini-3.5-flash-lite" autocomplete="off" autocapitalize="off" spellcheck="false">
     <label class="field-label">OpenAI APIキー</label>
     <input type="password" id="sOpenAIKey" autocomplete="off">
+    <label class="field-label">OpenAIモデル名（空なら標準）</label>
+    <input type="text" id="sOpenAIModel" placeholder="gpt-4o-mini" autocomplete="off" autocapitalize="off" spellcheck="false">
     <label class="field-label">Proxyサーバー URL</label>
     <input type="url" id="sProxyUrl" autocomplete="off">
     <label class="field-label" style="margin-top:20px;">iCloud Drive連携</label>
@@ -1511,7 +1515,7 @@ async function summarizeCluster(key) {
   if (box) box.innerHTML = '<div style="font-size:13px;color:#8e8e93">要約中…</div>';
   try {
     const plan = ClusterItems.summaryPlan(items);
-    const out = String(await callAI(plan.prompt, { redact: true }) || '').trim();
+    const out = String(await callAI(plan.prompt, { redact: true, maxTokens: 1600 }) || '').trim();
     if (!out) throw new Error('AIから返事がありませんでした');
     const prev = sumGet(c.g);
     sumSet(c.g, { text: out, ids: items.map(i => i.id), cite: plan.ids, kw: c.s.keywords, status: 'draft', edited: false, at: Date.now(), noteId: prev && prev.noteId }); // 作り直しても同じメモにつなぐ
@@ -2892,6 +2896,14 @@ const LS = {
   SYNC_TOKEN: 'qr_sync_token'
 };
 
+// Gemini / OpenAI のモデル名は設定画面で変えられる（古いモデルが止まっても直せるように）。空なら標準。
+const AI_MODEL_KEYS = { gemini: 'ml_gemini_model', openai: 'ml_openai_model' };
+const AI_MODEL_DEFAULT = { gemini: 'gemini-3.5-flash-lite', openai: 'gpt-4o-mini' };
+const AI_MODEL_RE = /^[A-Za-z0-9._-]{3,60}$/;
+function aiModelId(kind) {
+  let v = ''; try { v = (localStorage.getItem(AI_MODEL_KEYS[kind]) || '').trim(); } catch (_) {}
+  return AI_MODEL_RE.test(v) ? v : AI_MODEL_DEFAULT[kind];
+}
 const MODELS = {
   claude: {
     label: 'Claude',
@@ -2900,12 +2912,12 @@ const MODELS = {
   },
   gemini: {
     label: 'Gemini',
-    detail: 'gemini-2.0-flash',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+    get detail() { return aiModelId('gemini'); },
+    get endpoint() { return 'https://generativelanguage.googleapis.com/v1beta/models/' + aiModelId('gemini') + ':generateContent'; }
   },
   openai: {
     label: 'OpenAI',
-    detail: 'gpt-4o-mini',
+    get detail() { return aiModelId('openai'); },
     endpoint: 'https://api.openai.com/v1/chat/completions'
   }
 };
@@ -3036,6 +3048,13 @@ ${t}`,
 /* ─────────────────────────────
    AI呼び出し
 ───────────────────────────── */
+// 失敗したときに、原因が分かる短い文を作る（HTTP番号＋サービスの説明。キーらしい文字は伏せる）
+async function aiHttpError(label, res) {
+  let msg = '';
+  try { const j = await res.json(); const e = j && (j.error !== undefined ? j.error : j.message); msg = (e && e.message) || e || ''; } catch (_) {}
+  msg = String(typeof msg === 'string' ? msg : JSON.stringify(msg)).replace(/\s+/g, ' ').replace(/(sk-|AIza|ghp_|github_pat_)[A-Za-z0-9_\-*.]+/g, '…').slice(0, 140);
+  return new Error(label + ' ' + res.status + (msg ? '：' + msg : ''));
+}
 async function callAI(userPrompt, opts = {}) {
   const proxyUrl = localStorage.getItem(LS.PROXY) || '';
   const model = opts.model || activeModel;
@@ -3043,7 +3062,8 @@ async function callAI(userPrompt, opts = {}) {
   const apiKey = localStorage.getItem(LS[model.toUpperCase()]) || '';
   const maxTokens = opts.maxTokens || 1000;
 
-  if (!apiKey && !proxyUrl) {
+  // Proxy URL は Claude 用。Gemini / OpenAI はキーが必須
+  if (!apiKey && (model !== 'claude' || !proxyUrl)) {
     throw new Error(`${m.label}のAPIキーが未設定です`);
   }
   // 送信直前の秘密除外（fail closed：除外の部品が無ければ送らない）
@@ -3065,8 +3085,10 @@ async function callAI(userPrompt, opts = {}) {
         contents: [{ parts: [{ text: userPrompt }] }]
       })
     });
+    if (!res.ok) throw await aiHttpError('Gemini(' + m.detail + ')', res);
     const d = await res.json();
-    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const parts = d.candidates?.[0]?.content?.parts;
+    return Array.isArray(parts) ? parts.map(p => p.text || '').join('') : '';
   }
 
   if (model === 'openai') {
@@ -3077,11 +3099,12 @@ async function callAI(userPrompt, opts = {}) {
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: maxTokens,
+        model: m.detail,
+        max_completion_tokens: maxTokens,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
+    if (!res.ok) throw await aiHttpError('OpenAI(' + m.detail + ')', res);
     const d = await res.json();
     return d.choices?.[0]?.message?.content || '';
   }
@@ -3103,6 +3126,7 @@ async function callAI(userPrompt, opts = {}) {
       messages: [{ role: 'user', content: userPrompt }]
     })
   });
+  if (!res.ok) throw await aiHttpError('Claude', res);
   const d = await res.json();
   return d.content?.[0]?.text || '';
 }
@@ -3386,6 +3410,8 @@ function loadSettings() {
     localStorage.getItem(LS.OPENAI) || '';
   document.getElementById('sProxyUrl').value =
     localStorage.getItem(LS.PROXY) || '';
+  document.getElementById('sGeminiModel').value = localStorage.getItem(AI_MODEL_KEYS.gemini) || '';
+  document.getElementById('sOpenAIModel').value = localStorage.getItem(AI_MODEL_KEYS.openai) || '';
 
   activeModel = localStorage.getItem(LS.MODEL) || 'claude';
   document.getElementById('sSyncEndpoint').value = localStorage.getItem(LS.SYNC_ENDPOINT) || '';
@@ -3396,6 +3422,11 @@ function loadSettings() {
 }
 
 function saveSettings() {
+  for (const [kind, id] of [['gemini', 'sGeminiModel'], ['openai', 'sOpenAIModel']]) {
+    const v = document.getElementById(id).value.trim();
+    if (v && !AI_MODEL_RE.test(v)) { showToast('モデル名に使えない文字が含まれています'); return; }
+    if (v) localStorage.setItem(AI_MODEL_KEYS[kind], v); else localStorage.removeItem(AI_MODEL_KEYS[kind]);
+  }
   ['Claude', 'Gemini', 'OpenAI'].forEach(n => {
     const v = document.getElementById(`s${n}Key`).value.trim();
     if (v) localStorage.setItem(LS[n.toUpperCase()], v);
