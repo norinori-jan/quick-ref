@@ -1472,7 +1472,9 @@ function renderClusterDetail(key) {
   } else {
     const adopted = st.status === 'adopted', cite = st.cite || st.ids || [];
     const label = `<div style="font-size:11px;color:#8e8e93;margin-top:6px">✦ ${adopted ? '<b style="color:#34c759">AI作成・採用済み</b>' + (st.edited ? '（修正あり）' : '') : '<b style="color:#ff9500">AI作成・未採用</b>'}　番号＝根拠のメモ　※この端末のみに保存</div>`;
-    const noteBtn = st.noteId && allItems.some(i => i.id === st.noteId) ? ` <button type="button" data-cid="${escapeHtml(st.noteId)}">📝 メモを開く</button>` : '';
+    const nObj = st.noteId && allItems.find(i => i.id === st.noteId);
+    const noteBtn = (nObj ? ` <button type="button" data-cid="${escapeHtml(st.noteId)}">📝 メモを開く</button>` : '') +
+      (adopted ? (nObj && nObj.ai && nObj.ai.flowMind && nObj.ai.flowMind.sentAt ? ` <span style="font-size:12px;color:#34c759">✓ flow-mind へ送信済み</span>` : ` <button type="button" data-sumfm="${id}">⬡ flow-mind へ</button>`) : '');
     const sp = splitFlowSafe(st.text);
     const body = clusterEdit === key
       ? `<textarea data-sumtext="${id}" rows="7" style="width:100%;box-sizing:border-box;font-size:13px">${escapeHtml(st.text)}</textarea><div><button type="button" data-sumok="${id}">保存して採用</button> <button type="button" data-sumcancel="1">キャンセル</button></div>`
@@ -1536,7 +1538,7 @@ async function saveSummaryNote(key) {
   if (!CI || !CI.redact || !CI.redactTitle) { showToast('秘密除外の部品が読み込めないため、メモにはしませんでした'); return; }
   const now = Date.now(), ex = st.noteId ? allItems.find(i => i.id === st.noteId) : null;
   if (ex && ex.sensitive) { showToast('そのメモは保護メモになっているため、更新しませんでした'); return; }
-  if (ex && ex.ai && ex.updatedAt > (ex.ai.adoptedAt || 0) && !confirm('このメモは、要約を採用したあとに編集されています。要約の内容で上書きしますか？')) return;
+  if (ex && ex.ai && ex.updatedAt > Math.max(ex.ai.adoptedAt || 0, (ex.ai.flowMind && ex.ai.flowMind.sentAt) || 0) && !confirm('このメモは、要約を採用したあとに編集されています。要約の内容で上書きしますか？')) return;
   const r = CI.redact(st.text.replace(/【\d+】/g, ''));
   const kw = (c.s.keywords || []).slice(0, 3).join('・');
   const tags = [...new Set([...(ex ? ex.tags || [] : []), 'AI作成', 'まとまり'])];
@@ -1546,13 +1548,38 @@ async function saveSummaryNote(key) {
     tags, url: ex ? ex.url || '' : '', sensitive: false,
     body: escapeHtml(r.text).replace(/\n/g, '<br>'), fields: ex ? ex.fields || [] : [], encBody: null, encFields: null,
     createdAt: ex ? ex.createdAt : now, updatedAt: now,
-    ai: { kind: 'cluster-summary', srcIds: c.g.ids.slice(), edited: !!st.edited, adoptedAt: now }
+    ai: Object.assign({}, ex && ex.ai, { kind: 'cluster-summary', srcIds: c.g.ids.slice(), edited: !!st.edited, adoptedAt: now })   // flowMind(送信済みの印)は残す
   };
   await dbPut(item);
   sumSet(c.g, Object.assign({}, st, { noteId: item.id }));
   await reload();
   showToast((ex ? 'メモを更新しました' : 'メモとして保存しました') + (r.removed ? `（秘密らしい${r.removed}行は伏せました）` : ''));
   void syncCloudNow(false);
+}
+// 採用した要約を flow-mind へ送る。経路は既存のクラウド同期（sync-worker）。
+// メモに ai.flowMind={sentAt, refs} の印を付けるだけで、flow-mind 側がそれを見て Inbox のノードにする。
+// 印が無い AI作成メモは flow-mind に入らない（勝手には送らない）。
+async function sendSummaryToFlowMind(key) {
+  const c = clusterGroups.get(key), CI = window.ClusterItems;
+  let st = c && sumGet(c.g);
+  if (!c || !st || st.status !== 'adopted') { showToast('先に「✓ 採用」してください'); return; }
+  if (!CI || !CI.redactTitle) { showToast('部品が読み込めないため、送りませんでした'); return; }
+  if (!cloudSyncUrl() || !getCloudSyncConfig().token) { showToast('クラウド同期が未設定です（設定→クラウド同期）。flow-mind へはこの同期で届きます'); return; }
+  if (!confirm('この要約を flow-mind へ送ります（flow-mind の Inbox に入ります）。よろしいですか？')) return;
+  if (!st.noteId || !allItems.some(i => i.id === st.noteId)) { await saveSummaryNote(key); st = sumGet(c.g); }
+  const note = st && st.noteId && allItems.find(i => i.id === st.noteId);
+  if (!note || note.sensitive) { showToast('メモを用意できませんでした'); return; }
+  if (note.ai && note.ai.flowMind && note.ai.flowMind.sentAt) { showToast('すでに送信済みです'); return; }
+  const refs = (st.cite || st.ids || []).map((id, k) => {
+    const it = allItems.find(x => x.id === id);
+    return it && !it.sensitive ? { n: k + 1, title: CI.redactTitle(it.title || '(無題)').slice(0, 60) } : null;
+  }).filter(Boolean);
+  const now = Date.now();
+  await dbPut(Object.assign({}, note, { updatedAt: now, ai: Object.assign({}, note.ai, { flowMind: { sentAt: now, refs } }) }));
+  await reload();
+  const synced = await syncCloudNow(false);
+  showToast(synced ? 'flow-mind へ送りました（flow-mind を開くと Inbox に入ります）' : '印は付けましたが、同期に失敗しました。あとで「今すぐ同期」を押してください');
+  renderCluster(true, true);
 }
 async function adoptClusterSum(key, ok) {
   const c = clusterGroups.get(key), st = c && sumGet(c.g); if (!c || !st) return;
@@ -4144,6 +4171,7 @@ function wireEvents() {
       clusterEdit = null; renderCluster(true, true); return;
     }
     if ((t = q('[data-lk]'))) { const k = clusterOpenKey; if (t.dataset.lk === 'src') lookupSource(k); else if (t.dataset.lk === 'def') lookupDefine(k); else lookupWeb(); return; }
+    if ((t = q('[data-sumfm]'))) { sendSummaryToFlowMind(t.dataset.sumfm); return; }
     if ((t = q('[data-sumok]'))) { adoptClusterSum(t.dataset.sumok, true); return; }
     if ((t = q('[data-sumng]'))) { adoptClusterSum(t.dataset.sumng, false); return; }
     if ((t = q('[data-open]'))) { openClusterDetail(t.dataset.open); return; }

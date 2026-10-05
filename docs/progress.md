@@ -32,7 +32,13 @@
 - 対応: 標準を gemini-3.5-flash-lite に。Gemini / OpenAI のモデル名を設定画面で変えられるように（空なら標準）。HTTPエラーは番号＋説明を表示（キーらしい文字は伏せる）。OpenAI は max_completion_tokens に。Proxy URL は Claude 専用（Gemini/OpenAI はキー必須）。要約の最大出力を1600に。
 - 注意: モデルの寿命は短い。動かなくなったら、設定のモデル名を最新に変える（コード修正は不要）。
 
+## 第7便 — flow-mind 連携（採用した要約 → 1つの塊ノード）
+- quick-ref: 採用済みの要約の詳細画面に「⬡ flow-mind へ」。押すとメモに ai.flowMind={sentAt,refs} の印を付けて、クラウド同期（sync-worker）で届ける。送信前に確認。印は再採用しても残る。
+- flow-mind(pollQuickRefSync): AI作成/まとまり/用語タグのメモは、印があるものだけ取り込む（印の無いものは見送り、記憶しない）。取り込むと triageStatus:'inbox' の1ノード（メモ欄は最大1500字、末尾に元メモの一覧、タグ AI作成・まとまり、qrItemId/kind を保持）。「取り込み完了」を押すまで Inbox。
+- 経路は1本（クラウド同期）。端末をまたいでも届く。onItemSaved / is_emotion_transfer は使わない（感情推定を書き込み、勝手に送るため）。
+
 ## 次
+- flow-mind 連携の次: 要約の「流れ図」を複数ノード＋エッジにする案（未着手）、flow-mind 側ノードから quick-ref の元メモを開く導線(qrItemId)。
 - 実機確認（要約の番号・出所・意味）。必要なら語を「用語」タグのメモにする機能（未着手）。
 
 ## 注意
