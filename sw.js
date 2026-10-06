@@ -6,7 +6,7 @@
    - Share Target / Shortcut連携補助
 ───────────────────────────── */
 
-const CACHE_VERSION = 'qr-cache-v20';
+const CACHE_VERSION = 'qr-cache-v21';
 const BASE_URL = self.registration.scope;
 const APP_SHELL = [
   'index.html',

@@ -203,11 +203,29 @@
   var PROMPT_CITE = '各文の終わりに、根拠にしたメモの番号を【1】【3】のように付けてください（番号は下のメモの【n】と同じです）。\n';
   // 読みやすさ重視の指示 + 流れ図用の記述（FlowRender の書き方）。番号付き(cite)のときだけ使う
   var PROMPT_HEAD_FLOW = '以下は、同じテーマで書かれた一連のメモです（古い順）。本人の言葉とAIの返答が混ざっています。\n' +
-    'このテーマを知らない人にも分かる、やさしい日本語で、次の4項目を書いてください。専門用語・略語は、初めて出すときに（）で短く言い換えます。前置きや装飾記号は不要です。\n' +
-    '何について: （主題を1文で）\n結論・現在地: （どこまで決まった／分かったか。1〜2文）\n未解決・次の一手: （残っていること。1〜2文）\n' +
+    'このテーマを知らない人にも分かる、やさしい日本語で、次の項目を書いてください。前置きや装飾記号は不要です。\n' +
+    '関数名・変数名・ファイル名・括弧つきの英字（例: firenode()）は書かない。必要なときは「ノードを光らせる処理」のように日本語で言い換える。専門用語は、初めて出すときに（）で短く言い換える。\n' +
+    '題名: （この話を20字以内の名詞句で。英字の識別子は使わない）\n状態: （調べ中／決まった／止まっている／終わった のどれか1つだけ）\n次の一手: （次にやることを、「〜を確認する」のように1文・40字以内）\n' +
+    '何について: （主題を1文で）\n結論・現在地: （どこまで決まった／分かったか。1〜2文）\n未解決: （残っていること。1〜2文）\n' +
     '流れ:\n（この話の進み方を、時間順の「1本の筋」で書く。5〜7段階。最初の段階は1つだけ。各段階は「〜を調べた」「〜と分かった」「〜に決めた」「〜をやる」のように、動きが分かる12文字前後の短い文にする。単語だけの断片にしない。矢印 -> でつなぎ、1行に1〜2本。分かれ目は多くて1つで、{問い?} と書く（同じ分かれ目は同じ文字で書く）。分かれ目から出る行の最後に「 : はい」「 : いいえ」を付ける。各段階の末尾に根拠の番号【n】。コロン（：）は段階の中に使わない。最後の段階は「次にやること」）\n' +
     '例（別の話題）:\n画面が固まった【1】 -> 原因を調べた【2】 -> {再現するか?}\n{再現するか?} -> 設定を直した【3】 : はい\n{再現するか?} -> 条件を探す【4】 : いいえ\n' +
     '本文に書かれていないことは足さないでください。分からない項目は「不明」と書いてください。\n';
+  // 要約から「題名・状態・次の一手」の行を取り出す。残り(rest)は従来どおり splitFlow に渡せる。古い要約（この行が無い）は空で返る
+  var STATES = ['調べ中', '決まった', '止まっている', '終わった'];
+  function fields(text) {
+    var out = { title: '', state: '', next: '' }, keep = [];
+    String(text || '').split('\n').forEach(function (l) {
+      var m = /^[ \t]*(題名|状態|次の一手)[ \t]*[:：][ \t]*(.*)$/.exec(l);
+      if (!m) { keep.push(l); return; }
+      var v = m[2].trim();
+      if (m[1] === '題名') out.title = v; else if (m[1] === '状態') out.state = v; else out.next = v;
+    });
+    var s = out.state.replace(/[\s。．.]/g, ''), hit = STATES.filter(function (x) { return s.indexOf(x) === 0; })[0];
+    out.state = hit || '';
+    out.title = out.title.replace(/【\d+】/g, '').slice(0, 40);
+    if (/^不明[。]?$/.test(out.next)) out.next = '';
+    return { title: out.title, state: out.state, next: out.next, rest: keep.join('\n').replace(/^\s+/, '') };
+  }
   // 要約の本文と「流れ:」以降（図にする行だけ）に分ける
   function splitFlow(text) {
     var t = String(text || ''), m = /^[ \t]*流れ[ \t]*[:：][ \t]*/m.exec(t);
@@ -279,7 +297,7 @@
     };
   }
 
-  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, summaryPlan: summaryPlan, splitFlow: splitFlow, findTerm: findTerm, definePrompt: definePrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
+  var api = { cluster: cluster, describeAll: describeAll, summaryPrompt: summaryPrompt, summaryPlan: summaryPlan, splitFlow: splitFlow, fields: fields, findTerm: findTerm, definePrompt: definePrompt, params: P, isSecret: isSecret, redact: redact, redactTitle: redactTitle, eligible: eligible, eligibleOne: eligibleOne, EXCLUDE_TAGS: EXCLUDE_TAGS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.ClusterItems = api;
 })(typeof window !== 'undefined' ? window : globalThis);
