@@ -6,7 +6,7 @@
    - Share Target / Shortcut連携補助
 ───────────────────────────── */
 
-const CACHE_VERSION = 'qr-cache-v18';
+const CACHE_VERSION = 'qr-cache-v20';
 const BASE_URL = self.registration.scope;
 const APP_SHELL = [
   'index.html',
@@ -31,7 +31,8 @@ self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_VERSION);
-      await cache.addAll(APP_SHELL);
+      // 1つでも取れないファイルがあると addAll は全体が失敗し、古い版が居座り続ける。1件ずつ入れて、失敗は無視する
+      await Promise.all(APP_SHELL.map(u => cache.add(u).catch(() => {})));
       self.skipWaiting();
     })()
   );
