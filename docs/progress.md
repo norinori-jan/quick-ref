@@ -68,6 +68,15 @@
 - 未要約・項目の無い古い要約の件数と案内を下に出す。
 - 版 2026-10-06e、sw v22（第11便を含む累積版）。
 
+## 第13便 — flow-mind との往復（塊 → 流れに展開 → 考える → quick-ref へ返す）
+- 発見: flow-mind は押された要約を自動では受け取っていなかった（pollQuickRefSync は設定の「保存」を押したときだけ動いた）。起動・復帰・60秒ごとに、「flow-mind へ」を押した要約だけを受け取る（opts.auto）。設定の「保存」は、ふつうのメモの全件取り込みを確認してから。
+- 修正: 取り込み時に <br> が消えて「流れ:」の行が1本につながっていた → 改行にしてから読む（DOMParser）。メモ欄の上限 1500→2500。塊ノードの題はAIの「題名」。
+- A（flow-mind）: 塊ノードに cluster={state,next,flow[]} を保存。ノード編集シートの「🧭 まとまり要約の操作」→「🔀 流れに展開する」で、流れの行をノードと線にする（判断=金色、はい／いいえは線のラベル、根拠【n】はノードのメモに元メモの題）。作ったノードは kind:'flow-step', fromCluster。1つの塊につき1回。線のラベルを描く。
+- B（flow-mind → quick-ref）: 「↩ quick-ref へ返す」シートで 題名・決めたこと・次の一手 を書き、塊から先のノードと線を流れ図の書き方にして、同期サーバーの /sync/flow-mind-out に PUT。形: {data:{version:1, thoughts:[{id:'th_<塊ノードID>', title, decided, next, flow, steps, srcNoteId, graph, sentAt}]}}（最新30件、同じ塊は上書き）。
+- C（quick-ref）: まとまり一覧に「↩ flow-mind から考察が N件」。確認画面で「メモにする／見送る」。メモは 題「考察: …」・タグ flow-mind・origin={app:'flow-mind',thoughtId,sentAt,importedAt,srcNoteId}（秘密らしい行は伏せる）。送り直しは同じメモを更新（編集済みなら確認）。見送りは版ごとに記憶。
+- 循環の防止: origin.app==='flow-mind' のメモは flow-mind が取り込み直さない。返ったメモは元のまとまりに合流し、第10便の「要約のあとに足したメモ」に出る。
+- 版 2026-10-07a、quick-ref の sw は v23。適用順: flow-mind → quick-ref。
+
 ## 次
 - flow-mind 連携の次: 要約の「流れ図」を複数ノード＋エッジにする案（未着手）、flow-mind 側ノードから quick-ref の元メモを開く導線(qrItemId)。
 - 実機確認（要約の番号・出所・意味）。必要なら語を「用語」タグのメモにする機能（未着手）。

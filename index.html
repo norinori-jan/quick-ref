@@ -404,8 +404,8 @@ header {
   transform: translateX(-50%) translateY(0);
 }
 </style>
-  <script src="flow-render.js?v=2026-10-06e"></script>
-  <script src="cluster-items.js?v=2026-10-06e"></script>
+  <script src="flow-render.js?v=2026-10-07a"></script>
+  <script src="cluster-items.js?v=2026-10-07a"></script>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
@@ -1358,8 +1358,8 @@ function clusterFlowHtml(flow) {
 }
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
-let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null, clusterError = null, clusterTodo = false;
-const QR_BUILD = '2026-10-06e';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
+let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null, clusterError = null, clusterTodo = false, clusterFm = false, fmThoughts = [];
+const QR_BUILD = '2026-10-07a';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
 // 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
 const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
@@ -1492,6 +1492,7 @@ function renderClusterList() {
   const keys = [...clusterGroups.keys()], todo = keys.filter(k => !sumGet(clusterGroups.get(k).g));
   const open = todoRows().open.length;
   return `<p style="color:#8e8e93;font-size:12px;margin:4px 0">${clusterMeta}</p>` +
+    (fmThoughts.length ? `<button type="button" data-fmin="1" style="margin:4px 0;padding:6px 12px;font-weight:600;color:#ff9500">↩ flow-mind から考察が${fmThoughts.length}件届いています（確認する）</button><br>` : '') +
     `<button type="button" data-todo="1" style="margin:4px 0;padding:6px 12px;font-weight:600">☑ やること一覧（${open}件）</button><br>` +
     (todo.length ? `<button type="button" data-sumall="1" style="margin:4px 0">✦ 未要約の${todo.length}件をまとめて要約</button>` : '') +
     keys.map(clusterCard).join('') +
@@ -1564,16 +1565,82 @@ function renderClusterTodo() {
     (t.none ? `まだ要約していないまとまりが${t.none}件あります。 <button type="button" data-sumall="1">✦ まとめて要約</button><br>` : '') +
     (t.legacy ? `項目が付く前に作った要約が${t.legacy}件あります。各まとまりで「作り直す」と、ここに入ります。` : '') + `</div>`;
 }
+// flow-mind から届いた「考察」（flow-mind で考えた結果）。確認してからメモにする。経路は同期サーバーの /sync/flow-mind-out
+const FM_DISMISS_KEY = 'qr_fm_dismissed';
+function fmDismissed() { try { return new Set(JSON.parse(localStorage.getItem(FM_DISMISS_KEY) || '[]')); } catch (_) { return new Set(); } }
+function fmFind(t) { return allItems.find(i => i.origin && i.origin.app === 'flow-mind' && i.origin.thoughtId === t.id) || null; }
+function fmPending(list) {
+  const dis = fmDismissed();
+  return (Array.isArray(list) ? list : []).filter(t => t && typeof t.id === 'string' && typeof t.title === 'string' && typeof t.sentAt === 'number' && !dis.has(t.id + '@' + t.sentAt))
+    .filter(t => { const ex = fmFind(t); return !ex || ((ex.origin && ex.origin.sentAt) || 0) < t.sentAt; });   // 取り込み済みで、内容が新しくなっていないものは出さない
+}
+async function fmCheck() {
+  const cfg = getCloudSyncConfig(); if (!cfg.endpoint || !cfg.token) return;
+  try {
+    const res = await fetch(`${cfg.endpoint}/sync/flow-mind-out`, { headers: { Authorization: `Bearer ${cfg.token}` } });
+    if (!res.ok) return;   // まだ何も返されていないとき(404)も含む
+    const remote = await res.json();
+    fmThoughts = fmPending(remote && remote.data && remote.data.thoughts);
+    if (document.getElementById('clusterView').style.display !== 'none' && !clusterOpenKey && !clusterTodo) renderCluster(true);
+  } catch (_) {}
+}
+function renderClusterFm() {
+  const cards = fmThoughts.map(t => {
+    const id = escapeHtml(t.id), ex = fmFind(t);
+    return `<div style="border:1px solid #c7c7cc;border-radius:10px;padding:10px;margin:8px 0">` +
+      `<b>${escapeHtml(t.title)}</b> <span style="font-size:11px;color:#8e8e93">${escapeHtml(new Date(t.sentAt).toLocaleString('ja-JP'))}${t.graph ? ' ・' + escapeHtml(t.graph) : ''}${ex ? ' ・取り込み済みの更新' : ''}</span>` +
+      (t.decided ? `<div style="font-size:14px;line-height:1.7;margin-top:6px"><b>決めたこと</b> ${cbr(String(t.decided))}</div>` : '') +
+      (t.next ? `<div style="font-size:14px;line-height:1.7;margin-top:4px">▶ <b>次の一手</b> ${cbr(String(t.next))}</div>` : '') +
+      (t.flow ? clusterFlowHtml(String(t.flow)) : '') +
+      `<div style="margin-top:8px"><button type="button" data-fmok="${id}" style="font-weight:600">${ex ? 'メモを更新' : 'メモにする'}</button> <button type="button" data-fmng="${id}">見送る</button></div></div>`;
+  }).join('');
+  return `<h3 style="margin:4px 0">flow-mind から届いた考察</h3><div style="font-size:12px;color:#8e8e93;margin-bottom:4px">flow-mind で考えた結果です。確認してから、メモにします。メモにしても flow-mind へは戻りません。</div>` +
+    (cards || `<div style="color:#8e8e93;margin:12px 0">届いている考察はありません。</div>`);
+}
+async function fmImport(id) {
+  const t = fmThoughts.find(x => x.id === id), CI = window.ClusterItems; if (!t) return;
+  if (!CI || !CI.redact || !CI.redactTitle) { showToast('秘密除外の部品が読み込めないため、メモにはしませんでした'); return; }
+  const ex = fmFind(t), now = Date.now();
+  if (ex && ex.sensitive) { showToast('そのメモは保護メモになっているため、更新しませんでした'); return; }
+  if (ex && ex.updatedAt > ((ex.origin && ex.origin.importedAt) || 0) && !confirm('このメモは、取り込んだあとに編集されています。flow-mind の内容で上書きしますか？')) return;
+  const lines = [];
+  if (t.decided) lines.push('決めたこと: ' + t.decided);
+  if (t.next) lines.push('次の一手: ' + t.next);
+  if (t.flow) lines.push('流れ:', String(t.flow));
+  lines.push('出所: flow-mind' + (t.graph ? '「' + t.graph + '」' : '') + (t.srcNoteId ? '（元のまとまり要約メモから）' : ''));
+  const r = CI.redact(lines.join('\n'));
+  const item = {
+    id: ex ? ex.id : crypto.randomUUID(),
+    title: CI.redactTitle('考察: ' + t.title).slice(0, 60),
+    tags: [...new Set([...(ex ? ex.tags || [] : []), 'flow-mind'])], url: ex ? ex.url || '' : '', sensitive: false,
+    body: escapeHtml(r.text).replace(/\n/g, '<br>'), fields: ex ? ex.fields || [] : [], encBody: null, encFields: null,
+    createdAt: ex ? ex.createdAt : now, updatedAt: now,
+    origin: { app: 'flow-mind', thoughtId: t.id, sentAt: t.sentAt, importedAt: now, srcNoteId: t.srcNoteId || '' }   // flow-mind はこの印のメモを取り込み直さない（循環の防止）
+  };
+  await dbPut(item);
+  fmThoughts = fmThoughts.filter(x => x.id !== id);
+  await reload();
+  renderCluster(true);
+  showToast((ex ? 'メモを更新しました' : 'メモにしました') + (r.removed ? `（秘密らしい${r.removed}行は伏せました）` : ''));
+  void syncCloudNow(false);
+}
+function fmDismiss(id) {
+  const t = fmThoughts.find(x => x.id === id); if (!t) return;
+  const dis = fmDismissed(); dis.add(t.id + '@' + t.sentAt);
+  try { localStorage.setItem(FM_DISMISS_KEY, JSON.stringify([...dis].slice(-200))); } catch (_) {}
+  fmThoughts = fmThoughts.filter(x => x.id !== id); renderCluster(true);
+}
 function renderCluster(keepY, discard) {
   const view = document.getElementById('clusterView'), body = document.getElementById('clusterBody'), y = view.scrollTop;
   let draft = null;
   if (!discard && clusterOpenKey && clusterDirty(clusterOpenKey)) draft = clusterTextarea(clusterOpenKey).value;
-  body.innerHTML = clusterOpenKey ? renderClusterDetail(clusterOpenKey) : (clusterTodo ? renderClusterTodo() : renderClusterList());
+  body.innerHTML = clusterOpenKey ? renderClusterDetail(clusterOpenKey) : (clusterFm ? renderClusterFm() : clusterTodo ? renderClusterTodo() : renderClusterList());
   if (draft !== null) { const ta = clusterTextarea(clusterOpenKey); if (ta) ta.value = draft; }
   view.scrollTop = keepY ? y : 0;
 }
 function openClusterDetail(key) { clusterListY = document.getElementById('clusterView').scrollTop; clusterOpenKey = key; clusterEdit = null; clusterTerm = ''; clusterLookupHtml = ''; clusterError = null; renderCluster(false); }
 function clusterBack() {
+  if (!clusterOpenKey && clusterFm) { clusterFm = false; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY; return; }
   if (!clusterOpenKey && clusterTodo) { clusterTodo = false; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY; return; }
   if (!clusterOpenKey) { closeClusters(); return; }
   if (clusterDirty(clusterOpenKey) && !confirm('修正中の要約があります。保存せずに戻りますか？（「採用」を押すと保存されます）')) return;
@@ -1726,7 +1793,8 @@ function openClusters() {
   const orphan = Object.keys(sum2Load()).length - sumMatchAll().size;
   clusterMeta = `${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外。` : '') + (excl ? `AI作成・まとまり・用語タグ${excl}件は対象外。` : '') + (orphan > 0 ? `保存済みの要約${orphan}件は、対応するまとまりが今は見つかりません（消していません）。` : '') + ` 版 ${QR_BUILD}${CI && CI.summaryPlan ? '' : '（部品が古い）'}`;
   const view = document.getElementById('clusterView');
-  clusterTodo = false; renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
+  clusterTodo = false; clusterFm = false; renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
+  void fmCheck();   // flow-mind から届いた考察があるか調べる
 }
 
 async function reload() {
@@ -4251,6 +4319,9 @@ function wireEvents() {
       summarizeCluster(t.dataset.sum); return;
     }
     if (q('[data-sumall]')) { summarizeAll(); return; }
+    if (q('[data-fmin]')) { clusterListY = document.getElementById('clusterView').scrollTop; clusterFm = true; renderCluster(false); return; }
+    if ((t = q('[data-fmok]'))) { fmImport(t.dataset.fmok); return; }
+    if ((t = q('[data-fmng]'))) { fmDismiss(t.dataset.fmng); return; }
     if (q('[data-todo]')) { clusterListY = document.getElementById('clusterView').scrollTop; clusterTodo = true; renderCluster(false); return; }
     if ((t = q('[data-tdone]'))) {
       const c = clusterGroups.get(t.dataset.tdone), st = c && sumGet(c.g); if (!st) return;
