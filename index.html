@@ -404,8 +404,8 @@ header {
   transform: translateX(-50%) translateY(0);
 }
 </style>
-  <script src="flow-render.js?v=2026-10-06d"></script>
-  <script src="cluster-items.js?v=2026-10-06d"></script>
+  <script src="flow-render.js?v=2026-10-06e"></script>
+  <script src="cluster-items.js?v=2026-10-06e"></script>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
@@ -1358,8 +1358,8 @@ function clusterFlowHtml(flow) {
 }
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
-let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null, clusterError = null;
-const QR_BUILD = '2026-10-06d';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
+let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null, clusterError = null, clusterTodo = false;
+const QR_BUILD = '2026-10-06e';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
 // 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
 const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
@@ -1490,7 +1490,9 @@ function clusterEntry(e, late) {
 }
 function renderClusterList() {
   const keys = [...clusterGroups.keys()], todo = keys.filter(k => !sumGet(clusterGroups.get(k).g));
+  const open = todoRows().open.length;
   return `<p style="color:#8e8e93;font-size:12px;margin:4px 0">${clusterMeta}</p>` +
+    `<button type="button" data-todo="1" style="margin:4px 0;padding:6px 12px;font-weight:600">☑ やること一覧（${open}件）</button><br>` +
     (todo.length ? `<button type="button" data-sumall="1" style="margin:4px 0">✦ 未要約の${todo.length}件をまとめて要約</button>` : '') +
     keys.map(clusterCard).join('') +
     (clusterSingles.length ? `<div data-open="__single" style="border:1px solid #c7c7cc;border-radius:10px;padding:10px;margin:8px 0;cursor:pointer">単独のメモ（${clusterSingles.length}件） ›</div>` : '');
@@ -1534,16 +1536,45 @@ function renderClusterDetail(key) {
 // 編集中の要約（textarea）を再描画で失わない
 function clusterTextarea(key) { return [...document.querySelectorAll('#clusterBody textarea[data-sumtext]')].find(t => t.dataset.sumtext === key) || null; }
 function clusterDirty(key) { const ta = key && key !== '__single' ? clusterTextarea(key) : null; return !!ta && ta.value !== ta.defaultValue; }
+// やること一覧：各まとまりの要約の「次の一手」を1か所に集める。チェックは要約ごとに保存（作り直すと新しい次の一手になり、印は外れる）
+function todoRows() {
+  const rows = []; let none = 0, legacy = 0;
+  clusterGroups.forEach((c, key) => {
+    const st = sumGet(c.g); if (!st) { none++; return; }
+    const f = sumFields(st.text); if (!f.next) { legacy++; return; }
+    rows.push({ key, c, st, f, done: st.nextDone === f.next || f.state === '終わった', stale: sumIsStale(c.g, st) });
+  });
+  const ord = { '止まっている': 0, '調べ中': 1, '決まった': 2, '': 2, '終わった': 3 };
+  rows.sort((a, b) => (ord[a.f.state] - ord[b.f.state]) || (b.c.g.to - a.c.g.to));
+  return { open: rows.filter(r => !r.done), closed: rows.filter(r => r.done), none, legacy };
+}
+function todoRow(r) {
+  const id = escapeHtml(r.key), h = clusterHeading(r.c, r.st), nx = cbr(String(r.f.next).replace(/【\d+】/g, ''));
+  return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(142,142,147,.3)">` +
+    `<input type="checkbox" data-tdone="${id}" ${r.done ? 'checked' : ''} aria-label="済みにする" style="width:22px;height:22px;margin-top:3px;flex:none">` +
+    `<div style="flex:1;min-width:0"><div style="font-size:15px;line-height:1.6;${r.done ? 'text-decoration:line-through;color:#8e8e93;' : ''}">${nx}</div>` +
+    `<div data-open="${id}" style="font-size:12px;color:#8e8e93;cursor:pointer;margin-top:2px">${statePill(r.f.state)} ${h.title} ›${r.stale ? ' <span style="color:#ff9500">⚠ 要約のあとにメモが変わっています</span>' : ''}</div></div></div>`;
+}
+function renderClusterTodo() {
+  const t = todoRows();
+  return `<h3 style="margin:4px 0">やること一覧</h3><div style="font-size:12px;color:#8e8e93;margin-bottom:4px">各まとまりの要約の「次の一手」を集めました。止まっているものが上です。題をタップするとそのまとまりを開きます。</div>` +
+    (t.open.length ? t.open.map(todoRow).join('') : `<div style="color:#8e8e93;margin:12px 0">未完了のやることはありません。</div>`) +
+    (t.closed.length ? `<details style="margin-top:10px"><summary style="font-size:13px;color:#8e8e93">済み・終わったもの（${t.closed.length}件）</summary>${t.closed.map(todoRow).join('')}</details>` : '') +
+    `<div style="font-size:12px;color:#8e8e93;margin-top:14px;line-height:1.7">` +
+    (t.none ? `まだ要約していないまとまりが${t.none}件あります。 <button type="button" data-sumall="1">✦ まとめて要約</button><br>` : '') +
+    (t.legacy ? `項目が付く前に作った要約が${t.legacy}件あります。各まとまりで「作り直す」と、ここに入ります。` : '') + `</div>`;
+}
 function renderCluster(keepY, discard) {
   const view = document.getElementById('clusterView'), body = document.getElementById('clusterBody'), y = view.scrollTop;
   let draft = null;
   if (!discard && clusterOpenKey && clusterDirty(clusterOpenKey)) draft = clusterTextarea(clusterOpenKey).value;
-  body.innerHTML = clusterOpenKey ? renderClusterDetail(clusterOpenKey) : renderClusterList();
+  body.innerHTML = clusterOpenKey ? renderClusterDetail(clusterOpenKey) : (clusterTodo ? renderClusterTodo() : renderClusterList());
   if (draft !== null) { const ta = clusterTextarea(clusterOpenKey); if (ta) ta.value = draft; }
   view.scrollTop = keepY ? y : 0;
 }
 function openClusterDetail(key) { clusterListY = document.getElementById('clusterView').scrollTop; clusterOpenKey = key; clusterEdit = null; clusterTerm = ''; clusterLookupHtml = ''; clusterError = null; renderCluster(false); }
 function clusterBack() {
+  if (!clusterOpenKey && clusterTodo) { clusterTodo = false; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY; return; }
   if (!clusterOpenKey) { closeClusters(); return; }
   if (clusterDirty(clusterOpenKey) && !confirm('修正中の要約があります。保存せずに戻りますか？（「採用」を押すと保存されます）')) return;
   clusterOpenKey = null; clusterEdit = null; renderCluster(false); document.getElementById('clusterView').scrollTop = clusterListY;
@@ -1695,7 +1726,7 @@ function openClusters() {
   const orphan = Object.keys(sum2Load()).length - sumMatchAll().size;
   clusterMeta = `${items.length}件から${multi.length}個のまとまりを検出。単独${single.length}件。` + (prot ? `保護メモ${prot}件は対象外。` : '') + (excl ? `AI作成・まとまり・用語タグ${excl}件は対象外。` : '') + (orphan > 0 ? `保存済みの要約${orphan}件は、対応するまとまりが今は見つかりません（消していません）。` : '') + ` 版 ${QR_BUILD}${CI && CI.summaryPlan ? '' : '（部品が古い）'}`;
   const view = document.getElementById('clusterView');
-  renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
+  clusterTodo = false; renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
 }
 
 async function reload() {
@@ -4220,6 +4251,12 @@ function wireEvents() {
       summarizeCluster(t.dataset.sum); return;
     }
     if (q('[data-sumall]')) { summarizeAll(); return; }
+    if (q('[data-todo]')) { clusterListY = document.getElementById('clusterView').scrollTop; clusterTodo = true; renderCluster(false); return; }
+    if ((t = q('[data-tdone]'))) {
+      const c = clusterGroups.get(t.dataset.tdone), st = c && sumGet(c.g); if (!st) return;
+      const f = sumFields(st.text);
+      sumSet(c.g, Object.assign({}, st, { nextDone: t.checked ? f.next : '' })); renderCluster(true); return;
+    }
     if ((t = q('[data-sumkeep]'))) { sumKeep(t.dataset.sumkeep); return; }
     if ((t = q('[data-sumedit]'))) { clusterEdit = t.dataset.sumedit; renderCluster(true); return; }
     if (q('[data-sumcancel]')) {
