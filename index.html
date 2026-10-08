@@ -414,9 +414,15 @@ header {
 #tableView .tctl { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
 #tableView .tctl select, #tableView .tctl input { font-size:14px; padding:7px 8px; border-radius:8px; border:1px solid #c7c7cc; background:transparent; color:inherit; }
 #tableBar { position:sticky; bottom:0; margin:12px -16px -28px; padding:10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px); background:var(--card-bg,#fff); border-top:1px solid #c7c7cc; }
+.rich-toolbar, .memo-popup-toolbar { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; align-items:center; }
+.rich-toolbar button, .memo-popup-toolbar button, #edTools button { padding:7px 11px; border-radius:8px; border:1px solid #c7c7cc; background:transparent; color:inherit; font-size:14px; }
+.rich-toolbar .sep, .memo-popup-toolbar .sep { width:8px; }
+#edTools { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0; }
+#edTools label { font-size:12px; color:#8e8e93; display:flex; align-items:center; gap:4px; }
+mark.hl { border-radius:2px; padding:0 1px; }
 </style>
   <script src="flow-render.js?v=2026-10-07a"></script>
-  <script src="cluster-items.js?v=2026-10-08a"></script>
+  <script src="cluster-items.js?v=2026-10-08b"></script>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
@@ -580,6 +586,12 @@ header {
         <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
       </div>
 
+      <div id="edTools">
+        <button type="button" onclick="edFixText()">🔧 文字化け直し</button>
+        <button type="button" onclick="fmtMarkClear()">🖍✕ マーカー解除</button>
+        <button type="button" onclick="edClearAll()" style="color:#ff3b30">🧽 全文消去</button>
+        <label><input type="checkbox" id="edPastePlain"> 貼り付けは文字だけにする</label>
+      </div>
       <div class="rich-editor" id="fBody" contenteditable="true" data-placeholder="内容を入力"
         autocorrect="on" autocapitalize="sentences" spellcheck="true"></div>
 
@@ -720,6 +732,10 @@ header {
     <button type="button" onclick="popupMark('pink')">🩷</button>
     <span class="sep"></span>
     <button type="button" onclick="popupFmt('insertUnorderedList')">☰</button>
+    <span class="sep"></span>
+    <button type="button" onclick="edFixText()">🔧</button>
+    <button type="button" onclick="fmtMarkClear()">🖍✕</button>
+    <button type="button" onclick="edClearAll()" style="color:#ff3b30">🧽</button>
   </div>
 
   <div class="memo-popup-editor" id="memoPopupEditor"
@@ -1383,7 +1399,7 @@ function clusterFlowHtml(flow) {
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
 let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null, clusterError = null, clusterTodo = false, clusterFm = false, fmThoughts = [];
-const QR_BUILD = '2026-10-08a';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
+const QR_BUILD = '2026-10-08b';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
 // 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
 const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
@@ -1820,6 +1836,115 @@ function openClusters() {
   clusterTodo = false; clusterFm = false; renderCluster(false); view.style.display = 'block'; view.scrollTop = 0;
   void fmCheck();   // flow-mind から届いた考察があるか調べる
 }
+
+/* ── メモ編集ツール：文字化け直し・全文消去・マーカー・貼り付け ──
+   （本文ツールバーの B / I / U / マーカー / ✕fmt が動く部品も、ここで用意する） */
+function edEl() {
+  const sel = window.getSelection(); let n = sel && sel.anchorNode; n = n && (n.nodeType === 1 ? n : n.parentElement);
+  const e = n && n.closest && n.closest('[contenteditable="true"]');
+  if (e) return e;
+  const pop = document.getElementById('memoPopupEditor');
+  return (pop && pop.offsetParent !== null) ? pop : document.getElementById('fBody');
+}
+function fmtCmd(cmd) { const ed = edEl(); if (ed) ed.focus(); document.execCommand(cmd, false, null); }
+function popupFmt(cmd) { fmtCmd(cmd); }
+const HL_COLORS = { yellow: '#fff176', green: '#b9f6ca', pink: '#ffc1e3' };
+function edUnwrap(m) { const p = m.parentNode; if (!p) return; while (m.firstChild) p.insertBefore(m.firstChild, m); p.removeChild(m); p.normalize(); }
+function fmtMark(c) {
+  const ed = edEl(), sel = window.getSelection();
+  if (!ed || !sel.rangeCount || sel.isCollapsed) { showToast('マーカーを引く文字を、指で選んでから押してください'); return; }
+  const r = sel.getRangeAt(0); if (!ed.contains(r.commonAncestorContainer)) { showToast('メモの中の文字を選んでください'); return; }
+  const anc = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement;
+  const cur = anc && anc.closest && anc.closest('mark.hl');
+  if (cur && ed.contains(cur) && cur.dataset.c === c) { edUnwrap(cur); return; }   // 同じ色をもう一度押すと外れる
+  const mk = document.createElement('mark'); mk.className = 'hl'; mk.dataset.c = c; mk.style.cssText = 'background:' + HL_COLORS[c] + ';color:#000';
+  mk.appendChild(r.extractContents());
+  mk.querySelectorAll('mark.hl').forEach(edUnwrap);
+  r.insertNode(mk);
+  sel.removeAllRanges(); const nr = document.createRange(); nr.selectNodeContents(mk); sel.addRange(nr);
+}
+function popupMark(c) { fmtMark(c); }
+function fmtMarkClear() {
+  const ed = edEl(), sel = window.getSelection(); if (!ed) return;
+  const marks = [...ed.querySelectorAll('mark.hl')];
+  let hit = sel.rangeCount && !sel.isCollapsed ? marks.filter(m => sel.containsNode(m, true)) : [];
+  if (!hit.length && sel.rangeCount) { const n = sel.anchorNode, el = n && (n.nodeType === 1 ? n : n.parentElement), m = el && el.closest && el.closest('mark.hl'); if (m && ed.contains(m)) hit = [m]; }
+  if (!hit.length) { if (marks.length && confirm('選んだ場所にマーカーがありません。このメモのマーカーを全部外しますか？')) hit = marks; else { if (!marks.length) showToast('マーカーはありません'); return; } }
+  hit.forEach(edUnwrap);
+}
+// 文字化け直し
+const CP1252 = [0x20AC, 0x81, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0x8D, 0x017D, 0x8F, 0x90, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x9D, 0x017E, 0x0178];
+let revL1 = null, revSJ = null;
+function revLatin() { if (revL1) return revL1; revL1 = new Map(); for (let b = 0; b < 256; b++) { if (b >= 0x80 && b < 0xA0) revL1.set(String.fromCharCode(CP1252[b - 0x80]), [b]); revL1.set(String.fromCharCode(b), [b]); } return revL1; }
+function revSjis() {
+  if (revSJ) return revSJ; revSJ = new Map(); let d; try { d = new TextDecoder('shift_jis'); } catch (_) { return revSJ; }
+  const put = (ch, bytes) => { if (ch && ch.length === 1 && ch !== '�' && !revSJ.has(ch)) revSJ.set(ch, bytes); };
+  for (let b = 0; b < 256; b++) if (b < 0x80 || (b >= 0xA1 && b <= 0xDF)) put(d.decode(Uint8Array.of(b)), [b]);
+  for (let l = 0x81; l <= 0xFC; l++) { if (l > 0x9F && l < 0xE0) continue; for (let t = 0x40; t <= 0xFC; t++) { if (t === 0x7F) continue; put(d.decode(Uint8Array.of(l, t)), [l, t]); } }
+  return revSJ;
+}
+function reDecode(tok, rev, lossy) {
+  const bytes = []; let miss = 0;
+  for (const ch of tok) { const b = rev.get(ch); if (!b) { miss++; if (!lossy) return null; continue; } bytes.push(...b); }
+  if (miss > 3) return null;
+  const RC = String.fromCharCode(0xFFFD);
+  try {
+    const out = new TextDecoder('utf-8', { fatal: false }).decode(Uint8Array.from(bytes));
+    const bad = out.split(RC).length - 1;
+    return out && bad <= (lossy ? 2 : 0) ? out.split(RC).join('') : null;
+  } catch (_) { return null; }
+}
+const KANA_KANJI = /[぀-ヿ一-鿿]/g;
+function fixMojibakeToken(tok) {
+  if (/[ÃÂãâ][\u0080-¿Œ-™]|ã\u0081|ã\u0082|ã\u0083/.test(tok)) { const o = reDecode(tok, revLatin()); if (o && (o.match(KANA_KANJI) || []).length) return o; }
+  if (/[縺繧繝縲邵]/.test(tok)) { const o = reDecode(tok, revSjis(), true); if (o && (o.match(KANA_KANJI) || []).length >= 1 && /[぀-ヿ]/.test(o)) return o; }
+  return tok;
+}
+function cleanText(str, st) {
+  st = st || { moji: 0, inv: 0, bad: 0 };
+  let t = String(str);
+  const inv = (t.match(/[\u200B-\u200D\u2060\uFEFF\u00AD\u202A-\u202E\u2066-\u2069\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g) || []).length;
+  t = t.replace(/[\u200B-\u200D\u2060\uFEFF\u00AD\u202A-\u202E\u2066-\u2069\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').replace(/[\u2028\u2029]/g, '\n').replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
+  t = t.split(/(\s+)/).map(tok => { if (/^\s*$/.test(tok) || !/[^\x00-\x7F]/.test(tok)) return tok; const f = fixMojibakeToken(tok); if (f !== tok) st.moji++; return f; }).join('');
+  t = t.replace(/[\u0080-\u009F]/g, () => { st.inv++; return ''; });
+  st.bad += (t.match(/�/g) || []).length; st.inv += inv;
+  try { t = t.normalize('NFC'); } catch (_) {}
+  return t;
+}
+function edFixText() {
+  const ed = edEl(), st = { moji: 0, inv: 0, bad: 0 };
+  if (ed) { const w = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT); const nodes = []; while (w.nextNode()) nodes.push(w.currentNode); nodes.forEach(n => { const v = cleanText(n.nodeValue, st); if (v !== n.nodeValue) n.nodeValue = v; }); }
+  const ti = document.getElementById('fTitle'); if (ti && ed && ed.id === 'fBody') { const v = cleanText(ti.value, st); if (v !== ti.value) ti.value = v; }
+  const msg = [];
+  if (st.moji) msg.push('文字化け ' + st.moji + '語を直しました');
+  if (st.inv) msg.push('見えない文字 ' + st.inv + '個を取り除きました');
+  if (st.bad) msg.push('復元できない文字（�）が ' + st.bad + '個あります。元のアプリで、文字だけのコピー（Keepなら「Googleドキュメントにコピー」経由）をお試しください');
+  showToast(msg.length ? msg.join('／') : '直す文字は見つかりませんでした');
+}
+function edClearAll() {
+  const ed = edEl(); if (!ed) return;
+  if (!ed.textContent.trim() && !ed.querySelector('table,img')) { showToast('すでに空です'); return; }
+  if (!confirm('メモの本文を全部消します。よろしいですか？（保存するまでは、端末の「取り消し」で戻せることがあります）')) return;
+  ed.focus(); document.execCommand('selectAll', false, null);
+  if (!document.execCommand('delete', false, null)) ed.innerHTML = '';
+  showToast('本文を消しました');
+}
+function edPasteInit() {
+  const cb = document.getElementById('edPastePlain'); if (!cb) return;
+  let on = true; try { on = localStorage.getItem('qr_paste_plain') !== '0'; } catch (_) {}
+  cb.checked = on;
+  cb.addEventListener('change', () => { try { localStorage.setItem('qr_paste_plain', cb.checked ? '1' : '0'); } catch (_) {} });
+  document.addEventListener('paste', e => {
+    const ed = e.target && e.target.closest && e.target.closest('#fBody,#memoPopupEditor'); if (!ed || !cb.checked) return;
+    const t = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if (!t) return;
+    e.preventDefault();
+    const st = { moji: 0, inv: 0, bad: 0 }, c = cleanText(t.replace(/\r\n?/g, '\n'), st);
+    document.execCommand('insertHTML', false, escapeHtml(c).replace(/\n/g, '<br>'));
+    if (st.moji || st.inv) showToast('貼り付けを整えました（' + [st.moji ? '文字化け' + st.moji + '語' : '', st.inv ? '見えない文字' + st.inv + '個' : ''].filter(Boolean).join('・') + '）');
+  }, true);
+}
+// ボタンを押しても、選んだ文字の選択が外れないように
+document.addEventListener('pointerdown', e => { const b = e.target && e.target.closest && e.target.closest('.rich-toolbar button, .memo-popup-toolbar button, #edTools button'); if (b) e.preventDefault(); }, true);
 
 /* ── 表（メモを行にして並べる・絞る・選ぶ → スライスにして flow-mind へ） ──
    スライス＝「条件で絞った結果」に、行のチェックで足し引きしたもの。名前を付けて保存でき、選んだ一式を1つのメモとして flow-mind へ送れる。
@@ -4463,6 +4588,7 @@ function wireEvents() {
   document.getElementById('tableMenuBtn').addEventListener('click', openTable);
   document.getElementById('tableClose').addEventListener('click', closeTable);
   tableWire();
+  edPasteInit();
   document.getElementById('pushMenuBtn').addEventListener('click', () => { location.href = './settings.html'; });
   document.getElementById('clusterClose').addEventListener('click', clusterBack);
   document.getElementById('clusterBody').addEventListener('click', e => {
