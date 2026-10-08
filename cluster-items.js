@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   // AIが作ったメモ・まとまり・用語のメモは、まとまり検出・要約・語の抽出の対象から除く（ここ1か所）
-  var EXCLUDE_TAGS = ['AI作成', 'まとまり', '用語'];
+  var EXCLUDE_TAGS = ['AI作成', 'まとまり', '用語', 'スライス'];
   function eligibleOne(x) {
     if (!x || x.sensitive) return false;
     var t = x.tags || [];
@@ -17,7 +17,7 @@
   var P = { head: 4000, gapMin: 45, near: 0.08, merge: 0.22, code: 0.52 };   // merge: 設計の議論を1つの流れにまとめるため0.30→0.22
 
   function plain(h) {
-    return String(h || '').replace(/<(br|\/p|\/div|\/li)[^>]*>/gi, ' ').replace(/<[^>]+>/g, '')
+    return String(h || '').replace(/<\/(td|th)>/gi, ' | ').replace(/<(br|\/p|\/div|\/li|\/tr)[^>]*>/gi, ' ').replace(/<[^>]+>/g, '')
       .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
   }
   function grams(x, code) {

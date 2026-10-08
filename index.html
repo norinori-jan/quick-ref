@@ -403,9 +403,20 @@ header {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+.rich-editor table, .memo-popup-editor table { border-collapse:collapse; margin:6px 0; }
+.rich-editor td, .rich-editor th, .memo-popup-editor td, .memo-popup-editor th { border:1px solid #c7c7cc; padding:4px 8px; min-width:48px; }
+#tableView table.tbl { border-collapse:collapse; width:100%; font-size:13px; }
+#tableView .tbl th { text-align:left; font-size:12px; color:#8e8e93; padding:6px 4px; border-bottom:1px solid #c7c7cc; white-space:nowrap; cursor:pointer; }
+#tableView .tbl td { padding:7px 4px; border-bottom:1px solid rgba(120,120,128,.2); vertical-align:top; }
+#tableView .tbl tr.off td { opacity:.45; }
+#tableView .tbl .ttl { font-weight:600; cursor:pointer; }
+#tableView .tchip { display:inline-block; font-size:11px; padding:1px 7px; margin:2px 3px 0 0; border-radius:100px; border:1px solid #c7c7cc; }
+#tableView .tctl { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+#tableView .tctl select, #tableView .tctl input { font-size:14px; padding:7px 8px; border-radius:8px; border:1px solid #c7c7cc; background:transparent; color:inherit; }
+#tableBar { position:sticky; bottom:0; margin:12px -16px -28px; padding:10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px); background:var(--card-bg,#fff); border-top:1px solid #c7c7cc; }
 </style>
   <script src="flow-render.js?v=2026-10-07a"></script>
-  <script src="cluster-items.js?v=2026-10-07a"></script>
+  <script src="cluster-items.js?v=2026-10-08a"></script>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay">読み込み中…</div>
@@ -565,6 +576,7 @@ header {
         <button type="button" onclick="fmtMark('yellow')">🟡</button>
         <button type="button" onclick="fmtMark('green')">🟢</button>
         <button type="button" onclick="fmtMark('pink')">🩷</button>
+        <button type="button" onclick="fmtTable()" title="表を入れる">▦</button>
         <button type="button" onclick="fmtCmd('removeFormat')" style="font-size:13px;color:var(--text-secondary);">✕fmt</button>
       </div>
 
@@ -740,6 +752,10 @@ header {
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" id="clusterClose">‹ 戻る</button><strong style="flex:1;text-align:center;">まとまり</strong><span style="width:56px;"></span></div>
   <div id="clusterBody"></div>
 </div>
+<div id="tableView" style="display:none;position:fixed;inset:0;z-index:80;background:var(--card-bg,#fff);color:inherit;overflow-y:auto;padding:max(12px,env(safe-area-inset-top)) 16px 28px;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" id="tableClose">‹ 戻る</button><strong style="flex:1;text-align:center;">表（スライス）</strong><span style="width:56px;"></span></div>
+  <div id="tableBody"></div>
+</div>
 <div class="overlay" id="menuOverlay"></div>
 <div class="action-sheet" id="menuSheet">
   <div class="action-sheet-handle"></div>
@@ -750,6 +766,14 @@ header {
     <span class="action-btn-inner">
       <span class="action-label">iCloud Driveに保存</span>
       <span class="action-desc" id="icloudMenuDesc">ファイルアプリ経由で自動バックアップ</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="tableMenuBtn">
+    <span class="action-icon">📊</span>
+    <span class="action-btn-inner">
+      <span class="action-label">表（スライス）</span>
+      <span class="action-desc">メモを表で絞り込み、選んだ一式を flow-mind へ送る</span>
     </span>
   </button>
 
@@ -1359,7 +1383,7 @@ function clusterFlowHtml(flow) {
 /* ── まとまり画面（一覧はカード、詳細は別画面。AI要約は「AI作成」の枠。採用・修正・却下は利用者が選ぶ） ── */
 const clusterGroups = new Map();   // 先頭メモID → { g: まとまり, s: 説明 }
 let clusterOpenKey = null, clusterSingles = [], clusterMeta = '', clusterListY = 0, clusterEdit = null, clusterTerm = '', clusterLookupHtml = '', clusterReturn = null, clusterError = null, clusterTodo = false, clusterFm = false, fmThoughts = [];
-const QR_BUILD = '2026-10-07a';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
+const QR_BUILD = '2026-10-08a';   // 画面に出る版。部品を直したら変える（index.html の script の ?v= も同じ値に）
 const cdate = ms => { const x = new Date(ms); return (x.getMonth() + 1) + '/' + x.getDate(); };
 // 一覧に出す題名も、秘密らしいものは隠す（判定は ClusterItems.redactTitle の1か所）
 const qrSafeTitle = t => (window.ClusterItems && ClusterItems.redactTitle) ? ClusterItems.redactTitle(t) : t;
@@ -1797,6 +1821,131 @@ function openClusters() {
   void fmCheck();   // flow-mind から届いた考察があるか調べる
 }
 
+/* ── 表（メモを行にして並べる・絞る・選ぶ → スライスにして flow-mind へ） ──
+   スライス＝「条件で絞った結果」に、行のチェックで足し引きしたもの。名前を付けて保存でき、選んだ一式を1つのメモとして flow-mind へ送れる。
+   保護メモ・AI作成/まとまり/用語/スライスのタグのメモは、表に出さない（AIにも flow-mind にも送らない）。 */
+const SLICE_KEY = 'qr_slices';
+let tbl = { tag: '', days: 0, q: '', sort: 'upd', dir: -1, sel: new Set(), name: '', cur: '' };
+let tblReturn = false;
+function slicesLoad() { try { const v = JSON.parse(localStorage.getItem(SLICE_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (_) { return []; } }
+function slicesSave(a) { try { localStorage.setItem(SLICE_KEY, JSON.stringify(a.slice(0, 50))); } catch (_) {} }
+const tblText = h => String(h || '').replace(/<(br|\/p|\/div|\/li|\/tr)[^>]*>/gi, ' ').replace(/<\/(td|th)>/gi, ' ').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+function tblPool() { const CI = window.ClusterItems; return CI && CI.eligible ? CI.eligible(allItems) : allItems.filter(i => !i.sensitive); }
+function tblRows() {
+  const now = Date.now(), words = tbl.q.toLowerCase().split(/\s+/).filter(Boolean);
+  let rows = tblPool().filter(i => (!tbl.tag || (i.tags || []).includes(tbl.tag)) && (!tbl.days || (i.updatedAt || 0) >= now - tbl.days * 864e5));
+  if (words.length) rows = rows.filter(i => { const t = ((i.title || '') + ' ' + tblText(i.body) + ' ' + (i.tags || []).join(' ')).toLowerCase(); return words.every(w => t.includes(w)); });
+  const key = ({ upd: i => i.updatedAt || 0, title: i => (i.title || '').toLowerCase(), tag: i => (i.tags || [])[0] || '', len: i => tblText(i.body).length })[tbl.sort] || (i => i.updatedAt || 0);
+  rows.sort((a, b) => { const x = key(a), y = key(b); return (x < y ? -1 : x > y ? 1 : 0) * tbl.dir; });
+  return rows;
+}
+function openTable() {
+  closeMenu(); tbl.tag = ''; tbl.days = 0; tbl.q = ''; tbl.cur = ''; tbl.name = ''; tbl.sort = 'upd'; tbl.dir = -1;
+  tbl.sel = new Set(tblRows().map(i => i.id));
+  tblDraw(); const v = document.getElementById('tableView'); v.style.display = 'block'; v.scrollTop = 0;
+}
+function closeTable() { document.getElementById('tableView').style.display = 'none'; }
+function returnToTable() { tblReturn = false; tblDraw(); document.getElementById('tableView').style.display = 'block'; }
+function tblDraw() {
+  const pool = tblPool(), cnt = {}; pool.forEach(i => (i.tags || []).forEach(t => { cnt[t] = (cnt[t] || 0) + 1; }));
+  const tags = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+  const sl = slicesLoad();
+  const days = [[0, '全期間'], [7, '7日'], [30, '30日'], [90, '90日']];
+  document.getElementById('tableBody').innerHTML =
+    `<div style="font-size:12px;color:#8e8e93;margin-bottom:4px">メモを行にした表です。上で絞り込み、チェックで足し引きして、「スライス」にします。保護メモやAI作成のメモは出ません。</div>` +
+    (sl.length ? `<div style="margin:6px 0"><b style="font-size:12px">保存したスライス</b><div>` + sl.map(x => `<span class="tchip" style="cursor:pointer" data-tload="${escapeHtml(x.id)}">${escapeHtml(x.name)}（${x.ids.length}）</span><span data-tdel="${escapeHtml(x.id)}" style="cursor:pointer;color:#8e8e93;font-size:12px;margin-right:6px">✕</span>`).join('') + `</div></div>` : '') +
+    `<div class="tctl"><select id="tblTag"><option value="">タグ：すべて</option>${tags.map(t => `<option value="${escapeHtml(t)}"${t === tbl.tag ? ' selected' : ''}>${escapeHtml(t)}（${cnt[t]}）</option>`).join('')}</select>` +
+    `<select id="tblDays">${days.map(d => `<option value="${d[0]}"${d[0] === tbl.days ? ' selected' : ''}>${d[1]}</option>`).join('')}</select>` +
+    `<input id="tblQ" type="search" placeholder="語で絞る" value="${escapeHtml(tbl.q)}" style="flex:1;min-width:120px"></div>` +
+    `<div id="tblList"></div><div id="tblBar"></div>`;
+  tblDrawList();
+}
+function tblDrawList() {
+  const rows = tblRows(), all = rows.length && rows.every(i => tbl.sel.has(i.id));
+  const th = (k, t) => `<th data-tsort="${k}">${t}${tbl.sort === k ? (tbl.dir < 0 ? ' ▼' : ' ▲') : ''}</th>`;
+  const md = t => { const d = new Date(t || 0); return (d.getMonth() + 1) + '/' + d.getDate(); };
+  document.getElementById('tblList').innerHTML = rows.length ?
+    `<table class="tbl"><thead><tr><th data-tall="1">${all ? '☑' : '☐'}</th>${th('title', '題名')}${th('tag', 'タグ')}${th('upd', '更新')}${th('len', '字')}</tr></thead><tbody>` +
+    rows.map(i => `<tr class="${tbl.sel.has(i.id) ? '' : 'off'}"><td><input type="checkbox" data-tsel="${escapeHtml(i.id)}"${tbl.sel.has(i.id) ? ' checked' : ''}></td>` +
+      `<td><span class="ttl" data-topen="${escapeHtml(i.id)}">${escapeHtml(i.title || '(無題)')}</span></td>` +
+      `<td>${(i.tags || []).slice(0, 3).map(t => `<span class="tchip">${escapeHtml(t)}</span>`).join('')}</td><td>${md(i.updatedAt)}</td><td>${tblText(i.body).length}</td></tr>`).join('') + `</tbody></table>`
+    : `<div style="color:#8e8e93;margin:16px 0">条件に合うメモがありません。</div>`;
+  const n = [...tbl.sel].filter(id => tblPool().some(i => i.id === id)).length;
+  document.getElementById('tblBar').innerHTML =
+    `<div style="font-size:13px;margin-bottom:6px"><b>選択 ${n}件</b> ／ 表示 ${rows.length}件${tbl.cur ? ' ・保存済みスライスを編集中' : ''}</div>` +
+    `<div style="display:flex;gap:6px;flex-wrap:wrap"><input id="tblName" type="text" placeholder="スライスの名前" value="${escapeHtml(tbl.name)}" style="flex:1;min-width:130px;font-size:14px;padding:8px;border-radius:8px;border:1px solid #c7c7cc;background:transparent;color:inherit">` +
+    `<button type="button" id="tblSave">保存</button><button type="button" id="tblSend" style="font-weight:700">⬡ flow-mind へ送る</button></div>`;
+}
+function tblApplyFilter() { tbl.sel = new Set(tblRows().map(i => i.id)); tbl.cur = ''; tblDrawList(); }
+function tblSaveSlice(quiet) {
+  const pool = new Set(tblPool().map(i => i.id)), ids = [...tbl.sel].filter(id => pool.has(id));
+  if (!ids.length) { if (!quiet) showToast('メモが1件も選ばれていません'); return null; }
+  const el = document.getElementById('tblName'); if (el) tbl.name = el.value.trim();
+  const name = (tbl.name || ((tbl.tag || 'すべて') + ' ' + (new Date().getMonth() + 1) + '/' + new Date().getDate())).slice(0, 40);
+  const sl = slicesLoad(), id = tbl.cur || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+  const rec = { id, name, cond: { tag: tbl.tag, days: tbl.days, q: tbl.q }, ids, at: Date.now() };
+  const k = sl.findIndex(x => x.id === id); if (k >= 0) sl[k] = rec; else sl.unshift(rec);
+  slicesSave(sl); tbl.cur = id; tbl.name = name;
+  if (!quiet) { showToast('スライス「' + name + '」を保存しました'); tblDraw(); }
+  return rec;
+}
+async function tblSend() {
+  const CI = window.ClusterItems;
+  if (!CI || !CI.redact || !CI.redactTitle) { showToast('秘密除外の部品が読み込めないため、送りませんでした'); return; }
+  if (!cloudSyncUrl() || !getCloudSyncConfig().token) { showToast('クラウド同期が未設定です（設定→クラウド同期）。flow-mind へはこの同期で届きます'); return; }
+  const rec = tblSaveSlice(true); if (!rec) { showToast('メモを2件以上選んでください'); return; }
+  const pool = new Map(tblPool().map(i => [i.id, i]));
+  let picked = rec.ids.map(id => pool.get(id)).filter(Boolean).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (picked.length < 2) { showToast('メモを2件以上選んでください'); return; }
+  let cut = '';
+  if (picked.length > 40) { picked = picked.slice(0, 40); cut = '（新しい順に40件までを送ります）'; }
+  if (!confirm('スライス「' + rec.name + '」の' + picked.length + '件を flow-mind へ送ります。' + cut + '\nflow-mind の Inbox に、中心ノードと各メモのノードが入ります。よろしいですか？')) return;
+  const refs = picked.map((i, k) => ({ n: k + 1, id: i.id, title: CI.redactTitle(i.title || '(無題)').slice(0, 60), tags: (i.tags || []).slice(0, 3), text: CI.redact(tblText(i.body)).text.slice(0, 300) }));
+  const cond = [rec.cond.tag ? 'タグ: ' + rec.cond.tag : '', rec.cond.days ? '直近' + rec.cond.days + '日' : '', rec.cond.q ? '語: ' + rec.cond.q : ''].filter(Boolean).join(' ／ ') || '条件なし（手で選択）';
+  const text = 'スライス: ' + rec.name + '\n対象 ' + refs.length + '件 ／ ' + cond + '\n' + refs.map(r => r.n + '. ' + r.title).join('\n');
+  const now = Date.now();
+  await dbPut({ id: crypto.randomUUID(), title: CI.redactTitle('スライス: ' + rec.name).slice(0, 60), tags: ['スライス'], url: '', sensitive: false,
+    body: escapeHtml(text).replace(/\n/g, '<br>'), fields: [], encBody: null, encFields: null, createdAt: now, updatedAt: now,
+    ai: { kind: 'slice', slice: { name: rec.name, cond: rec.cond, refs }, flowMind: { sentAt: now, refs: refs.map(r => ({ n: r.n, title: r.title })) } } });
+  await reload();
+  const synced = await syncCloudNow(false);
+  showToast(synced ? 'flow-mind へ送りました（flow-mind を開くと Inbox に入ります）' : '保存はしましたが、同期に失敗しました。あとで「今すぐ同期」を押してください');
+}
+function tableWire() {
+  const body = document.getElementById('tableBody'); if (!body) return;
+  body.addEventListener('input', e => { if (e.target.id === 'tblQ') { tbl.q = e.target.value; tblApplyFilter(); } if (e.target.id === 'tblName') tbl.name = e.target.value; });
+  body.addEventListener('change', e => {
+    const t = e.target;
+    if (t.id === 'tblTag') { tbl.tag = t.value; tblApplyFilter(); }
+    else if (t.id === 'tblDays') { tbl.days = +t.value || 0; tblApplyFilter(); }
+    else if (t.dataset && t.dataset.tsel) { if (t.checked) tbl.sel.add(t.dataset.tsel); else tbl.sel.delete(t.dataset.tsel); tblDrawList(); }
+  });
+  body.addEventListener('click', e => {
+    const t = e.target;
+    if (t.dataset.tsort) { const k = t.dataset.tsort; if (tbl.sort === k) tbl.dir = -tbl.dir; else { tbl.sort = k; tbl.dir = k === 'title' || k === 'tag' ? 1 : -1; } tblDrawList(); }
+    else if (t.dataset.tall) { const rows = tblRows(), all = rows.every(i => tbl.sel.has(i.id)); rows.forEach(i => { if (all) tbl.sel.delete(i.id); else tbl.sel.add(i.id); }); tblDrawList(); }
+    else if (t.dataset.topen) { tblReturn = true; closeTable(); openEdit(t.dataset.topen).then(() => { if (!document.getElementById('editSheet').classList.contains('open')) returnToTable(); }); }
+    else if (t.dataset.tload) { const x = slicesLoad().find(y => y.id === t.dataset.tload); if (x) { tbl.tag = x.cond.tag || ''; tbl.days = x.cond.days || 0; tbl.q = x.cond.q || ''; tbl.cur = x.id; tbl.name = x.name; const pool = new Set(tblPool().map(i => i.id)); tbl.sel = new Set(x.ids.filter(id => pool.has(id))); tblDraw(); } }
+    else if (t.dataset.tdel) { if (confirm('この保存済みスライスを消しますか？（メモは消えません）')) { slicesSave(slicesLoad().filter(y => y.id !== t.dataset.tdel)); if (tbl.cur === t.dataset.tdel) tbl.cur = ''; tblDraw(); } }
+    else if (t.id === 'tblSave') tblSaveSlice(false);
+    else if (t.id === 'tblSend') void tblSend();
+  });
+}
+// 本文に表を入れる（行,列）
+function fmtTable() {
+  const v = prompt('表の大きさ（行,列）', '3,3'); if (!v) return;
+  const m = v.match(/(\d+)\D+(\d+)/); if (!m) { showToast('「3,3」のように入力してください'); return; }
+  const r = Math.max(1, Math.min(20, +m[1])), c = Math.max(1, Math.min(8, +m[2]));
+  const ed = document.getElementById('fBody'); if (!ed) return;
+  ed.focus();
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !ed.contains(sel.anchorNode)) { const rg = document.createRange(); rg.selectNodeContents(ed); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); }
+  let h = '<table style="border-collapse:collapse;width:100%"><tbody>';
+  for (let i = 0; i < r; i++) { h += '<tr>'; for (let j = 0; j < c; j++) h += (i === 0 ? '<th' : '<td') + ' style="border:1px solid #c7c7cc;padding:4px 8px;min-width:48px' + (i === 0 ? ';background:rgba(120,120,128,.15)' : '') + '"><br></' + (i === 0 ? 'th' : 'td') + '>'; h += '</tr>'; }
+  h += '</tbody></table><div><br></div>';
+  document.execCommand('insertHTML', false, h);
+}
+
 async function reload() {
   allItems = await dbGetAll();
   attachmentMeta = await dbGetAllAttachmentMeta();
@@ -2034,6 +2183,7 @@ function closeSheet() {
   document.getElementById('editSheet').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
   if (clusterReturn) returnToCluster();   // まとまり画面から開いたメモなら、閉じたときにそこへ戻る
+  if (tblReturn) returnToTable();
 }
 /* ─────────────────────────────
    タグ入力・構造化項目
@@ -4310,6 +4460,9 @@ function wireEvents() {
   /* メニュー */
   document.getElementById('menuBtn').addEventListener('click', openMenu);
   document.getElementById('clusterMenuBtn').addEventListener('click', openClusters);
+  document.getElementById('tableMenuBtn').addEventListener('click', openTable);
+  document.getElementById('tableClose').addEventListener('click', closeTable);
+  tableWire();
   document.getElementById('pushMenuBtn').addEventListener('click', () => { location.href = './settings.html'; });
   document.getElementById('clusterClose').addEventListener('click', clusterBack);
   document.getElementById('clusterBody').addEventListener('click', e => {
