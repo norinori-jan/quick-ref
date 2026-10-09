@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -470,6 +470,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
   <button class="dock-btn dock-cam" id="dockCam">📷<span class="dock-label">カメラ</span></button>
   <button class="dock-btn dock-photo" id="dockPhoto">🖼<span class="dock-label">写真</span></button>
   <button class="dock-btn dock-video" id="dockVideo">🎬<span class="dock-label">動画</span></button>
+  <button class="dock-btn dock-odd" id="dockOdd">⚠️<span class="dock-label">違和感</span></button>
   <button class="dock-btn dock-add" id="fabBtn">＋<span class="dock-label">追加</span></button>
 </div>
 
@@ -3173,14 +3174,14 @@ function relatedScore(a, b) {
   };
   const tx = jaccard(extractNgrams(getT(a), 2), extractNgrams(getT(b), 2));
 
-  return Math.round((ts * 60 + tx * 40) * 100);
+  return Math.round((ts * 0.6 + tx * 0.4) * 100);   // 0〜100%（以前は ×60 ×40 のあと更に ×100 していて、847% などになっていた）
 }
 
 function findRelated(item, limit = 5) {
   return allItems
     .filter(it => it.id !== item.id)
     .map(it => ({ item: it, score: relatedScore(item, it) }))
-    .filter(x => x.score > 3)
+    .filter(x => x.score >= 2)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
@@ -4072,6 +4073,17 @@ function wireEvents() {
   document.getElementById('fabBtn').addEventListener('click', () => {
     haptic();
     openNew();
+  });
+
+  // いつもと違うと感じたら、まずこれ。「違和感」タグ付きの新規メモが開き、保存すると flow-mind の道筋の起点になる
+  document.getElementById('dockOdd').addEventListener('click', () => {
+    haptic();
+    openNew();
+    draftTags = ['違和感'];
+    renderTagChips();
+    document.getElementById('sheetTitle').textContent = '違和感を記録';
+    document.getElementById('fTitle').value = '違和感：';
+    setTimeout(() => { const t = document.getElementById('fTitle'); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }, 380);
   });
 
   document.getElementById('voiceFab').addEventListener('click', () => {
