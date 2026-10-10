@@ -3571,9 +3571,12 @@ async function callAI(userPrompt, opts = {}) {
   const apiKey = localStorage.getItem(LS[model.toUpperCase()]) || '';
   const maxTokens = opts.maxTokens || 1000;
 
-  // Proxy URL は Claude 用。Gemini / OpenAI はキーが必須
-  if (!apiKey && (model !== 'claude' || !proxyUrl)) {
-    throw new Error(`${m.label}のAPIキーが未設定です`);
+  // この端末にキーが無く、同期の設定（エンドポイント＋トークン）があるときは、Worker の /ai 経由で呼ぶ（キーは Worker だけが持つ）
+  const sync = getCloudSyncConfig();
+  const viaWorker = !apiKey && !(model === 'claude' && proxyUrl) && !!(sync.endpoint && sync.token);
+  // Proxy URL は Claude 用。Gemini / OpenAI は、端末のキーか Worker 経由が必要
+  if (!apiKey && !viaWorker && (model !== 'claude' || !proxyUrl)) {
+    throw new Error(`${m.label}のAPIキーが未設定です（設定でキーを入れるか、クラウド同期を設定してください）`);
   }
   // 送信直前の秘密除外（fail closed：除外の部品が無ければ送らない）
   if (opts.redact) {
@@ -3583,6 +3586,18 @@ async function callAI(userPrompt, opts = {}) {
     userPrompt = r.text;
     if (r.removed) console.info('[redact] 除外した行数:', r.removed);   // 値はログに出さない
     if (typeof opts.onRedact === 'function') opts.onRedact(r.removed);
+  }
+
+  if (viaWorker) {
+    const res = await aiFetch(sync.endpoint + '/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sync.token },
+      body: JSON.stringify({ provider: model, model: model === 'claude' ? 'claude-sonnet-4-6' : m.detail, maxTokens: opts.maxTokens || (model === 'gemini' ? undefined : maxTokens), prompt: userPrompt })
+    });
+    if (res.status === 401) throw new Error('同期トークンが違います（設定→クラウド同期を確認してください）');
+    if (!res.ok) throw await aiHttpError('AI中継(' + m.label + ')', res);
+    const d = await res.json();
+    return (d && typeof d.text === 'string') ? d.text : '';
   }
 
   if (model === 'gemini') {
