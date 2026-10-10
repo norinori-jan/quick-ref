@@ -254,6 +254,9 @@ header {
   z-index: 20;
 }
 
+.header-top h1{white-space:nowrap;font-size:20px;}
+#countLabel{font-size:11px;white-space:nowrap;}
+.header-actions{flex-shrink:0;}
 .header-top {
   display: flex;
   align-items: center;
@@ -442,6 +445,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
       <span id="countLabel">0件</span>
       <button class="review-btn" id="reviewBtn">📋<span class="review-badge" id="reviewBadge"></span></button>
       <button class="icon-btn" id="lockToggleBtn">🔓</button>
+      <button class="icon-btn" id="uiPrefBtn" title="文字の設定" style="font-weight:800;font-size:15px">Aa</button>
       <button class="icon-btn" id="settingsBtn">⚙️</button>
       <button class="icon-btn" id="menuBtn">☰</button>
     </div>
@@ -809,6 +813,14 @@ mark.hl { border-radius:2px; padding:0 1px; }
     <span class="action-btn-inner">
       <span class="action-label">表（スライス）</span>
       <span class="action-desc">メモを表で絞り込み、選んだ一式を flow-mind へ送る</span>
+    </span>
+  </button>
+
+  <button type="button" class="action-btn" id="shelfMenuBtn">
+    <span class="action-icon">📚</span>
+    <span class="action-btn-inner">
+      <span class="action-label">本棚（棚の仕分け）</span>
+      <span class="action-desc">メモをジャンルの棚に自動で仕分ける。確認と直し</span>
     </span>
   </button>
 
@@ -1648,7 +1660,7 @@ function renderClusterFm() {
     const id = escapeHtml(t.id), ex = fmFind(t);
     return `<div style="border:1px solid #c7c7cc;border-radius:10px;padding:10px;margin:8px 0">` +
       `<b>${escapeHtml(t.title)}</b> <span style="font-size:11px;color:#8e8e93">${escapeHtml(new Date(t.sentAt).toLocaleString('ja-JP'))}${t.graph ? ' ・' + escapeHtml(t.graph) : ''}${ex ? ' ・取り込み済みの更新' : ''}</span>` +
-      (t.decided ? `<div style="font-size:14px;line-height:1.7;margin-top:6px"><b>決めたこと</b> ${cbr(String(t.decided))}</div>` : '') +
+      (t.decided ? `<div style="font-size:14px;line-height:1.7;margin-top:6px"><b>${t.kind === 'plan' ? '内容' : '決めたこと'}</b> ${cbr(String(t.decided))}</div>` : '') +
       (t.next ? `<div style="font-size:14px;line-height:1.7;margin-top:4px">▶ <b>次の一手</b> ${cbr(String(t.next))}</div>` : '') +
       (t.flow ? clusterFlowHtml(String(t.flow)) : '') +
       `<div style="margin-top:8px"><button type="button" data-fmok="${id}" style="font-weight:600">${ex ? 'メモを更新' : 'メモにする'}</button> <button type="button" data-fmng="${id}">見送る</button></div></div>`;
@@ -1663,15 +1675,16 @@ async function fmImport(id) {
   if (ex && ex.sensitive) { showToast('そのメモは保護メモになっているため、更新しませんでした'); return; }
   if (ex && ex.updatedAt > ((ex.origin && ex.origin.importedAt) || 0) && !confirm('このメモは、取り込んだあとに編集されています。flow-mind の内容で上書きしますか？')) return;
   const lines = [];
-  if (t.decided) lines.push('決めたこと: ' + t.decided);
+  const plan = t.kind === 'plan';
+  if (t.decided) lines.push(plan ? t.decided : '決めたこと: ' + t.decided);
   if (t.next) lines.push('次の一手: ' + t.next);
   if (t.flow) lines.push('流れ:', String(t.flow));
   lines.push('出所: flow-mind' + (t.graph ? '「' + t.graph + '」' : '') + (t.srcNoteId ? '（元のまとまり要約メモから）' : ''));
   const r = CI.redact(lines.join('\n'));
   const item = {
     id: ex ? ex.id : crypto.randomUUID(),
-    title: CI.redactTitle('考察: ' + t.title).slice(0, 60),
-    tags: [...new Set([...(ex ? ex.tags || [] : []), 'flow-mind'])], url: ex ? ex.url || '' : '', sensitive: false,
+    title: CI.redactTitle((plan ? '' : '考察: ') + t.title).slice(0, 60),
+    tags: [...new Set([...(ex ? ex.tags || [] : []), 'flow-mind', ...(Array.isArray(t.tags) ? t.tags.map(x => String(x).replace(/\s+/g, '').slice(0, 20)).filter(Boolean).slice(0, 8) : [])])], url: ex ? ex.url || '' : '', sensitive: false,
     body: escapeHtml(r.text).replace(/\n/g, '<br>'), fields: ex ? ex.fields || [] : [], encBody: null, encFields: null,
     createdAt: ex ? ex.createdAt : now, updatedAt: now,
     origin: { app: 'flow-mind', thoughtId: t.id, sentAt: t.sentAt, importedAt: now, srcNoteId: t.srcNoteId || '' }   // flow-mind はこの印のメモを取り込み直さない（循環の防止）
@@ -4971,5 +4984,170 @@ document.addEventListener('visibilitychange', () => {
 <script src="shared/senders/creative-apps.js"></script>
 <script src="shared/senders/security-apps.js"></script>
 
+<script>
+/* 文字の設定（quick-ref と flow-mind で共通。同じ localStorage キーを使う） */
+(function () {
+  var SC = [0.9, 1, 1.25, 1.5, 1.8, 2.2], SCN = ['小', '標準', '大', '特大', '最大', '特々大'];
+  var FONTS = [
+    ['sys', '標準（iPhoneの字）', '-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif'],
+    ['kaku', 'くっきりゴシック', '"Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif'],
+    ['maru', 'やわらか丸ゴシック', '"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif'],
+    ['min', '明朝（本のような字）', '"Hiragino Mincho ProN","Yu Mincho",serif'],
+    ['mono', '等幅（文字が揃う）', 'ui-monospace,Menlo,"Hiragino Sans",monospace']
+  ];
+  function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
+  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function si() { var i = parseInt(get('ui_scale_i', '1'), 10); return (i >= 0 && i < SC.length) ? i : 1; }
+  function apply() {
+    var f = FONTS.filter(function (x) { return x[0] === get('ui_font', 'sys'); })[0] || FONTS[0];
+    var bold = get('ui_bold', '0') === '1';
+    document.documentElement.style.setProperty('--uiz', String(SC[si()]));
+    var st = document.getElementById('uiPrefStyle');
+    if (!st) { st = document.createElement('style'); st.id = 'uiPrefStyle'; document.head.appendChild(st); }
+    var css = 'html,body,button,input,textarea,select{font-family:' + f[2] + ' !important}' +
+      (bold ? 'body,input,textarea{font-weight:600}' : '') +
+      '.sheet-body>*{zoom:var(--uiz,1)}#uiSheet .sheet-body>*{zoom:1 !important}#uiSample{zoom:var(--uiz,1)}';
+    if (document.getElementById('cardList')) css += '#cardList{zoom:var(--uiz,1)}';
+    st.textContent = css;
+  }
+  function hook() { try { if (typeof window.__uiHook === 'function') window.__uiHook(); } catch (e) {} }
+  function step(d) { set('ui_scale_i', String(Math.max(0, Math.min(SC.length - 1, si() + d)))); apply(); hook(); drawSheet(); }
+  function build() {
+    if (document.getElementById('uiSheet')) return;
+    var s = document.createElement('div'); s.className = 'sheet'; s.id = 'uiSheet'; s.style.zIndex = '60';
+    s.innerHTML = '<div class="sheet-handle"></div><div class="sheet-header"><span></span><h2>🔤 文字の設定</h2><button type="button" id="uiClose">閉じる</button></div>' +
+      '<div class="sheet-body"><div id="uiBody"></div></div>';
+    document.body.appendChild(s);
+    document.getElementById('uiClose').addEventListener('click', close);
+    document.getElementById('uiBody').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.sz != null) { set('ui_scale_i', b.dataset.sz); apply(); hook(); }
+      else if (b.dataset.fn) { set('ui_font', b.dataset.fn); apply(); hook(); }
+      else if (b.dataset.bold) { set('ui_bold', get('ui_bold', '0') === '1' ? '0' : '1'); apply(); hook(); }
+      else if (b.dataset.reset) { set('ui_scale_i', '1'); set('ui_font', 'sys'); set('ui_bold', '0'); apply(); hook(); }
+      drawSheet();
+    });
+    var ov = document.getElementById('overlay');
+    if (ov) ov.addEventListener('click', close);
+  }
+  var BTN = 'border:1px solid rgba(127,127,127,.55);border-radius:12px;padding:12px 6px;font-size:16px;background:rgba(127,127,127,.12);color:inherit;cursor:pointer;';
+  var ON = 'outline:3px solid #4A9EFF;font-weight:800;';
+  function drawSheet() {
+    var el = document.getElementById('uiBody'); if (!el) return;
+    var cur = si(), fn = get('ui_font', 'sys'), bold = get('ui_bold', '0') === '1';
+    var h = '<div id="uiSample" style="border:1px solid rgba(127,127,127,.5);border-radius:12px;padding:12px;margin-bottom:16px;line-height:1.7">いつもと違う → なぜ？ → 調べた → 分かった。<br>ABC abc 123 / 場所：渋谷　期限：10/15</div>';
+    h += '<div style="font-weight:700;margin:6px 0">文字の大きさ</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+    SCN.forEach(function (n, i) { h += '<button type="button" data-sz="' + i + '" style="' + BTN + (i === cur ? ON : '') + '">' + n + '</button>'; });
+    h += '</div><div style="font-weight:700;margin:16px 0 6px">字の形</div><div style="display:flex;flex-direction:column;gap:8px">';
+    FONTS.forEach(function (f) { h += '<button type="button" data-fn="' + f[0] + '" style="' + BTN + 'text-align:left;padding:12px 14px;font-family:' + f[2].replace(/"/g, "'") + ' !important;' + (f[0] === fn ? ON : '') + '">' + f[1] + '　あいうアイウ漢字</button>'; });
+    h += '</div><div style="margin-top:14px"><button type="button" data-bold="1" style="' + BTN + 'width:100%;' + (bold ? ON : '') + '">' + (bold ? '✓ ' : '') + '太めの字にする</button></div>';
+    h += '<div style="margin-top:10px"><button type="button" data-reset="1" style="' + BTN + 'width:100%;opacity:.8">もとに戻す</button></div>';
+    h += '<div style="margin:14px 0 4px;font-size:13px;opacity:.75;line-height:1.6">この設定は quick-ref と flow-mind で共通です。画面を指で広げて拡大もできます。</div>';
+    el.innerHTML = h;
+  }
+  function open() { build(); drawSheet(); document.getElementById('uiSheet').classList.add('open'); var ov = document.getElementById('overlay'); if (ov) ov.classList.add('open'); }
+  function close() {
+    var s = document.getElementById('uiSheet'); if (!s) return; s.classList.remove('open');
+    var ov = document.getElementById('overlay'); if (ov && !document.querySelector('.sheet.open')) ov.classList.remove('open');
+  }
+  window.UIPrefs = { apply: apply, step: step, open: open, scale: function () { return SC[si()]; } };
+  apply();
+  var b = document.getElementById('uiPrefBtn'); if (b) b.addEventListener('click', open);
+})();
+</script>
+<script>
+/* 本棚：メモを「棚（ジャンル）」に自動で仕分ける（第1段階）。タグ→棚の対応を保存し、メモごとの棚は付いているタグから決める */
+(function () {
+  var LS_MAP = 'qr_shelf_map', LS_SH = 'qr_shelves';
+  var DEFAULTS = [
+    ['セキュリティ', /セキュ|暗号|パスワード|流出|漏洩|漏えい|認証|ウイルス|フィッシング|個人情報|crypto|vault|security|ハッカ|脆弱/i],
+    ['スマホ・通信', /iPhone|iOS|Wi-?Fi|モバイル|楽天|通信|AirPods|Bluetooth|スマホ|電波|ルーター|SIM/i],
+    ['アプリ開発', /PWA|HTML|JavaScript|\bJS\b|GitHub|\bGit\b|開発|アプリ|コード行|Worker|\bAPI\b|flow-?mind|quick-?ref|CSS|PowerShell|プログラ|同期/i],
+    ['音楽', /音楽|楽曲|コード進行|ビート|ボーカル|歌|楽譜|DTM|作曲|music/i],
+    ['占い・暦', /占い|タロット|四柱|風水|梅花|易|九星|暦/],
+    ['学習・語学', /英語|English|学習|単語|語学|勉強|発音/],
+    ['お金・会計', /会計|経理|Power ?BI|お金|税|家計|請求/],
+    ['暮らし', /レシピ|料理|買い物|旅行|健康|運動|家事|住まい/]
+  ];
+  var OTHER = 'その他';
+  var GENERIC = ['AI作成', 'まとまり', '用語', 'スライス', 'flow-mind', '次の一手', '調べる計画', '違和感', 'quick-ref'];
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function shelves() {
+    var s = jget(LS_SH, null);
+    if (!Array.isArray(s) || !s.length) s = DEFAULTS.map(function (d) { return d[0]; }).concat([OTHER]);
+    if (s.indexOf(OTHER) < 0) s.push(OTHER);
+    return s;
+  }
+  function map() { var m = jget(LS_MAP, {}); return (m && typeof m === 'object') ? m : {}; }
+  function guessTag(tag) {
+    for (var i = 0; i < DEFAULTS.length; i++) if (DEFAULTS[i][1].test(tag)) return DEFAULTS[i][0];
+    return OTHER;
+  }
+  function shelfOfTag(tag) { var m = map(); var sh = shelves(); var v = m[tag]; if (v && sh.indexOf(v) >= 0) return v; var g = guessTag(tag); return sh.indexOf(g) >= 0 ? g : OTHER; }
+  function items() { try { return (typeof allItems !== 'undefined' && Array.isArray(allItems)) ? allItems : []; } catch (e) { return []; } }
+  function shelfOf(item) {
+    var vote = {}, best = null, bn = 0, tags = (item.tags || []).filter(function (t) { return GENERIC.indexOf(t) < 0; });
+    tags.forEach(function (t) { var s = shelfOfTag(t); if (s === OTHER) return; vote[s] = (vote[s] || 0) + 1; });
+    Object.keys(vote).forEach(function (s) { if (vote[s] > bn) { bn = vote[s]; best = s; } });
+    if (best) return best;
+    var g = guessTag(String(item.title || ''));
+    return shelves().indexOf(g) >= 0 ? g : OTHER;
+  }
+  function tagCounts() {
+    var c = {}; items().forEach(function (i) { (i.tags || []).forEach(function (t) { if (GENERIC.indexOf(t) < 0) c[t] = (c[t] || 0) + 1; }); });
+    return c;
+  }
+  // 巻（テーマ）＝そのメモのタグのうち、同じ棚で一番たくさんのメモに付いているもの
+  function volumeOf(item) {
+    var sh = shelfOf(item), c = tagCounts(), best = '', bn = 0;
+    (item.tags || []).forEach(function (t) { if (GENERIC.indexOf(t) >= 0) return; if (shelfOfTag(t) !== sh && sh !== OTHER) return; if ((c[t] || 0) > bn) { bn = c[t]; best = t; } });
+    return best;
+  }
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (x) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]; }); }
+  function build() {
+    if (document.getElementById('shelfSheet')) return;
+    var s = document.createElement('div'); s.className = 'sheet'; s.id = 'shelfSheet'; s.style.zIndex = '60';
+    s.innerHTML = '<div class="sheet-handle"></div><div class="sheet-header"><span></span><h2>📚 本棚（棚の仕分け）</h2><button type="button" id="shelfClose">閉じる</button></div><div class="sheet-body"><div id="shelfBody"></div></div>';
+    document.body.appendChild(s);
+    document.getElementById('shelfClose').addEventListener('click', close);
+    var ov = document.getElementById('overlay'); if (ov) ov.addEventListener('click', close);
+    document.getElementById('shelfBody').addEventListener('change', function (e) {
+      var sel = e.target.closest('select[data-tag]'); if (!sel) return;
+      var m = map(), v = sel.value;
+      if (v === '__new') { var n = (prompt('新しい棚の名前') || '').trim().slice(0, 12); if (!n) { draw(); return; } var sh = shelves(); if (sh.indexOf(n) < 0) { sh.splice(sh.length - 1, 0, n); jset(LS_SH, sh); } v = n; }
+      m[sel.dataset.tag] = v; jset(LS_MAP, m); draw();
+      try { if (typeof renderAll === 'function') renderAll(); } catch (er) {}
+    });
+    document.getElementById('shelfBody').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-reset]'); if (!b) return;
+      if (confirm('棚の仕分けを、自動の初期状態に戻します。よろしいですか？')) { try { localStorage.removeItem(LS_MAP); localStorage.removeItem(LS_SH); } catch (er) {} draw(); }
+    });
+  }
+  function draw() {
+    var el = document.getElementById('shelfBody'); if (!el) return;
+    var c = tagCounts(), sh = shelves(), byShelf = {}, cnt = {};
+    sh.forEach(function (s) { byShelf[s] = []; cnt[s] = 0; });
+    Object.keys(c).sort(function (a, b) { return c[b] - c[a]; }).forEach(function (t) { byShelf[shelfOfTag(t)].push(t); });
+    items().forEach(function (i) { cnt[shelfOf(i)] = (cnt[shelfOf(i)] || 0) + 1; });
+    var h = '<div style="line-height:1.7;margin-bottom:12px">メモは、付いているタグから<b>自動で棚に入ります</b>。違う棚に置きたいタグは、右の「▾」で移してください。次の画面（本棚）は、この仕分けをもとに作ります。</div>';
+    sh.forEach(function (s) {
+      h += '<div style="margin:14px 0 6px;font-weight:800;font-size:17px">📚 ' + esc(s) + ' <span style="font-weight:600;opacity:.7;font-size:14px">メモ ' + (cnt[s] || 0) + '件</span></div>';
+      if (!byShelf[s].length) { h += '<div style="opacity:.6;font-size:14px;padding:4px 0">タグなし</div>'; return; }
+      byShelf[s].forEach(function (t) {
+        h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(127,127,127,.25)"><span style="flex:1;font-size:16px">' + esc(t) + ' <span style="opacity:.6;font-size:13px">' + c[t] + '</span></span>' +
+          '<select data-tag="' + esc(t) + '" style="font-size:16px;padding:8px;border-radius:8px;max-width:48%">' + sh.map(function (x) { return '<option' + (x === s ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '<option value="__new">＋ 新しい棚…</option></select></div>';
+      });
+    });
+    h += '<div style="margin-top:18px"><button type="button" data-reset="1" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit;font-size:15px">自動の初期状態に戻す</button></div>';
+    el.innerHTML = h;
+  }
+  function open() { build(); draw(); document.getElementById('shelfSheet').classList.add('open'); var ov = document.getElementById('overlay'); if (ov) ov.classList.add('open'); }
+  function close() { var s = document.getElementById('shelfSheet'); if (!s) return; s.classList.remove('open'); var ov = document.getElementById('overlay'); if (ov && !document.querySelector('.sheet.open')) ov.classList.remove('open'); }
+  window.Shelf = { shelves: shelves, shelfOf: shelfOf, volumeOf: volumeOf, open: open, tagShelf: shelfOfTag };
+  var b = document.getElementById('shelfMenuBtn');
+  if (b) b.addEventListener('click', function () { try { closeMenu(); } catch (e) {} open(); });
+})();
+</script>
 </body>
 </html>
