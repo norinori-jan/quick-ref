@@ -322,6 +322,14 @@ header {
   flex-wrap: wrap;
 }
 
+.more-sec{margin-top:16px;border:1px solid var(--border);border-radius:12px;padding:0 12px;background:var(--card-bg);}
+.more-sec>summary{padding:14px 0;font-size:15px;font-weight:600;cursor:pointer;list-style:none;}
+.more-sec>summary::-webkit-details-marker{display:none;}
+.more-sec>summary::after{content:'▾';float:right;opacity:.6;}
+.more-sec[open]>summary::after{content:'▴';}
+.more-sec .sec-help{font-size:14px;line-height:1.7;opacity:.85;margin:0 0 10px;padding:10px 12px;border-radius:10px;background:rgba(127,127,127,.12);}
+.more-sec .field-label{margin-top:14px !important;}
+.filter-chip.more{border-style:dashed;}
 .filter-chip {
   padding: 6px 12px;
   border-radius: 20px;
@@ -599,10 +607,16 @@ mark.hl { border-radius:2px; padding:0 1px; }
       <button type="button" class="expand-btn" id="expandMemoBtn">⛶ 全画面</button>
     </div>
     <!-- 構造化フィールド -->
-    <label class="field-label" style="margin-top:18px;">構造化項目</label>
+    <details class="more-sec" id="secFields">
+    <summary>📋 項目表（場所・期限などを分けて書く）</summary>
+    <div class="sec-help">メモ本文とは別に、<b>「項目名：中身」</b>の表を付けられます。<br>例）場所：渋谷　／　期限：10/15　／　値段：3,200円<br>あとで探しやすくなります。<b>書かなくても大丈夫です。</b><br>🔀 フロー＝手順を1行ずつ書くと、流れ図になります。</div>
     <div id="fieldRows"></div>
     <button type="button" id="addFieldBtn" class="add-field-btn">＋ 項目を追加</button>
     <button type="button" id="addFlowBtn" class="add-field-btn">🔀 フローを追加</button>
+    </details>
+
+    <details class="more-sec" id="secMedia">
+    <summary>📎 画像・音声・動画を付ける</summary>
 
     <!-- 画像添付 -->
     <label class="field-label" style="margin-top:18px;">画像</label>
@@ -634,10 +648,14 @@ mark.hl { border-radius:2px; padding:0 1px; }
     </div>
     <div id="videoList" class="video-list"></div>
 
+    </details>
+
     <!-- 関連項目 -->
-    <label class="field-label" style="margin-top:18px;">関連項目</label>
+    <details class="more-sec" id="secRelated" open>
+    <summary>🔗 似ているメモ</summary>
     <div id="relatedSection" class="related-section"></div>
     <button id="aiRelatedBtn" class="ai-related-btn">✨ AIでさらに探す</button>
+    </details>
 
     <!-- 危険ゾーン -->
     <div id="dangerZone" class="danger-zone" style="display:none;">
@@ -2094,18 +2112,33 @@ function getAllTagsSorted() {
   return [...s].sort();
 }
 
+let tagFilterOpen = false;
 function renderTagFilter() {
   const row = document.getElementById('tagFilterRow');
   const allTags = getAllTagsSorted();
-  const chips = ['__all__', ...allTags].map(tag => {
+  const cnt = {};
+  allItems.forEach(i => (i.tags || []).forEach(t => { cnt[t] = (cnt[t] || 0) + 1; }));
+  const TOP = 6;
+  let shown = allTags;
+  if (!tagFilterOpen && allTags.length > TOP + 1) {
+    shown = [...allTags].sort((a, b) => (cnt[b] || 0) - (cnt[a] || 0)).slice(0, TOP);
+    if (filterTag && filterTag !== '__all__' && !shown.includes(filterTag)) shown.unshift(filterTag);
+  }
+  const hidden = allTags.length - shown.length;
+  const chips = ['__all__', ...shown].map(tag => {
     const label = tag === '__all__' ? 'すべて' : tag;
     const active = filterTag === tag ? 'active' : '';
     return `<button class="filter-chip ${active}" data-tag="${escapeHtml(tag)}">${escapeHtml(label)}</button>`;
   });
 
+  const moreBtn = (hidden > 0)
+    ? `<button class="filter-chip more" id="tagMoreBtn">タグをもっと見る（あと${hidden}）</button>`
+    : (tagFilterOpen && allTags.length > TOP + 1 ? `<button class="filter-chip more" id="tagMoreBtn">たたむ ▴</button>` : '');
   row.innerHTML =
-    chips.join('') +
+    chips.join('') + moreBtn +
     `<button class="filter-chip${linkFilterActive ? ' active' : ''}" id="linkFilterBtn">🔗 リンク集</button>`;
+  const mb = document.getElementById('tagMoreBtn');
+  if (mb) mb.addEventListener('click', () => { tagFilterOpen = !tagFilterOpen; renderTagFilter(); });
 
   row.querySelectorAll('.filter-chip[data-tag]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2297,6 +2330,11 @@ async function openEdit(id) {
 }
 
 function openSheet() {
+  try {
+    const f=document.getElementById('secFields'); if(f) f.open = draftFields.length>0;
+    const m=document.getElementById('secMedia');
+    if(m) m.open = !!(document.querySelector('#imgThumbs>*')||document.querySelector('#audioList>*')||document.querySelector('#videoList>*'));
+  } catch(e){}
   document.getElementById('editSheet').classList.add('open');
   document.getElementById('overlay').classList.add('open');
   setTimeout(() => document.getElementById('fTitle').focus(), 300);
