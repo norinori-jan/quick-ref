@@ -3549,7 +3549,7 @@ async function aiFetch(url, init, ms = 90000) {
     clearTimeout(timer);
     if (e && e.name === 'AbortError') throw new Error('応答が' + Math.round(ms / 1000) + '秒ありませんでした（通信が不安定か、モデルが応答していません）');
     throw new Error('通信に失敗しました（' + ((e && e.message) || e) + '）');
-  }
+  }  finally { clearTimeout(timer); }
 }
 async function callAI(userPrompt, opts = {}) {
   const proxyUrl = localStorage.getItem(LS.PROXY) || '';
