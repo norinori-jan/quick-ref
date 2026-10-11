@@ -424,6 +424,12 @@ header {
 #tableView .tchip { display:inline-block; font-size:11px; padding:1px 7px; margin:2px 3px 0 0; border-radius:100px; border:1px solid #c7c7cc; }
 #tableView .tctl { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
 #tableView .tctl select, #tableView .tctl input { font-size:14px; padding:7px 8px; border-radius:8px; border:1px solid #c7c7cc; background:transparent; color:inherit; }
+#clusterView, #tableView { overflow-x:hidden; overflow-wrap:anywhere; word-break:break-word; padding-bottom:calc(150px + env(safe-area-inset-bottom, 0px)) !important; }
+#clusterView *, #tableView * { max-width:100%; box-sizing:border-box; overflow-wrap:anywhere; }
+#clusterView textarea, #clusterView input, #clusterView select { width:100%; }
+#clusterView table, #tableView table { max-width:none; }
+#cardList { padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px)) !important; }
+#bookBody { padding-bottom:calc(100px + env(safe-area-inset-bottom, 0px)); overflow-wrap:anywhere; }
 #tableBar { position:sticky; bottom:0; margin:12px -16px -28px; padding:10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px); background:var(--card-bg,#fff); border-top:1px solid #c7c7cc; }
 .rich-toolbar, .memo-popup-toolbar { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; align-items:center; }
 .rich-toolbar button, .memo-popup-toolbar button, #edTools button { padding:7px 11px; border-radius:8px; border:1px solid #c7c7cc; background:transparent; color:inherit; font-size:14px; }
@@ -444,6 +450,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
     <div class="header-actions">
       <span id="countLabel">0件</span>
       <button class="review-btn" id="reviewBtn">📋<span class="review-badge" id="reviewBadge"></span></button>
+      <button class="icon-btn" id="syncWarnBtn" style="display:none;color:#fff;background:#d92d20;border-radius:10px;font-weight:800" title="同期の問題">⚠️</button>
       <button class="icon-btn" id="lockToggleBtn">🔓</button>
       <button class="icon-btn" id="uiPrefBtn" title="文字の設定" style="font-weight:800;font-size:15px">Aa</button>
       <button class="icon-btn" id="settingsBtn">⚙️</button>
@@ -789,10 +796,12 @@ mark.hl { border-radius:2px; padding:0 1px; }
 <!-- メニュー -->
 <div id="clusterView" style="display:none;position:fixed;inset:0;z-index:80;background:var(--card-bg,#fff);color:inherit;overflow-y:auto;padding:max(12px,env(safe-area-inset-top)) 16px 28px;">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" id="clusterClose">‹ 戻る</button><strong style="flex:1;text-align:center;">まとまり</strong><span style="width:56px;"></span></div>
+  <div style="font-size:12px;line-height:1.5;color:#8e8e93;margin:0 0 8px;">📱 要約の案・却下・スライスは<strong>この端末のみ</strong>に保存されます（他の端末には同期されません）。採用した要約はメモとして保存され、同期されます。</div>
   <div id="clusterBody"></div>
 </div>
 <div id="tableView" style="display:none;position:fixed;inset:0;z-index:80;background:var(--card-bg,#fff);color:inherit;overflow-y:auto;padding:max(12px,env(safe-area-inset-top)) 16px 28px;">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" id="tableClose">‹ 戻る</button><strong style="flex:1;text-align:center;">表（スライス）</strong><span style="width:56px;"></span></div>
+  <div style="font-size:12px;line-height:1.5;color:#8e8e93;margin:0 0 8px;">📱 スライスの設定は<strong>この端末のみ</strong>に保存されます。</div>
   <div id="tableBody"></div>
 </div>
 <div class="overlay" id="menuOverlay"></div>
@@ -816,11 +825,20 @@ mark.hl { border-radius:2px; padding:0 1px; }
     </span>
   </button>
 
+  <button type="button" class="action-btn" id="keepImportMenuBtn">
+    <span class="action-icon">📥</span>
+    <span class="action-btn-inner">
+      <span class="action-label">Google Keep から取り込む</span>
+      <span class="action-desc">Takeout の .json を選ぶ。ラベルと #タグ がタグになる</span>
+    </span>
+  </button>
+  <input type="file" id="keepImportInput" accept=".json,application/json" multiple style="display:none">
+
   <button type="button" class="action-btn" id="shelfMenuBtn">
     <span class="action-icon">📚</span>
     <span class="action-btn-inner">
-      <span class="action-label">本棚（棚の仕分け）</span>
-      <span class="action-desc">メモをジャンルの棚に自動で仕分ける。確認と直し</span>
+      <span class="action-label">本棚</span>
+      <span class="action-desc">棚（ジャンル）の目次から、巻（テーマ）、メモへ。索引もある</span>
     </span>
   </button>
 
@@ -1128,6 +1146,8 @@ async function dbDeleteAttachmentsByItemId(itemId) {
 ───────────────────────────── */
 const PIN_META_KEY = 'qr_pin_meta';
 let sessionKey = null;
+let sessionPin = null;                 // 他の端末のsaltで作られたメモを開くため、ロック解除中だけ覚える（保存しない）
+const foreignKeys = new Map();         // "salt|回数" → 鍵
 let decryptedCache = new Map();
 let pinMode = null;
 let pinModalResolve = null;
@@ -1198,7 +1218,7 @@ async function setupPin(pin) {
   const saltB64 = bytesToBase64(salt);
   const iterations = CryptoCore.DEFAULT_ITERATIONS; // 新規は20万回（crypto-vaultに合わせる）
   const key = await deriveKeyFromPin(pin, saltB64, iterations);
-  sessionKey = key;
+  sessionKey = key; sessionPin = pin; foreignKeys.clear();
   setPinMeta({ salt: saltB64, iterations });
 }
 
@@ -1207,7 +1227,7 @@ async function tryUnlockWithPin(pin) {
   if (!meta) return false;
   try {
     const key = await deriveKeyFromPin(pin, meta.salt, meta.iterations);
-    sessionKey = key;
+    sessionKey = key; sessionPin = pin; foreignKeys.clear();
     return true;
   } catch (_) {
     return false;
@@ -1215,7 +1235,7 @@ async function tryUnlockWithPin(pin) {
 }
 
 function lockSession() {
-  sessionKey = null;
+  sessionKey = null; sessionPin = null; foreignKeys.clear();
   decryptedCache.clear();
   updateLockButton();
   renderAll();
@@ -1235,13 +1255,24 @@ function updateLockButton() {
 /* ─────────────────────────────
    暗号化された項目の復号
 ───────────────────────────── */
+// メモ側に入っている salt / iterations が、この端末の設定と違うときは、同じパスコードからそのsaltで鍵を作り直して使う
+async function keyForEnc(enc) {
+  const meta = getPinMeta() || {};
+  const it = Number(enc && enc.iterations) || 150000;
+  if (!enc || typeof enc.salt !== 'string' || !enc.salt) return sessionKey;               // 旧形式：この端末の鍵
+  if (enc.salt === meta.salt && it === (Number(meta.iterations) || 150000)) return sessionKey;
+  if (!sessionPin || it < 10000 || it > 2000000) return sessionKey;                         // 範囲外の回数は使わない
+  const id = enc.salt + '|' + it;
+  if (!foreignKeys.has(id)) foreignKeys.set(id, await deriveKeyFromPin(sessionPin, enc.salt, it));
+  return foreignKeys.get(id);
+}
 async function decryptOneField(enc) {
   // 新形式（envelope: iv/ciphertextがbase64文字列）と
   // 旧形式（iv/dataが生バイト、ivを使い回していたデータ）の両方に対応
   const isEnvelope = typeof enc.iv === 'string';
   const iv = isEnvelope ? base64ToBytes(enc.iv) : enc.iv;
   const data = isEnvelope ? base64ToBytes(enc.ciphertext) : enc.data;
-  const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, sessionKey, data);
+  const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, await keyForEnc(enc), data);
   return new TextDecoder().decode(buf);
 }
 
@@ -3107,7 +3138,7 @@ function checkShortcutParam() {
   history.replaceState(null, '', location.pathname + (location.hash || ''));
 
   if (sc === 'quicksave') {
-    quickSaveText(quickText);
+    quickSaveText(quickText, params.get('tags') || '', params.get('title') || '');
     return;
   }
 
@@ -3125,7 +3156,36 @@ function checkShortcutParam() {
 /* ─────────────────────────────
    Siriショートカット：即保存
 ───────────────────────────── */
-async function quickSaveText(text) {
+const HASHTAG_RE = /#[\w\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\-]+/g;
+function hashtagsOf(text) { return [...new Set((String(text || '').match(HASHTAG_RE) || []).map(t => t.slice(1)).filter(t => t && !/^\d+$/.test(t)))]; }
+async function importKeepFiles(files) {
+  const list = [...files]; if (!list.length) return;
+  const have = new Set(allItems.map(i => i.origin && i.origin.keepId).filter(Boolean));
+  const out = []; let skipped = 0, trashed = 0, att = 0, bad = 0;
+  for (const f of list) {
+    let j; try { j = JSON.parse(await f.text()); } catch (e) { bad++; continue; }
+    if (!j || typeof j !== 'object' || (j.textContent == null && !Array.isArray(j.listContent) && j.title == null)) { bad++; continue; }
+    if (j.isTrashed) { trashed++; continue; }
+    const created = Math.round((j.createdTimestampUsec || 0) / 1000) || f.lastModified || Date.now();
+    const edited = Math.round((j.userEditedTimestampUsec || 0) / 1000) || created;
+    const keepId = String(j.createdTimestampUsec || created) + '|' + String(j.title || '').slice(0, 40);
+    if (have.has(keepId)) { skipped++; continue; }
+    const body = String(j.textContent || '') + (Array.isArray(j.listContent) ? (j.textContent ? '\n' : '') + j.listContent.map(x => (x.isChecked ? '☑ ' : '☐ ') + (x.text || '')).join('\n') : '');
+    if (Array.isArray(j.attachments)) att += j.attachments.length;
+    const labels = (Array.isArray(j.labels) ? j.labels : []).map(x => String((x && x.name) || '').replace(/\s+/g, '').slice(0, 20)).filter(Boolean);
+    const tags = [...new Set([...labels, ...hashtagsOf(String(j.title || '') + ' ' + body), 'keep', ...(j.isArchived ? ['Keepアーカイブ'] : [])])].slice(0, 10);
+    const t = String(j.title || '').trim() || (body.split('\n')[0] || '無題').replace(HASHTAG_RE, '').trim() || '無題';
+    out.push({ id: crypto.randomUUID(), title: t.slice(0, 60), tags, body: escapeHtml(body.trim()).replace(/\n/g, '<br>'), fields: [], url: '', sensitive: false, createdAt: created, updatedAt: edited, origin: { app: 'google-keep', keepId, importedAt: Date.now() } });
+    have.add(keepId);
+  }
+  if (!out.length) { alert('取り込めるメモがありませんでした。\n（重複 ' + skipped + '件、ごみ箱 ' + trashed + '件、読めないファイル ' + bad + '件）'); return; }
+  if (!confirm('Keep のメモ ' + out.length + '件を取り込みます。\n（重複 ' + skipped + '件、ごみ箱 ' + trashed + '件は除きます。画像などの添付 ' + att + '件は取り込みません）')) return;
+  for (const it of out) await dbPut(it);
+  await reload(); try { syncEcosystemTags(); } catch (e) {}
+  showToast('📥 Keep から ' + out.length + '件 取り込みました');
+  try { void syncCloudNow(false); } catch (e) {}
+}
+async function quickSaveText(text, tagsParam, titleParam) {
   const trimmed = (text || '').trim();
   if (!trimmed) {
     showToast('保存する内容が空です');
@@ -3137,8 +3197,8 @@ async function quickSaveText(text) {
 
   const item = {
     id: crypto.randomUUID(),
-    title: (lines[0] || '無題').slice(0, 60),
-    tags: [],
+    title: ((titleParam || '').trim() || (lines[0] || '無題').replace(HASHTAG_RE, '').trim() || '無題').slice(0, 60),
+    tags: [...new Set([...String(tagsParam || '').split(/[,、\s]+/).map(t => t.replace(/^#/, '').trim()).filter(Boolean), ...hashtagsOf(trimmed)])].slice(0, 8),
     body: escapeHtml(trimmed).replace(/\n/g, '<br>'),
     fields: [],
     url: '',
@@ -3452,11 +3512,35 @@ function cloudSyncUrl() {
   return endpoint ? `${endpoint}/sync/quick-ref` : '';
 }
 
+let lastPullOk = null, lastCloudCount = 0, syncStats = { recv: 0, sent: 0, cloud: 0 };
+function setSyncWarn(msg) {
+  window.__syncWarn = msg || '';
+  const b = document.getElementById('syncWarnBtn');
+  if (b) { b.style.display = msg ? '' : 'none'; b.title = msg || ''; }
+}
+function syncErrText(label, status, e) {
+  if (status === 401 || status === 403) return 'トークンが違います（' + status + '）。⚙️の同期トークンを確かめてください';
+  if (status) return label + '失敗（' + status + '）';
+  return label + '失敗: ' + ((e && e.message) || e);
+}
+
 async function syncCloudNow(showResult = true) {
   const config = getCloudSyncConfig();
   const url = cloudSyncUrl();
   if (!url || !config.token || cloudSyncBusy) {
     if (showResult && (!url || !config.token)) updateCloudSyncStatus('エンドポイントとトークンを設定してください');
+    return false;
+  }
+  // 空の端末の保護：受信に成功していない間は送らない。端末が0件でクラウドに有るときも送らない
+  if (lastPullOk !== true) {
+    if (lastPullOk === null) { void pullCloudSync(false); return false; }   // まだ受信していない：先に受信（必要なら受信後に送信）
+    const m = '受信に成功していないため、送信を止めました（クラウドを上書きしないため）';
+    if (showResult) updateCloudSyncStatus(m);
+    return false;
+  }
+  if (allItems.length === 0 && lastCloudCount > 0) {
+    const m = 'この端末が0件で、クラウドに' + lastCloudCount + '件あるため、送信を止めました';
+    updateCloudSyncStatus(m); setSyncWarn(m);
     return false;
   }
 
@@ -3470,11 +3554,14 @@ async function syncCloudNow(showResult = true) {
       },
       body: JSON.stringify({ data: { items: allItems } })
     });
-    if (!response.ok) throw new Error(`同期PUT失敗 (${response.status})`);
+    if (!response.ok) { const er = new Error(syncErrText('送信', response.status)); er.status = response.status; throw er; }
+    syncStats.sent = allItems.length; syncStats.cloud = allItems.length; lastCloudCount = allItems.length;
+    setSyncWarn('');
     updateCloudSyncStatus(`最終同期: ${new Date().toLocaleTimeString('ja-JP')}`);
     return true;
   } catch (error) {
-    updateCloudSyncStatus(`同期失敗: ${error.message}`);
+    const m = error.status ? error.message : syncErrText('送信', 0, error);
+    updateCloudSyncStatus('同期失敗: ' + m); setSyncWarn(m);
     return false;
   } finally {
     cloudSyncBusy = false;
@@ -3487,42 +3574,66 @@ async function pullCloudSync(showResult = false) {
   if (!url || !config.token || cloudSyncBusy) return false;
 
   cloudSyncBusy = true;
+  let pushAfter = false, ok = false;
   try {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${config.token}` }
     });
-    if (response.status === 404) return false;
-    if (!response.ok) throw new Error(`同期GET失敗 (${response.status})`);
-    const remote = await response.json();
-    const remoteItems = Array.isArray(remote.data) ? remote.data : remote.data?.items;
-    if (!Array.isArray(remoteItems)) return false;
+    if (response.status === 404) { lastPullOk = true; lastCloudCount = 0; syncStats.recv = 0; setSyncWarn(''); pushAfter = allItems.length > 0; ok = false; }
+    else {
+      if (!response.ok) { const er = new Error(syncErrText('受信', response.status)); er.status = response.status; throw er; }
+      const remote = await response.json();
+      const remoteItems = Array.isArray(remote.data) ? remote.data : remote.data?.items;
+      if (!Array.isArray(remoteItems)) throw new Error('クラウドの形式が想定と違います');
 
-    const localItems = allItems;
-    const merged = new Map(localItems.map(item => [item.id, item]));
-    let localWins = false;
-    for (const remoteItem of remoteItems) {
-      const localItem = merged.get(remoteItem.id);
-      if (!localItem || (remoteItem.updatedAt || 0) > (localItem.updatedAt || 0)) {
-        merged.set(remoteItem.id, remoteItem);
-      } else if ((localItem.updatedAt || 0) > (remoteItem.updatedAt || 0)) {
-        localWins = true;
+      const localItems = allItems;
+      const merged = new Map(localItems.map(item => [item.id, item]));
+      let recv = 0;
+      for (const remoteItem of remoteItems) {
+        const localItem = merged.get(remoteItem.id);
+        if (!localItem || (remoteItem.updatedAt || 0) > (localItem.updatedAt || 0)) {
+          merged.set(remoteItem.id, remoteItem); recv++;
+        } else if ((localItem.updatedAt || 0) > (remoteItem.updatedAt || 0)) {
+          pushAfter = true;
+        }
       }
+      const remoteIds = new Set(remoteItems.map(r => r.id));
+      if (localItems.some(item => !remoteIds.has(item.id))) pushAfter = true;
+      const mergedItems = [...merged.values()];
+      for (const item of mergedItems) await dbPut(item);
+      await reload();
+      lastPullOk = true; lastCloudCount = remoteItems.length;
+      syncStats.recv = recv; syncStats.cloud = remoteItems.length;
+      setSyncWarn('');
+      if (showResult) updateCloudSyncStatus(`受信・統合: ${new Date().toLocaleTimeString('ja-JP')}（受信${recv}件）`);
+      ok = true;
     }
-    if (localItems.some(item => !remoteItems.some(remoteItem => remoteItem.id === item.id))) {
-      localWins = true;
-    }
-    const mergedItems = [...merged.values()];
-    for (const item of mergedItems) await dbPut(item);
-    await reload();
-    if (showResult) updateCloudSyncStatus(`受信・統合: ${new Date().toLocaleTimeString('ja-JP')}`);
-    if (localWins) void syncCloudNow(false);
-    return true;
   } catch (error) {
-    if (showResult) updateCloudSyncStatus(`受信失敗: ${error.message}`);
-    return false;
+    lastPullOk = false;
+    const m = error.status ? error.message : syncErrText('受信', 0, error);
+    setSyncWarn(m);
+    if (showResult) updateCloudSyncStatus('受信失敗: ' + m);
   } finally {
     cloudSyncBusy = false;
   }
+  if (pushAfter && lastPullOk === true) void syncCloudNow(false);
+  return ok;
+}
+
+// 「今すぐ同期」：受信→送信し、件数を見せる
+async function syncAllNow() {
+  const before = allItems.length;
+  syncStats = { recv: 0, sent: 0, cloud: 0 };
+  lastPullOk = null;
+  await pullCloudSync(true);
+  if (lastPullOk === true) await syncCloudNow(true);
+  const ok = lastPullOk === true && !window.__syncWarn;
+  const msg = ok
+    ? `同期できました：受信 ${syncStats.recv}件／送信 ${syncStats.sent}件／クラウド合計 ${syncStats.cloud || lastCloudCount}件／この端末 ${allItems.length}件`
+    : '同期できませんでした：' + (window.__syncWarn || '原因不明') + `（この端末 ${allItems.length}件）`;
+  updateCloudSyncStatus(msg);
+  try { showToast(msg); } catch (_) {}
+  return ok;
 }
 
 const AI_PROMPTS = {
@@ -4557,7 +4668,7 @@ function wireEvents() {
     for (const it of sensitiveItems) await dbDelete(it.id);
 
     localStorage.removeItem(PIN_META_KEY);
-    sessionKey = null;
+    sessionKey = null; sessionPin = null; foreignKeys.clear();
     decryptedCache.clear();
 
     await reload();
@@ -4614,10 +4725,10 @@ function wireEvents() {
     closeSettingsSheet();
   });
 
+  document.getElementById('syncWarnBtn').addEventListener('click', () => { alert('同期の問題：\n' + (window.__syncWarn || '') + '\n\n⚙️の「今すぐ同期」で再確認できます。'); });
   document.getElementById('syncNowBtn').addEventListener('click', async () => {
     saveCloudSyncConfig();
-    await pullCloudSync(true);
-    await syncCloudNow(true);
+    await syncAllNow();
   });
 
   /* AIパネル */
@@ -4664,6 +4775,8 @@ function wireEvents() {
   document.getElementById('menuBtn').addEventListener('click', openMenu);
   document.getElementById('clusterMenuBtn').addEventListener('click', openClusters);
   document.getElementById('tableMenuBtn').addEventListener('click', openTable);
+  document.getElementById('keepImportMenuBtn').addEventListener('click', () => { closeMenu(); document.getElementById('keepImportInput').click(); });
+  document.getElementById('keepImportInput').addEventListener('change', e => { const fs = e.target.files; importKeepFiles(fs).finally(() => { e.target.value = ''; }); });
   document.getElementById('tableClose').addEventListener('click', closeTable);
   tableWire();
   edPasteInit();
@@ -5076,11 +5189,12 @@ document.addEventListener('visibilitychange', () => {
   var LS_MAP = 'qr_shelf_map', LS_SH = 'qr_shelves';
   var DEFAULTS = [
     ['セキュリティ', /セキュ|暗号|パスワード|流出|漏洩|漏えい|認証|ウイルス|フィッシング|個人情報|crypto|vault|security|ハッカ|脆弱/i],
-    ['スマホ・通信', /iPhone|iOS|Wi-?Fi|モバイル|楽天|通信|AirPods|Bluetooth|スマホ|電波|ルーター|SIM/i],
-    ['アプリ開発', /PWA|HTML|JavaScript|\bJS\b|GitHub|\bGit\b|開発|アプリ|コード行|Worker|\bAPI\b|flow-?mind|quick-?ref|CSS|PowerShell|プログラ|同期/i],
+    ['スマホ・通信', /iPhone|iOS|Wi-?Fi|モバイル|楽天|Rakuten|通信|Network|ネットワーク|AirPods|Bluetooth|スマホ|電波|ルーター|\bSIM\b|回線|5G|LTE/i],
+    ['アプリ開発', /PWA|HTML|JavaScript|\bJS\b|GitHub|\bGit\b|開発|アプリ|コード行|Worker|\bAPI\b|flow-?mind|quick-?ref|CSS|PowerShell|プログラ|同期|Python|Xcode|Cursor|Cloudflare|Windows|\bMac\b|コマンド|\bZip\b|移行|バグ|デバッグ|Claude|Gemini|OpenAI|ChatGPT|\bAI\b|npm|Node|SQL|ターミナル|VS ?Code|サーバー|デプロイ|リポジトリ/i],
     ['音楽', /音楽|楽曲|コード進行|ビート|ボーカル|歌|楽譜|DTM|作曲|music/i],
     ['占い・暦', /占い|タロット|四柱|風水|梅花|易|九星|暦/],
-    ['学習・語学', /英語|English|学習|単語|語学|勉強|発音/],
+    ['学習・語学', /英語|English|学習|単語|語学|勉強|発音|ガイド|マニュアル|使い方|操作|入門/],
+    ['アイデア', /idea|アイデア|企画|発想|ひらめき/i],
     ['お金・会計', /会計|経理|Power ?BI|お金|税|家計|請求/],
     ['暮らし', /レシピ|料理|買い物|旅行|健康|運動|家事|住まい/]
   ];
@@ -5099,7 +5213,24 @@ document.addEventListener('visibilitychange', () => {
     for (var i = 0; i < DEFAULTS.length; i++) if (DEFAULTS[i][1].test(tag)) return DEFAULTS[i][0];
     return OTHER;
   }
-  function shelfOfTag(tag) { var m = map(); var sh = shelves(); var v = m[tag]; if (v && sh.indexOf(v) >= 0) return v; var g = guessTag(tag); return sh.indexOf(g) >= 0 ? g : OTHER; }
+  var coCache = { key: '', map: {} };
+  function coMap() {
+    var it = items(), n = 0; it.forEach(function (i) { n += (i.tags || []).length; });
+    var key = it.length + ':' + n; if (coCache.key === key) return coCache.map;
+    var sh = shelves(), votes = {};
+    it.forEach(function (i) {
+      var ts = (i.tags || []).filter(function (t) { return GENERIC.indexOf(t) < 0; });
+      var cls = ts.map(function (t) { var g = guessTag(t); return sh.indexOf(g) >= 0 ? g : OTHER; });
+      ts.forEach(function (t, a) {
+        if (cls[a] !== OTHER) return;
+        ts.forEach(function (u, b) { if (a === b || cls[b] === OTHER) return; votes[t] = votes[t] || {}; votes[t][cls[b]] = (votes[t][cls[b]] || 0) + 1; });
+      });
+    });
+    var res = {};
+    Object.keys(votes).forEach(function (t) { var best = '', bn = 0; Object.keys(votes[t]).forEach(function (g) { if (votes[t][g] > bn) { bn = votes[t][g]; best = g; } }); if (best) res[t] = best; });
+    coCache = { key: key, map: res }; return res;
+  }
+  function shelfOfTag(tag) { var m = map(); var sh = shelves(); var v = m[tag]; if (v && sh.indexOf(v) >= 0) return v; var g = guessTag(tag); if (g === OTHER) { var c = coMap()[tag]; if (c && sh.indexOf(c) >= 0) return c; } return sh.indexOf(g) >= 0 ? g : OTHER; }
   function items() { try { return (typeof allItems !== 'undefined' && Array.isArray(allItems)) ? allItems : []; } catch (e) { return []; } }
   function shelfOf(item) {
     var vote = {}, best = null, bn = 0, tags = (item.tags || []).filter(function (t) { return GENERIC.indexOf(t) < 0; });
@@ -5116,14 +5247,14 @@ document.addEventListener('visibilitychange', () => {
   // 巻（テーマ）＝そのメモのタグのうち、同じ棚で一番たくさんのメモに付いているもの
   function volumeOf(item) {
     var sh = shelfOf(item), c = tagCounts(), best = '', bn = 0;
-    (item.tags || []).forEach(function (t) { if (GENERIC.indexOf(t) >= 0) return; if (shelfOfTag(t) !== sh && sh !== OTHER) return; if ((c[t] || 0) > bn) { bn = c[t]; best = t; } });
+    (item.tags || []).forEach(function (t) { if (GENERIC.indexOf(t) >= 0) return; if (shelfOfTag(t) !== sh && sh !== OTHER) return; if ((c[t] || 0) > bn || ((c[t] || 0) === bn && bn > 0 && t < best)) { bn = c[t]; best = t; } });
     return best;
   }
   function esc(t) { return String(t).replace(/[&<>"']/g, function (x) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]; }); }
   function build() {
     if (document.getElementById('shelfSheet')) return;
     var s = document.createElement('div'); s.className = 'sheet'; s.id = 'shelfSheet'; s.style.zIndex = '60';
-    s.innerHTML = '<div class="sheet-handle"></div><div class="sheet-header"><span></span><h2>📚 本棚（棚の仕分け）</h2><button type="button" id="shelfClose">閉じる</button></div><div class="sheet-body"><div id="shelfBody"></div></div>';
+    s.innerHTML = '<div class="sheet-handle"></div><div class="sheet-header"><span></span><h2>🗂 棚の仕分け（設定）</h2><button type="button" id="shelfClose">閉じる</button></div><div class="sheet-body"><div id="shelfBody"></div></div>';
     document.body.appendChild(s);
     document.getElementById('shelfClose').addEventListener('click', close);
     var ov = document.getElementById('overlay'); if (ov) ov.addEventListener('click', close);
@@ -5135,6 +5266,7 @@ document.addEventListener('visibilitychange', () => {
       try { if (typeof renderAll === 'function') renderAll(); } catch (er) {}
     });
     document.getElementById('shelfBody').addEventListener('click', function (e) {
+      var gs = e.target.closest('[data-goshelf]'); if (gs) { var nm = gs.dataset.goshelf; close(); openBook(); nav.level = 1; nav.shelf = nm; drawBook(); return; }
       var b = e.target.closest('[data-reset]'); if (!b) return;
       if (confirm('棚の仕分けを、自動の初期状態に戻します。よろしいですか？')) { try { localStorage.removeItem(LS_MAP); localStorage.removeItem(LS_SH); } catch (er) {} draw(); }
     });
@@ -5147,7 +5279,7 @@ document.addEventListener('visibilitychange', () => {
     items().forEach(function (i) { cnt[shelfOf(i)] = (cnt[shelfOf(i)] || 0) + 1; });
     var h = '<div style="line-height:1.7;margin-bottom:12px">メモは、付いているタグから<b>自動で棚に入ります</b>。違う棚に置きたいタグは、右の「▾」で移してください。次の画面（本棚）は、この仕分けをもとに作ります。</div>';
     sh.forEach(function (s) {
-      h += '<div style="margin:14px 0 6px;font-weight:800;font-size:17px">📚 ' + esc(s) + ' <span style="font-weight:600;opacity:.7;font-size:14px">メモ ' + (cnt[s] || 0) + '件</span></div>';
+      h += '<div data-goshelf="' + esc(s) + '" style="margin:14px 0 6px;font-weight:800;font-size:17px;cursor:pointer">📚 ' + esc(s) + ' <span style="font-weight:600;opacity:.7;font-size:14px">メモ ' + (cnt[s] || 0) + '件 ▸ 開く</span></div>';
       if (!byShelf[s].length) { h += '<div style="opacity:.6;font-size:14px;padding:4px 0">タグなし</div>'; return; }
       byShelf[s].forEach(function (t) {
         h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(127,127,127,.25)"><span style="flex:1;font-size:16px">' + esc(t) + ' <span style="opacity:.6;font-size:13px">' + c[t] + '</span></span>' +
@@ -5159,9 +5291,132 @@ document.addEventListener('visibilitychange', () => {
   }
   function open() { build(); draw(); document.getElementById('shelfSheet').classList.add('open'); var ov = document.getElementById('overlay'); if (ov) ov.classList.add('open'); }
   function close() { var s = document.getElementById('shelfSheet'); if (!s) return; s.classList.remove('open'); var ov = document.getElementById('overlay'); if (ov && !document.querySelector('.sheet.open')) ov.classList.remove('open'); }
-  window.Shelf = { shelves: shelves, shelfOf: shelfOf, volumeOf: volumeOf, open: open, tagShelf: shelfOfTag };
+  /* ── 本棚の画面：棚（目次）→ 巻 → メモ、と、索引（タグの辞書） ── */
+  var nav = { level: 0, tab: 'toc', shelf: '', vol: null, tag: '', busy: '' };
+  var LS_DICT = 'qr_dict';
+  function dget() { var d = jget(LS_DICT, {}); return (d && typeof d === 'object') ? d : {}; }
+  function dset(term, text, src) { var d = dget(); if (text) d[term] = { text: String(text).slice(0, 120), src: src, at: Date.now() }; else delete d[term]; jset(LS_DICT, d); }
+  function eligible(i) { if (i.sensitive) return false; try { var CI = window.ClusterItems; if (CI && CI.eligibleOne) return !!CI.eligibleOne(i); } catch (e) {} return true; }
+  async function makeDef(term) {
+    var ex = items().filter(function (i) { return (i.tags || []).indexOf(term) >= 0 && eligible(i); }).slice(0, 4).map(function (i) { return '・' + String(i.title || '').slice(0, 40) + '：' + plain(i.body).slice(0, 120); }).join('\n');
+    var pr = '次の言葉の意味を、下の自分のメモの内容を参考にして、やさしい日本語で1文（60字以内）で説明してください。前置き・記号・改行は不要です。\n言葉: ' + term + '\n【メモの抜粋】\n' + (ex || '（なし）');
+    var out = String(await callAI(pr, { redact: true, maxTokens: 200 }) || '').replace(/\s+/g, ' ').trim();
+    if (!out) throw new Error('AIから返事がありませんでした');
+    dset(term, out.slice(0, 100), 'ai'); return out;
+  }
+  function ts(i) { return i.updatedAt || i.createdAt || 0; }
+  function dstr(t) { try { return new Date(t).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }); } catch (e) { return ''; } }
+  function plain(h) { return String(h || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function itemRow(i) {
+    var sn = i.sensitive ? '🔒 保護メモ' : plain(i.body).slice(0, 70);
+    return '<div data-open="' + esc(i.id) + '" style="padding:12px 4px;border-bottom:1px solid rgba(127,127,127,.25);cursor:pointer"><div style="font-size:17px;font-weight:700">' + esc(i.title || '無題') + ' <span style="font-weight:500;opacity:.6;font-size:13px">' + dstr(ts(i)) + '</span></div>' + (sn ? '<div style="opacity:.75;font-size:14px;line-height:1.5;margin-top:2px">' + esc(sn) + '</div>' : '') + '</div>';
+  }
+  function card(attr, title, sub, extra) {
+    return '<div ' + attr + ' style="border:1px solid rgba(127,127,127,.45);border-radius:14px;padding:14px;margin:10px 0;cursor:pointer;background:rgba(127,127,127,.08)"><div style="font-size:18px;font-weight:800">' + title + '</div>' + (sub ? '<div style="opacity:.75;font-size:14px;margin-top:2px">' + sub + '</div>' : '') + (extra || '') + '</div>';
+  }
+  function drawBook() {
+    var el = document.getElementById('bookBody'), hd = document.getElementById('bookTitle'), bk = document.getElementById('bookBack'); if (!el) return;
+    var all = items().slice().sort(function (a, b) { return ts(b) - ts(a); }), h = '';
+    bk.style.visibility = nav.level === 0 ? 'hidden' : 'visible';
+    if (nav.level === 0) {
+      hd.textContent = '📚 本棚';
+      h += '<div style="display:flex;gap:8px;margin-bottom:6px"><button type="button" data-tab="toc" style="flex:1;padding:12px;border-radius:12px;font-size:16px;border:1px solid rgba(127,127,127,.5);' + (nav.tab === 'toc' ? 'outline:3px solid #4A9EFF;font-weight:800;' : '') + '">目次（棚）</button><button type="button" data-tab="idx" style="flex:1;padding:12px;border-radius:12px;font-size:16px;border:1px solid rgba(127,127,127,.5);' + (nav.tab === 'idx' ? 'outline:3px solid #4A9EFF;font-weight:800;' : '') + '">索引（言葉）</button></div>';
+      if (nav.tab === 'toc') {
+        var by = {}; shelves().forEach(function (x) { by[x] = []; });
+        all.forEach(function (i) { var x = shelfOf(i); (by[x] = by[x] || []).push(i); });
+        shelves().forEach(function (x) {
+          var l = by[x] || []; if (!l.length) return;
+          h += card('data-shelf="' + esc(x) + '"', '📚 ' + esc(x) + ' <span style="font-weight:600;opacity:.7;font-size:14px">' + l.length + '件</span>', l.slice(0, 3).map(function (i) { return esc((i.title || '無題').slice(0, 24)); }).join('　／　'));
+        });
+        if (!all.length) h += '<div style="opacity:.7;padding:16px 0">まだメモがありません。</div>';
+        h += '<div style="margin-top:14px"><button type="button" data-sort="1" style="width:100%;padding:12px;border-radius:12px;font-size:15px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit">棚の仕分けを直す</button></div>';
+      } else {
+        var c = tagCounts(), tags = Object.keys(c);
+        var grp = { '英数字': [], 'かな・カタカナ': [], '漢字': [] };
+        tags.forEach(function (t) { var ch = t.charAt(0); (/[A-Za-z0-9]/.test(ch) ? grp['英数字'] : /[ぁ-んァ-ヴー]/.test(ch) ? grp['かな・カタカナ'] : grp['漢字']).push(t); });
+        var dict = dget(), nodef = tags.filter(function (t) { return !dict[t]; }).sort(function (a, b) { return c[b] - c[a]; }).slice(0, 8);
+        if (nodef.length) h += '<button type="button" data-bulk="1" style="width:100%;margin:10px 0 2px;padding:12px;border-radius:12px;font-size:15px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit">' + (nav.busy === '__bulk' ? '作っています…' : '✨ 説明のない主な言葉 ' + nodef.length + '個に、AIで一行説明を作る') + '</button>';
+        Object.keys(grp).forEach(function (g) {
+          if (!grp[g].length) return;
+          h += '<div style="margin:16px 0 4px;font-weight:800;opacity:.8">' + g + '</div>';
+          grp[g].sort(function (a, b) { return a.localeCompare(b, 'ja'); }).forEach(function (t) { h += '<div data-tag="' + esc(t) + '" role="button" style="display:flex;align-items:center;gap:10px;min-height:56px;padding:12px 10px;margin:6px 0;border:1px solid rgba(74,158,255,.45);border-radius:12px;background:rgba(74,158,255,.07);cursor:pointer"><div style="flex:1;min-width:0"><span style="font-size:18px;font-weight:800;color:#2f7fe0">' + esc(t) + '</span> <span style="opacity:.65;font-size:13px">' + c[t] + '件</span><div style="opacity:.85;font-size:14px;line-height:1.5">' + (dict[t] ? esc(dict[t].text) : '<span style="opacity:.45">（説明なし）</span>') + '</div></div><span style="font-size:26px;color:#2f7fe0;font-weight:700">›</span></div>'; });
+        });
+        if (!tags.length) h += '<div style="opacity:.7;padding:16px 0">タグがまだありません。</div>';
+      }
+    } else if (nav.level === 1) {
+      hd.textContent = '📚 ' + nav.shelf;
+      var inS = all.filter(function (i) { return shelfOf(i) === nav.shelf; }), vols = {}, none = [];
+      inS.forEach(function (i) { var v = volumeOf(i); if (v) (vols[v] = vols[v] || []).push(i); else none.push(i); });
+      Object.keys(vols).sort(function (a, b) { return ts(vols[b][0]) - ts(vols[a][0]); }).forEach(function (v) {
+        h += card('data-vol="' + esc(v) + '"', '📖 ' + esc(v) + ' <span style="font-weight:600;opacity:.7;font-size:14px">' + vols[v].length + '件</span>', vols[v].slice(0, 2).map(function (i) { return esc((i.title || '無題').slice(0, 24)); }).join('　／　'));
+      });
+      if (none.length) h += card('data-vol="__none"', '📄 まとまりなし <span style="font-weight:600;opacity:.7;font-size:14px">' + none.length + '件</span>', none.slice(0, 2).map(function (i) { return esc((i.title || '無題').slice(0, 24)); }).join('　／　'));
+    } else if (nav.level === 2) {
+      var l2;
+      if (nav.tag) { hd.textContent = '🔎 ' + nav.tag; l2 = all.filter(function (i) { return (i.tags || []).indexOf(nav.tag) >= 0; }); }
+      else {
+        hd.textContent = (nav.vol === '__none' ? '📄 まとまりなし' : '📖 ' + nav.vol);
+        l2 = all.filter(function (i) { return shelfOf(i) === nav.shelf && (nav.vol === '__none' ? !volumeOf(i) : volumeOf(i) === nav.vol); });
+      }
+      if (nav.tag) {
+        var df = dget()[nav.tag];
+        h += '<div style="border:1px solid rgba(127,127,127,.45);border-radius:14px;padding:12px;margin-bottom:10px;background:rgba(127,127,127,.08)"><div style="font-size:13px;opacity:.7;margin-bottom:4px">この言葉の一行説明</div>' +
+          (df ? '<div style="font-size:17px;line-height:1.6">' + esc(df.text) + '</div><div style="font-size:12px;opacity:.6;margin-top:2px">' + (df.src === 'ai' ? '✨ AIが作成（メモの内容から）' : '✏️ 自分で書いた') + '</div>' : '<div style="opacity:.6">まだありません</div>') +
+          '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" data-defgen="1" style="flex:1;padding:11px;border-radius:12px;font-size:15px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit">' + (nav.busy === nav.tag ? '作っています…' : '✨ AIで作る') + '</button><button type="button" data-defedit="1" style="flex:1;padding:11px;border-radius:12px;font-size:15px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit">✏️ 自分で書く</button></div></div>';
+      }
+      if (nav.tag) {
+        var rel = {}, nxt = [], src = { fm: 0, memo: 0 };
+        l2.forEach(function (i) {
+          var tg = i.tags || [];
+          tg.forEach(function (x) { if (x !== nav.tag && GENERIC.indexOf(x) < 0) rel[x] = (rel[x] || 0) + 1; });
+          if (tg.indexOf('次の一手') >= 0 || tg.indexOf('調べる計画') >= 0) nxt.push(i);
+          if (tg.indexOf('flow-mind') >= 0) src.fm++; else src.memo++;
+        });
+        var rk = Object.keys(rel).sort(function (a, b) { return rel[b] - rel[a]; }).slice(0, 12);
+        var chip = 'display:inline-block;min-height:40px;line-height:40px;padding:0 14px;margin:4px 6px 4px 0;border-radius:20px;border:1px solid rgba(74,158,255,.6);background:rgba(74,158,255,.1);color:#2f7fe0;font-size:16px;font-weight:700;cursor:pointer';
+        h += '<div style="margin:6px 0 12px"><div style="font-size:13px;opacity:.7;margin-bottom:2px">🔗 関連する言葉（押すとその言葉へ）</div>' + (rk.length ? rk.map(function (x) { return '<span data-tag="' + esc(x) + '" role="button" style="' + chip + '">' + esc(x) + ' ›</span>'; }).join('') : '<span style="opacity:.55">まだありません</span>') + '</div>';
+        h += '<div style="border:1px solid rgba(127,127,127,.45);border-radius:14px;padding:12px;margin-bottom:10px"><div style="font-size:13px;opacity:.7;margin-bottom:4px">🧭 次に調べること</div>' +
+          (nxt.length ? nxt.slice(0, 5).map(function (i) { return '<div data-open="' + esc(i.id) + '" style="padding:10px 2px;font-size:16px;cursor:pointer;color:#2f7fe0;font-weight:700">' + esc(i.title || '無題') + ' ›</div>'; }).join('') : '<div style="opacity:.65;font-size:15px;line-height:1.6">まだありません。flow-mind で「💡 ここからどう進める？」を押すと、この言葉の調べる計画がここに集まります。</div>') + '</div>';
+        h += '<div style="font-size:13px;opacity:.7;margin-bottom:6px">📍 出所：メモ ' + src.memo + '件／flow-mind由来 ' + src.fm + '件</div>';
+      }
+      h += '<div style="opacity:.7;font-size:14px;margin-bottom:4px">' + l2.length + '件（新しい順）。押すと開きます。</div>' + l2.map(itemRow).join('');
+    }
+    el.innerHTML = h;
+  }
+  function buildBook() {
+    if (document.getElementById('bookSheet')) return;
+    var sh = document.createElement('div'); sh.className = 'sheet'; sh.id = 'bookSheet'; sh.style.zIndex = '58';
+    sh.innerHTML = '<div class="sheet-handle"></div><div class="sheet-header"><button type="button" id="bookBack">‹ 戻る</button><h2 id="bookTitle">📚 本棚</h2><button type="button" id="bookClose">閉じる</button></div><div class="sheet-body"><div id="bookBody"></div></div>';
+    document.body.appendChild(sh);
+    document.getElementById('bookClose').addEventListener('click', closeBook);
+    document.getElementById('bookBack').addEventListener('click', function () { if (nav.level === 2 && nav.tag) { nav.level = 0; nav.tab = 'idx'; nav.tag = ''; } else nav.level = Math.max(0, nav.level - 1); drawBook(); });
+    var ov = document.getElementById('overlay'); if (ov) ov.addEventListener('click', closeBook);
+    document.getElementById('bookBody').addEventListener('click', function (e) {
+      var t = e.target.closest('[data-tab],[data-shelf],[data-vol],[data-tag],[data-open],[data-sort],[data-defgen],[data-defedit],[data-bulk]'); if (!t) return;
+      if (t.dataset.defedit) { var cur = dget()[nav.tag]; var v = prompt('「' + nav.tag + '」の一行説明（空にすると消えます）', cur ? cur.text : ''); if (v !== null) { dset(nav.tag, v.trim(), 'user'); drawBook(); } return; }
+      if (t.dataset.defgen) { if (nav.busy) return; var term = nav.tag; nav.busy = term; drawBook(); makeDef(term).catch(function (er) { alert('作れませんでした：' + ((er && er.message) || er)); }).then(function () { nav.busy = ''; drawBook(); }); return; }
+      if (t.dataset.bulk) {
+        if (nav.busy) return;
+        var cc = tagCounts(), dd = dget(), todo = Object.keys(cc).filter(function (x) { return !dd[x]; }).sort(function (a, b) { return cc[b] - cc[a]; }).slice(0, 8);
+        if (!todo.length || !confirm(todo.length + '個の言葉と、そのメモの抜粋（保護メモ・秘密らしい行は除く）をAIに送って、一行説明を作ります。よろしいですか？\n' + todo.join('、'))) return;
+        nav.busy = '__bulk'; drawBook();
+        (async function () { var ok = 0, bad = ''; for (var k = 0; k < todo.length; k++) { try { await makeDef(todo[k]); ok++; } catch (er) { bad = (er && er.message) || String(er); break; } } nav.busy = ''; drawBook(); if (bad) alert('途中で止まりました（' + ok + '個 作成）：' + bad); })();
+        return;
+      }
+      if (t.dataset.tab) { nav.tab = t.dataset.tab; }
+      else if (t.dataset.shelf) { nav.level = 1; nav.shelf = t.dataset.shelf; }
+      else if (t.dataset.vol) { nav.level = 2; nav.vol = t.dataset.vol; nav.tag = ''; }
+      else if (t.dataset.tag) { nav.level = 2; nav.tag = t.dataset.tag; }
+      else if (t.dataset.sort) { closeBook(); open(); return; }
+      else if (t.dataset.open) { var id = t.dataset.open; closeBook(); try { openEdit(id); } catch (er) {} return; }
+      drawBook();
+    });
+  }
+  function openBook() { buildBook(); nav = { level: 0, tab: 'toc', shelf: '', vol: null, tag: '' }; drawBook(); document.getElementById('bookSheet').classList.add('open'); var ov = document.getElementById('overlay'); if (ov) ov.classList.add('open'); }
+  function closeBook() { var b = document.getElementById('bookSheet'); if (!b) return; b.classList.remove('open'); var ov = document.getElementById('overlay'); if (ov && !document.querySelector('.sheet.open')) ov.classList.remove('open'); }
+  window.Shelf = { shelves: shelves, shelfOf: shelfOf, volumeOf: volumeOf, open: open, openBook: openBook, tagShelf: shelfOfTag };
   var b = document.getElementById('shelfMenuBtn');
-  if (b) b.addEventListener('click', function () { try { closeMenu(); } catch (e) {} open(); });
+  if (b) b.addEventListener('click', function () { try { closeMenu(); } catch (e) {} openBook(); });
 })();
 </script>
 </body>
