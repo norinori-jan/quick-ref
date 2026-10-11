@@ -3513,10 +3513,35 @@ function cloudSyncUrl() {
 }
 
 let lastPullOk = null, lastCloudCount = 0, syncStats = { recv: 0, sent: 0, cloud: 0 };
-function setSyncWarn(msg) {
+function setSyncWarn(msg, kind) {
   window.__syncWarn = msg || '';
+  window.__syncKind = msg ? (kind || 'err') : '';
   const b = document.getElementById('syncWarnBtn');
-  if (b) { b.style.display = msg ? '' : 'none'; b.title = msg || ''; }
+  if (b) {
+    b.style.display = msg ? '' : 'none'; b.title = msg || '';
+    b.textContent = kind === 'net' ? '⏳' : '⚠️';
+    b.style.background = kind === 'net' ? '#e08a00' : '#d92d20';
+  }
+  try { localStorage.setItem('qr_sync_pending', kind === 'net' ? '1' : ''); } catch (_) {}
+}
+// 回線の不調（番号のない失敗：Load failed・時間切れなど）かどうか
+function isNetErr(e) { return !(e && e.status); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// 時間を切って通信する（弱い回線で固まらないように）
+async function fetchT(url, init, ms) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms || 30000);
+  try { return await fetch(url, Object.assign({}, init, { signal: ctl.signal })); }
+  catch (e) { if (e && e.name === 'AbortError') throw new Error('時間切れ（回線が遅い）'); throw e; }
+  finally { clearTimeout(timer); }
+}
+// 回線の不調のときだけ、間を空けて やり直す（401などの設定ミスは すぐ止める）
+async function withRetry(fn, tries) {
+  let last;
+  for (let k = 0; k < (tries || 3); k++) {
+    try { return await fn(); }
+    catch (e) { last = e; if (!isNetErr(e) && !(e.status >= 500)) throw e; if (k < (tries || 3) - 1) await sleep(2000 * (k + 1)); }
+  }
+  throw last;
 }
 function syncErrText(label, status, e) {
   if (status === 401 || status === 403) return 'トークンが違います（' + status + '）。⚙️の同期トークンを確かめてください';
@@ -3546,29 +3571,35 @@ async function syncCloudNow(showResult = true) {
 
   cloudSyncBusy = true;
   try {
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.token}`
-      },
-      body: JSON.stringify({ data: { items: allItems } })
-    });
-    if (!response.ok) { const er = new Error(syncErrText('送信', response.status)); er.status = response.status; throw er; }
+    const body = JSON.stringify({ data: { items: allItems } });
+    syncStats.kb = Math.max(1, Math.round(body.length / 1024));
+    const response = await withRetry(async () => {
+      const r = await fetchT(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.token}`
+        },
+        body
+      }, 45000);
+      if (!r.ok) { const er = new Error(syncErrText('送信', r.status)); er.status = r.status; throw er; }
+      return r;
+    }, 3);
     syncStats.sent = allItems.length; syncStats.cloud = allItems.length; lastCloudCount = allItems.length;
     setSyncWarn('');
     updateCloudSyncStatus(`最終同期: ${new Date().toLocaleTimeString('ja-JP')}`);
     return true;
   } catch (error) {
-    const m = error.status ? error.message : syncErrText('送信', 0, error);
-    updateCloudSyncStatus('同期失敗: ' + m); setSyncWarn(m);
+    const net = isNetErr(error);
+    const m = net ? '回線が不安定で送れませんでした（' + (syncStats.kb || '?') + 'KB）。メモはこの端末に残っています。回線が戻ったら自動でやり直します' : error.message;
+    updateCloudSyncStatus((net ? '未送信: ' : '同期失敗: ') + m); setSyncWarn(m, net ? 'net' : 'err');
     return false;
   } finally {
     cloudSyncBusy = false;
   }
 }
 
-async function pullCloudSync(showResult = false) {
+async function pullCloudSync(showResult = false, noPush = false) {
   const config = getCloudSyncConfig();
   const url = cloudSyncUrl();
   if (!url || !config.token || cloudSyncBusy) return false;
@@ -3576,9 +3607,11 @@ async function pullCloudSync(showResult = false) {
   cloudSyncBusy = true;
   let pushAfter = false, ok = false;
   try {
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${config.token}` }
-    });
+    const response = await withRetry(async () => {
+      const r = await fetchT(url, { headers: { Authorization: `Bearer ${config.token}` } }, 30000);
+      if (r.status >= 500) { const er = new Error(syncErrText('受信', r.status)); er.status = r.status; throw er; }
+      return r;
+    }, 2);
     if (response.status === 404) { lastPullOk = true; lastCloudCount = 0; syncStats.recv = 0; setSyncWarn(''); pushAfter = allItems.length > 0; ok = false; }
     else {
       if (!response.ok) { const er = new Error(syncErrText('受信', response.status)); er.status = response.status; throw er; }
@@ -3610,13 +3643,14 @@ async function pullCloudSync(showResult = false) {
     }
   } catch (error) {
     lastPullOk = false;
-    const m = error.status ? error.message : syncErrText('受信', 0, error);
-    setSyncWarn(m);
-    if (showResult) updateCloudSyncStatus('受信失敗: ' + m);
+    const net = isNetErr(error);
+    const m = net ? '回線が不安定で受信できませんでした。回線が戻ったら自動でやり直します' : error.message;
+    setSyncWarn(m, net ? 'net' : 'err');
+    if (showResult) updateCloudSyncStatus((net ? '未受信: ' : '受信失敗: ') + m);
   } finally {
     cloudSyncBusy = false;
   }
-  if (pushAfter && lastPullOk === true) void syncCloudNow(false);
+  if (pushAfter && !noPush && lastPullOk === true) void syncCloudNow(false);
   return ok;
 }
 
@@ -3625,7 +3659,7 @@ async function syncAllNow() {
   const before = allItems.length;
   syncStats = { recv: 0, sent: 0, cloud: 0 };
   lastPullOk = null;
-  await pullCloudSync(true);
+  await pullCloudSync(true, true);
   if (lastPullOk === true) await syncCloudNow(true);
   const ok = lastPullOk === true && !window.__syncWarn;
   const msg = ok
@@ -5092,6 +5126,10 @@ window.addEventListener('pageshow', () => {
   void pullCloudSync();
   void pullAttachments();
 });
+window.addEventListener('online', () => { void pullCloudSync(); });
+setInterval(() => {   // 回線の不調で未送信のあいだだけ、1分ごとにやり直す（画面が見えているとき）
+  if (document.visibilityState === 'visible' && window.__syncKind === 'net') void pullCloudSync();
+}, 60000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     void pullCloudSync();
