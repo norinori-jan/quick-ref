@@ -5314,10 +5314,59 @@ document.addEventListener('visibilitychange', () => {
   function card(attr, title, sub, extra) {
     return '<div ' + attr + ' style="border:1px solid rgba(127,127,127,.45);border-radius:14px;padding:14px;margin:10px 0;cursor:pointer;background:rgba(127,127,127,.08)"><div style="font-size:18px;font-weight:800">' + title + '</div>' + (sub ? '<div style="opacity:.75;font-size:14px;margin-top:2px">' + sub + '</div>' : '') + (extra || '') + '</div>';
   }
+  /* ── 足跡：本棚でたどった順を道筋として残す（この端末のみ） ── */
+  var LS_TC = 'qr_trail_cur', LS_TS = 'qr_trails';
+  function trCur() { var a = jget(LS_TC, []); return Array.isArray(a) ? a : []; }
+  function trSaved() { var a = jget(LS_TS, []); return Array.isArray(a) ? a : []; }
+  function trLabel(st) { return st.k === 's' ? '📚 ' + st.v : st.k === 'v' ? '📖 ' + (st.v === '__none' ? 'まとまりなし' : st.v) : st.k === 't' ? '🔎 ' + st.v : '📝 ' + (st.label || '無題'); }
+  function trKind(st) { return st.k === 's' ? '棚' : st.k === 'v' ? '巻（テーマ）' : st.k === 't' ? '言葉' : 'メモ'; }
+  function rec(st) {
+    var t = trCur(), last = t[t.length - 1];
+    if (last && last.k === st.k && last.v === st.v && last.id === st.id) return;
+    t.push(st); if (t.length > 30) t = t.slice(t.length - 30);
+    jset(LS_TC, t);
+  }
+  function trViewList() { if (nav.tr && nav.tr !== 'cur') { var f = trSaved().filter(function (x) { return x.id === nav.tr; })[0]; return f ? f.steps : []; } return trCur(); }
+  function trGo(st) {
+    if (st.k === 's') { nav.level = 1; nav.shelf = st.v; nav.tag = ''; }
+    else if (st.k === 'v') { nav.level = 2; nav.shelf = st.shelf; nav.vol = st.v; nav.tag = ''; }
+    else if (st.k === 't') { nav.level = 2; nav.tag = st.v; }
+    else if (st.k === 'm') { closeBook(); try { openEdit(st.id); } catch (e) {} return false; }
+    return true;
+  }
+  var TRCHIP = 'display:inline-block;min-height:40px;line-height:40px;padding:0 12px;margin:3px 0;border-radius:20px;border:1px solid rgba(74,158,255,.6);background:rgba(74,158,255,.1);color:#2f7fe0;font-size:15px;font-weight:700;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle';
+  var TRBTN = 'flex:1;padding:11px 6px;border-radius:12px;font-size:15px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit;cursor:pointer';
+  function trStrip() {
+    var t = trCur(); if (!t.length) return '';
+    var h = '<div style="border:1px solid rgba(74,158,255,.5);border-radius:14px;padding:10px;margin-bottom:10px;background:rgba(74,158,255,.07)"><div style="font-size:13px;opacity:.75;margin-bottom:4px">👣 たどった道筋（' + t.length + '歩・押すとそこへ戻る）</div><div>';
+    t.forEach(function (st, i) { h += '<span data-tgo="' + i + '" role="button" style="' + TRCHIP + '">' + (i + 1) + ' ' + esc(trLabel(st)) + '</span>' + (i < t.length - 1 ? '<span style="opacity:.5"> › </span>' : ''); });
+    return h + '</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-trview="cur" style="' + TRBTN + '">🗺 図で見る</button><button type="button" data-trsave="1" style="' + TRBTN + '">✅ 残す</button><button type="button" data-trclear="1" style="' + TRBTN + '">やり直す</button></div></div>';
+  }
+  function trFlow() {
+    var l = trViewList(), cur = (!nav.tr || nav.tr === 'cur'), h = '';
+    if (!cur) { var sv = trSaved().filter(function (x) { return x.id === nav.tr; })[0]; h += '<div style="font-size:18px;font-weight:800;margin-bottom:2px">' + esc(sv ? sv.name : '') + '</div><div style="font-size:13px;opacity:.65;margin-bottom:8px">残した道筋（この端末のみ）</div>'; }
+    else h += '<div style="font-size:13px;opacity:.65;margin-bottom:8px">いまたどっている道筋です。気に入ったら「残す」を押してください。</div>';
+    if (!l.length) return h + '<div style="opacity:.7;padding:16px 0">まだ足跡がありません。本棚で棚や言葉を開くと、ここに順に並びます。</div>';
+    l.forEach(function (st, i) {
+      h += '<div data-tgo="' + i + '" role="button" style="display:flex;align-items:center;gap:12px;border:2px solid rgba(74,158,255,.6);border-radius:16px;padding:12px 14px;background:rgba(74,158,255,.08);cursor:pointer"><span style="flex:0 0 32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background:#2f7fe0;color:#fff;font-weight:800">' + (i + 1) + '</span><span style="flex:1;min-width:0"><span style="display:block;font-size:12px;opacity:.65">' + trKind(st) + '</span><span style="display:block;font-size:18px;font-weight:800;overflow-wrap:anywhere">' + esc(trLabel(st)) + '</span></span><span style="font-size:24px;color:#2f7fe0">›</span></div>';
+      if (i < l.length - 1) h += '<div style="text-align:center;font-size:26px;line-height:28px;color:#2f7fe0">↓</div>';
+    });
+    h += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">';
+    if (cur) h += '<button type="button" data-trsave="1" style="' + TRBTN + '">✅ この道筋を残す</button><button type="button" data-trclear="1" style="' + TRBTN + '">やり直す</button>';
+    else h += '<button type="button" data-trcont="1" style="' + TRBTN + '">ここから続ける</button><button type="button" data-trname="1" style="' + TRBTN + '">名前を変える</button><button type="button" data-trdel="1" style="' + TRBTN + '">削除</button>';
+    return h + '</div>';
+  }
+  function trSavedList() {
+    var sv = trSaved(); if (!sv.length) return '';
+    var h = '<div style="margin:18px 0 4px;font-weight:800;opacity:.85">📌 残した道筋（' + sv.length + '）<span style="font-weight:500;font-size:12px;opacity:.6"> この端末のみ</span></div>';
+    sv.slice().reverse().forEach(function (x) { h += card('data-trsaved="' + esc(x.id) + '"', '🧭 ' + esc(x.name), x.steps.length + '歩：' + esc(trLabel(x.steps[0])) + ' → ' + esc(trLabel(x.steps[x.steps.length - 1]))); });
+    return h;
+  }
   function drawBook() {
     var el = document.getElementById('bookBody'), hd = document.getElementById('bookTitle'), bk = document.getElementById('bookBack'); if (!el) return;
     var all = items().slice().sort(function (a, b) { return ts(b) - ts(a); }), h = '';
     bk.style.visibility = nav.level === 0 ? 'hidden' : 'visible';
+    if (nav.level !== 3) h += trStrip();
     if (nav.level === 0) {
       hd.textContent = '📚 本棚';
       h += '<div style="display:flex;gap:8px;margin-bottom:6px"><button type="button" data-tab="toc" style="flex:1;padding:12px;border-radius:12px;font-size:16px;border:1px solid rgba(127,127,127,.5);' + (nav.tab === 'toc' ? 'outline:3px solid #4A9EFF;font-weight:800;' : '') + '">目次（棚）</button><button type="button" data-tab="idx" style="flex:1;padding:12px;border-radius:12px;font-size:16px;border:1px solid rgba(127,127,127,.5);' + (nav.tab === 'idx' ? 'outline:3px solid #4A9EFF;font-weight:800;' : '') + '">索引（言葉）</button></div>';
@@ -5329,6 +5378,7 @@ document.addEventListener('visibilitychange', () => {
           h += card('data-shelf="' + esc(x) + '"', '📚 ' + esc(x) + ' <span style="font-weight:600;opacity:.7;font-size:14px">' + l.length + '件</span>', l.slice(0, 3).map(function (i) { return esc((i.title || '無題').slice(0, 24)); }).join('　／　'));
         });
         if (!all.length) h += '<div style="opacity:.7;padding:16px 0">まだメモがありません。</div>';
+        h += trSavedList();
         h += '<div style="margin-top:14px"><button type="button" data-sort="1" style="width:100%;padding:12px;border-radius:12px;font-size:15px;border:1px solid rgba(127,127,127,.5);background:rgba(127,127,127,.12);color:inherit">棚の仕分けを直す</button></div>';
       } else {
         var c = tagCounts(), tags = Object.keys(c);
@@ -5343,6 +5393,8 @@ document.addEventListener('visibilitychange', () => {
         });
         if (!tags.length) h += '<div style="opacity:.7;padding:16px 0">タグがまだありません。</div>';
       }
+    } else if (nav.level === 3) {
+      hd.textContent = '🧭 道筋'; h += trFlow();
     } else if (nav.level === 1) {
       hd.textContent = '📚 ' + nav.shelf;
       var inS = all.filter(function (i) { return shelfOf(i) === nav.shelf; }), vols = {}, none = [];
@@ -5389,10 +5441,18 @@ document.addEventListener('visibilitychange', () => {
     sh.innerHTML = '<div class="sheet-handle"></div><div class="sheet-header"><button type="button" id="bookBack">‹ 戻る</button><h2 id="bookTitle">📚 本棚</h2><button type="button" id="bookClose">閉じる</button></div><div class="sheet-body"><div id="bookBody"></div></div>';
     document.body.appendChild(sh);
     document.getElementById('bookClose').addEventListener('click', closeBook);
-    document.getElementById('bookBack').addEventListener('click', function () { if (nav.level === 2 && nav.tag) { nav.level = 0; nav.tab = 'idx'; nav.tag = ''; } else nav.level = Math.max(0, nav.level - 1); drawBook(); });
+    document.getElementById('bookBack').addEventListener('click', function () { if (nav.level === 3) { nav.level = 0; nav.tab = 'toc'; } else if (nav.level === 2 && nav.tag) { nav.level = 0; nav.tab = 'idx'; nav.tag = ''; } else nav.level = Math.max(0, nav.level - 1); drawBook(); });
     var ov = document.getElementById('overlay'); if (ov) ov.addEventListener('click', closeBook);
     document.getElementById('bookBody').addEventListener('click', function (e) {
-      var t = e.target.closest('[data-tab],[data-shelf],[data-vol],[data-tag],[data-open],[data-sort],[data-defgen],[data-defedit],[data-bulk]'); if (!t) return;
+      var t = e.target.closest('[data-tab],[data-shelf],[data-vol],[data-tag],[data-open],[data-sort],[data-defgen],[data-defedit],[data-bulk],[data-tgo],[data-trview],[data-trsave],[data-trclear],[data-trsaved],[data-trcont],[data-trname],[data-trdel]'); if (!t) return;
+      if (t.dataset.tgo !== undefined) { var lst = nav.level === 3 ? trViewList() : trCur(), st0 = lst[+t.dataset.tgo]; if (st0 && trGo(st0)) drawBook(); return; }
+      if (t.dataset.trview) { nav.level = 3; nav.tr = 'cur'; drawBook(); return; }
+      if (t.dataset.trclear) { if (trCur().length && !confirm('いまの足跡を消して、最初からやり直します。よろしいですか？')) return; jset(LS_TC, []); if (nav.level === 3) nav.level = 0; drawBook(); return; }
+      if (t.dataset.trsave) { var cs = trCur(); if (!cs.length) return; var nm = prompt('この道筋の名前', trLabel(cs[0]).replace(/^\S+\s/, '') + ' → ' + trLabel(cs[cs.length - 1]).replace(/^\S+\s/, '')); if (nm === null) return; var all2 = trSaved(); all2.push({ id: 'tr' + Date.now(), name: (nm.trim() || '道筋').slice(0, 60), steps: cs.slice(), at: Date.now() }); if (all2.length > 50) all2 = all2.slice(all2.length - 50); jset(LS_TS, all2); jset(LS_TC, []); nav.level = 0; nav.tab = 'toc'; drawBook(); try { showToast('道筋を残しました'); } catch (e) {} return; }
+      if (t.dataset.trsaved) { nav.level = 3; nav.tr = t.dataset.trsaved; drawBook(); return; }
+      if (t.dataset.trcont) { var f1 = trSaved().filter(function (x) { return x.id === nav.tr; })[0]; if (f1) { jset(LS_TC, f1.steps.slice()); nav.tr = 'cur'; drawBook(); } return; }
+      if (t.dataset.trname) { var all3 = trSaved(), f2 = all3.filter(function (x) { return x.id === nav.tr; })[0]; if (f2) { var n2 = prompt('道筋の名前', f2.name); if (n2 !== null && n2.trim()) { f2.name = n2.trim().slice(0, 60); jset(LS_TS, all3); drawBook(); } } return; }
+      if (t.dataset.trdel) { if (!confirm('この道筋を削除します。よろしいですか？')) return; jset(LS_TS, trSaved().filter(function (x) { return x.id !== nav.tr; })); nav.level = 0; nav.tab = 'toc'; drawBook(); return; }
       if (t.dataset.defedit) { var cur = dget()[nav.tag]; var v = prompt('「' + nav.tag + '」の一行説明（空にすると消えます）', cur ? cur.text : ''); if (v !== null) { dset(nav.tag, v.trim(), 'user'); drawBook(); } return; }
       if (t.dataset.defgen) { if (nav.busy) return; var term = nav.tag; nav.busy = term; drawBook(); makeDef(term).catch(function (er) { alert('作れませんでした：' + ((er && er.message) || er)); }).then(function () { nav.busy = ''; drawBook(); }); return; }
       if (t.dataset.bulk) {
@@ -5404,15 +5464,15 @@ document.addEventListener('visibilitychange', () => {
         return;
       }
       if (t.dataset.tab) { nav.tab = t.dataset.tab; }
-      else if (t.dataset.shelf) { nav.level = 1; nav.shelf = t.dataset.shelf; }
-      else if (t.dataset.vol) { nav.level = 2; nav.vol = t.dataset.vol; nav.tag = ''; }
-      else if (t.dataset.tag) { nav.level = 2; nav.tag = t.dataset.tag; }
+      else if (t.dataset.shelf) { nav.level = 1; nav.shelf = t.dataset.shelf; rec({ k: 's', v: nav.shelf }); }
+      else if (t.dataset.vol) { nav.level = 2; nav.vol = t.dataset.vol; nav.tag = ''; rec({ k: 'v', shelf: nav.shelf, v: nav.vol }); }
+      else if (t.dataset.tag) { nav.level = 2; nav.tag = t.dataset.tag; rec({ k: 't', v: nav.tag }); }
       else if (t.dataset.sort) { closeBook(); open(); return; }
-      else if (t.dataset.open) { var id = t.dataset.open; closeBook(); try { openEdit(id); } catch (er) {} return; }
+      else if (t.dataset.open) { var id = t.dataset.open; var it0 = items().filter(function (x) { return x.id === id; })[0]; rec({ k: 'm', id: id, label: it0 ? (it0.sensitive ? '保護メモ' : String(it0.title || '無題').slice(0, 30)) : '無題' }); closeBook(); try { openEdit(id); } catch (er) {} return; }
       drawBook();
     });
   }
-  function openBook() { buildBook(); nav = { level: 0, tab: 'toc', shelf: '', vol: null, tag: '' }; drawBook(); document.getElementById('bookSheet').classList.add('open'); var ov = document.getElementById('overlay'); if (ov) ov.classList.add('open'); }
+  function openBook() { buildBook(); nav = { level: 0, tab: 'toc', shelf: '', vol: null, tag: '', tr: 'cur' }; drawBook(); document.getElementById('bookSheet').classList.add('open'); var ov = document.getElementById('overlay'); if (ov) ov.classList.add('open'); }
   function closeBook() { var b = document.getElementById('bookSheet'); if (!b) return; b.classList.remove('open'); var ov = document.getElementById('overlay'); if (ov && !document.querySelector('.sheet.open')) ov.classList.remove('open'); }
   window.Shelf = { shelves: shelves, shelfOf: shelfOf, volumeOf: volumeOf, open: open, openBook: openBook, tagShelf: shelfOfTag };
   var b = document.getElementById('shelfMenuBtn');
