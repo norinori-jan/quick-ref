@@ -15,4 +15,4 @@ CORS_ORIGIN = "*"
 
 # Cron（毎朝のデイリーレビュー通知）
 [triggers]
-crons = ["0 8 * * *"]   # 毎朝 8:00 に実行
+crons = ["0 20 * * *"]   # 毎朝 5:00（日本時間）に実行。cron は UTC なので 20:00 UTC
