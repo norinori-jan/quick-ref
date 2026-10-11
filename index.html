@@ -5199,7 +5199,7 @@ document.addEventListener('visibilitychange', () => {
     ['暮らし', /レシピ|料理|買い物|旅行|健康|運動|家事|住まい/]
   ];
   var OTHER = 'その他';
-  var GENERIC = ['AI作成', 'まとまり', '用語', 'スライス', 'flow-mind', '次の一手', '調べる計画', '違和感', 'quick-ref'];
+  var GENERIC = ['AI作成', 'まとまり', '用語', 'スライス', 'flow-mind', '次の一手', '調べる計画', '違和感', 'quick-ref', '道筋'];
   function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function shelves() {
@@ -5342,13 +5342,70 @@ document.addEventListener('visibilitychange', () => {
     t.forEach(function (st, i) { h += '<span data-tgo="' + i + '" role="button" style="' + TRCHIP + '">' + (i + 1) + ' ' + esc(trLabel(st)) + '</span>' + (i < t.length - 1 ? '<span style="opacity:.5"> › </span>' : ''); });
     return h + '</div><div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-trview="cur" style="' + TRBTN + '">🗺 図で見る</button><button type="button" data-trsave="1" style="' + TRBTN + '">✅ 残す</button><button type="button" data-trclear="1" style="' + TRBTN + '">やり直す</button></div></div>';
   }
+  function trItems(st) {
+    var all = items().slice().sort(function (x, y) { return ts(y) - ts(x); });
+    if (st.k === 's') return all.filter(function (i) { return shelfOf(i) === st.v; });
+    if (st.k === 'v') return all.filter(function (i) { return shelfOf(i) === st.shelf && (st.v === '__none' ? !volumeOf(i) : volumeOf(i) === st.v); });
+    if (st.k === 't') return all.filter(function (i) { return (i.tags || []).indexOf(st.v) >= 0; });
+    return all.filter(function (i) { return i.id === st.id; });
+  }
+  function trCollect(list) {
+    var seen = {}, out = [], per = { s: 3, v: 5, t: 5, m: 1 };
+    list.forEach(function (st) { var n = 0; trItems(st).forEach(function (i) { if (n >= per[st.k] || seen[i.id] || !eligible(i)) return; seen[i.id] = 1; n++; out.push(i); }); });
+    return out.slice(0, 14);
+  }
+  function trSumGet() {
+    if (!nav.tr || nav.tr === 'cur') { var c = jget('qr_trail_cursum', null); return (c && c.n === trCur().length) ? c : null; }
+    var f = trSaved().filter(function (x) { return x.id === nav.tr; })[0]; return f && f.summary ? f.summary : null;
+  }
+  function trSumSet(sm) {
+    if (!nav.tr || nav.tr === 'cur') { jset('qr_trail_cursum', sm); return; }
+    var all = trSaved(), f = all.filter(function (x) { return x.id === nav.tr; })[0]; if (f) { f.summary = sm; jset(LS_TS, all); }
+  }
+  function trPrompt(list, mem) {
+    return '次は、私がメモの本棚をたどった道筋です（順番どおり）。\n道筋: ' + list.map(function (st) { return trLabel(st).replace(/^\S+\s/, ''); }).join(' → ') + '\n\n【各メモの抜粋】\n' +
+      (mem.length ? mem.map(function (i) { return '・' + String(i.title || '無題').slice(0, 40) + '：' + plain(i.body).slice(0, 150); }).join('\n') : '（なし）') +
+      '\n\nこの道筋を、次の形で日本語でまとめてください。前置きは不要。各項目は短く。\n【ひとことで】この道筋が何を考えているか（1〜2文）\n【つながり】順番どおりに、なぜ次へ進むのか（箇条書き。A→B→C の論理）\n【分かっていること】（箇条書き3つまで）\n【足りないこと・次に調べること】（箇条書き3つまで。具体的な検索語や試すことを書く）\nメモに書かれていないことは、断定しないでください。';
+  }
+  async function trAI() {
+    var list = trViewList(); if (nav.busy || !list.length) return;
+    var mem = trCollect(list);
+    if (!confirm(mem.length + '件のメモの題名と抜粋（保護メモ・秘密らしい行は除く）をAIに送って、この道筋をまとめます。よろしいですか？')) return;
+    nav.busy = '__tr'; drawBook();
+    try {
+      var out = String(await callAI(trPrompt(list, mem), { redact: true, maxTokens: 900 }) || '').trim();
+      if (!out) throw new Error('AIから返事がありませんでした');
+      trSumSet({ text: out.slice(0, 3000), at: Date.now(), n: list.length, cnt: mem.length });
+    } catch (er) { alert('まとめられませんでした：' + ((er && er.message) || er)); }
+    nav.busy = ''; drawBook();
+  }
+  async function trToMemo() {
+    var sm = trSumGet(), list = trViewList(); if (!sm) return;
+    var names = list.map(function (st) { return trLabel(st).replace(/^\S+\s/, ''); });
+    var tg = ['AI作成', 'まとまり', '道筋']; list.forEach(function (st) { if ((st.k === 't' || st.k === 'v') && st.v !== '__none' && tg.indexOf(st.v) < 0 && tg.length < 6) tg.push(st.v); });
+    await quickSaveText('道筋: ' + names.join(' → ') + '\n\n' + sm.text, tg.join(','), '道筋のまとめ: ' + names[0] + ' → ' + names[names.length - 1]);
+  }
   function trFlow() {
     var l = trViewList(), cur = (!nav.tr || nav.tr === 'cur'), h = '';
     if (!cur) { var sv = trSaved().filter(function (x) { return x.id === nav.tr; })[0]; h += '<div style="font-size:18px;font-weight:800;margin-bottom:2px">' + esc(sv ? sv.name : '') + '</div><div style="font-size:13px;opacity:.65;margin-bottom:8px">残した道筋（この端末のみ）</div>'; }
     else h += '<div style="font-size:13px;opacity:.65;margin-bottom:8px">いまたどっている道筋です。気に入ったら「残す」を押してください。</div>';
     if (!l.length) return h + '<div style="opacity:.7;padding:16px 0">まだ足跡がありません。本棚で棚や言葉を開くと、ここに順に並びます。</div>';
+    var sm = trSumGet();
+    if (sm) h += '<div style="border:2px solid rgba(255,159,10,.7);border-radius:14px;padding:12px;margin-bottom:12px;background:rgba(255,159,10,.08)"><div style="font-size:13px;opacity:.75;margin-bottom:6px">✨ AIのまとめ（' + sm.cnt + '件のメモから・間違いがあるかもしれません）</div><div style="font-size:16px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere">' + esc(sm.text) + '</div><div style="display:flex;gap:8px;margin-top:10px"><button type="button" data-trmemo="1" style="' + TRBTN + '">📝 メモにする</button><button type="button" data-trai="1" style="' + TRBTN + '">作り直す</button></div></div>';
+    else h += '<button type="button" data-trai="1" style="width:100%;padding:14px;margin-bottom:12px;border-radius:14px;font-size:17px;font-weight:800;border:2px solid rgba(255,159,10,.8);background:rgba(255,159,10,.12);color:inherit;cursor:pointer">' + (nav.busy === '__tr' ? 'まとめています…' : '✨ この道筋をAIでまとめる') + '</button>';
+    if (nav.busy === '__tr' && sm) h = h.replace('作り直す', 'まとめています…');
     l.forEach(function (st, i) {
-      h += '<div data-tgo="' + i + '" role="button" style="display:flex;align-items:center;gap:12px;border:2px solid rgba(74,158,255,.6);border-radius:16px;padding:12px 14px;background:rgba(74,158,255,.08);cursor:pointer"><span style="flex:0 0 32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background:#2f7fe0;color:#fff;font-weight:800">' + (i + 1) + '</span><span style="flex:1;min-width:0"><span style="display:block;font-size:12px;opacity:.65">' + trKind(st) + '</span><span style="display:block;font-size:18px;font-weight:800;overflow-wrap:anywhere">' + esc(trLabel(st)) + '</span></span><span style="font-size:24px;color:#2f7fe0">›</span></div>';
+      var open = nav.trOpen === i;
+      h += '<div data-tgo="' + i + '" role="button" style="display:flex;align-items:center;gap:12px;border:2px solid rgba(74,158,255,.6);border-radius:16px;padding:12px 14px;background:rgba(74,158,255,.08);cursor:pointer"><span style="flex:0 0 32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background:#2f7fe0;color:#fff;font-weight:800">' + (i + 1) + '</span><span style="flex:1;min-width:0"><span style="display:block;font-size:12px;opacity:.65">' + trKind(st) + '</span><span style="display:block;font-size:18px;font-weight:800;overflow-wrap:anywhere">' + esc(trLabel(st)) + '</span></span><span style="font-size:22px;color:#2f7fe0">' + (open ? '▾' : '▸') + '</span></div>';
+      if (open) {
+        var its = trItems(st), df = st.k === 't' ? dget()[st.v] : null;
+        h += '<div style="margin:6px 4px 2px;padding:10px 12px;border-left:4px solid #2f7fe0;background:rgba(127,127,127,.08);border-radius:0 12px 12px 0">' +
+          (df ? '<div style="font-size:15px;line-height:1.6;margin-bottom:6px">' + esc(df.text) + '</div>' : '') +
+          '<div style="font-size:13px;opacity:.7;margin-bottom:2px">' + (st.k === 'm' ? 'このメモ' : 'ここにあるメモ ' + its.length + '件（新しい順）') + '</div>' +
+          (its.length ? its.slice(0, 6).map(function (i) { return '<div data-open="' + esc(i.id) + '" style="padding:9px 2px;border-bottom:1px solid rgba(127,127,127,.25);cursor:pointer"><span style="font-size:16px;font-weight:700;color:#2f7fe0">' + esc(i.sensitive ? '🔒 保護メモ' : (i.title || '無題')) + ' ›</span>' + (i.sensitive ? '' : '<div style="font-size:13px;opacity:.75;line-height:1.5">' + esc(plain(i.body).slice(0, 60)) + '</div>') + '</div>'; }).join('') : '<div style="opacity:.6;font-size:14px">この道筋のときのメモは、いまは見つかりません。</div>') +
+          (its.length > 6 ? '<div style="font-size:13px;opacity:.6;padding-top:4px">ほか ' + (its.length - 6) + '件</div>' : '') +
+          (st.k !== 'm' ? '<button type="button" data-trmove="' + i + '" style="' + TRBTN + ';margin-top:8px;width:100%;flex:none">📍 本棚のここへ移動</button>' : '') + '</div>';
+      }
       if (i < l.length - 1) h += '<div style="text-align:center;font-size:26px;line-height:28px;color:#2f7fe0">↓</div>';
     });
     h += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">';
@@ -5444,12 +5501,15 @@ document.addEventListener('visibilitychange', () => {
     document.getElementById('bookBack').addEventListener('click', function () { if (nav.level === 3) { nav.level = 0; nav.tab = 'toc'; } else if (nav.level === 2 && nav.tag) { nav.level = 0; nav.tab = 'idx'; nav.tag = ''; } else nav.level = Math.max(0, nav.level - 1); drawBook(); });
     var ov = document.getElementById('overlay'); if (ov) ov.addEventListener('click', closeBook);
     document.getElementById('bookBody').addEventListener('click', function (e) {
-      var t = e.target.closest('[data-tab],[data-shelf],[data-vol],[data-tag],[data-open],[data-sort],[data-defgen],[data-defedit],[data-bulk],[data-tgo],[data-trview],[data-trsave],[data-trclear],[data-trsaved],[data-trcont],[data-trname],[data-trdel]'); if (!t) return;
-      if (t.dataset.tgo !== undefined) { var lst = nav.level === 3 ? trViewList() : trCur(), st0 = lst[+t.dataset.tgo]; if (st0 && trGo(st0)) drawBook(); return; }
-      if (t.dataset.trview) { nav.level = 3; nav.tr = 'cur'; drawBook(); return; }
-      if (t.dataset.trclear) { if (trCur().length && !confirm('いまの足跡を消して、最初からやり直します。よろしいですか？')) return; jset(LS_TC, []); if (nav.level === 3) nav.level = 0; drawBook(); return; }
-      if (t.dataset.trsave) { var cs = trCur(); if (!cs.length) return; var nm = prompt('この道筋の名前', trLabel(cs[0]).replace(/^\S+\s/, '') + ' → ' + trLabel(cs[cs.length - 1]).replace(/^\S+\s/, '')); if (nm === null) return; var all2 = trSaved(); all2.push({ id: 'tr' + Date.now(), name: (nm.trim() || '道筋').slice(0, 60), steps: cs.slice(), at: Date.now() }); if (all2.length > 50) all2 = all2.slice(all2.length - 50); jset(LS_TS, all2); jset(LS_TC, []); nav.level = 0; nav.tab = 'toc'; drawBook(); try { showToast('道筋を残しました'); } catch (e) {} return; }
-      if (t.dataset.trsaved) { nav.level = 3; nav.tr = t.dataset.trsaved; drawBook(); return; }
+      var t = e.target.closest('[data-tab],[data-shelf],[data-vol],[data-tag],[data-open],[data-sort],[data-defgen],[data-defedit],[data-bulk],[data-tgo],[data-trview],[data-trsave],[data-trclear],[data-trsaved],[data-trcont],[data-trname],[data-trdel],[data-trai],[data-trmemo],[data-trmove]'); if (!t) return;
+      if (t.dataset.trai) { void trAI(); return; }
+      if (t.dataset.trmemo) { void trToMemo(); return; }
+      if (t.dataset.trmove) { var stm = trViewList()[+t.dataset.trmove]; if (stm && trGo(stm)) drawBook(); return; }
+      if (t.dataset.tgo !== undefined) { if (nav.level === 3) { var ix = +t.dataset.tgo; nav.trOpen = (nav.trOpen === ix) ? -1 : ix; drawBook(); return; } var st0 = trCur()[+t.dataset.tgo]; if (st0 && trGo(st0)) drawBook(); return; }
+      if (t.dataset.trview) { nav.level = 3; nav.tr = 'cur'; nav.trOpen = -1; drawBook(); return; }
+      if (t.dataset.trclear) { if (trCur().length && !confirm('いまの足跡を消して、最初からやり直します。よろしいですか？')) return; jset(LS_TC, []); jset('qr_trail_cursum', null); if (nav.level === 3) nav.level = 0; drawBook(); return; }
+      if (t.dataset.trsave) { var cs = trCur(); if (!cs.length) return; var nm = prompt('この道筋の名前', trLabel(cs[0]).replace(/^\S+\s/, '') + ' → ' + trLabel(cs[cs.length - 1]).replace(/^\S+\s/, '')); if (nm === null) return; var all2 = trSaved(); var cs0 = jget('qr_trail_cursum', null); all2.push({ id: 'tr' + Date.now(), name: (nm.trim() || '道筋').slice(0, 60), steps: cs.slice(), at: Date.now(), summary: (cs0 && cs0.n === cs.length) ? cs0 : undefined }); jset('qr_trail_cursum', null); if (all2.length > 50) all2 = all2.slice(all2.length - 50); jset(LS_TS, all2); jset(LS_TC, []); nav.level = 0; nav.tab = 'toc'; drawBook(); try { showToast('道筋を残しました'); } catch (e) {} return; }
+      if (t.dataset.trsaved) { nav.level = 3; nav.tr = t.dataset.trsaved; nav.trOpen = -1; drawBook(); return; }
       if (t.dataset.trcont) { var f1 = trSaved().filter(function (x) { return x.id === nav.tr; })[0]; if (f1) { jset(LS_TC, f1.steps.slice()); nav.tr = 'cur'; drawBook(); } return; }
       if (t.dataset.trname) { var all3 = trSaved(), f2 = all3.filter(function (x) { return x.id === nav.tr; })[0]; if (f2) { var n2 = prompt('道筋の名前', f2.name); if (n2 !== null && n2.trim()) { f2.name = n2.trim().slice(0, 60); jset(LS_TS, all3); drawBook(); } } return; }
       if (t.dataset.trdel) { if (!confirm('この道筋を削除します。よろしいですか？')) return; jset(LS_TS, trSaved().filter(function (x) { return x.id !== nav.tr; })); nav.level = 0; nav.tab = 'toc'; drawBook(); return; }
