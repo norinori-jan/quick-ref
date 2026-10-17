@@ -490,6 +490,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
   <button class="dock-btn dock-photo" id="dockPhoto">🖼<span class="dock-label">写真</span></button>
   <button class="dock-btn dock-video" id="dockVideo">🎬<span class="dock-label">動画</span></button>
   <button class="dock-btn dock-odd" id="dockOdd">⚠️<span class="dock-label">違和感</span></button>
+  <button class="dock-btn dock-qa" id="dockQA">🤖<span class="dock-label">Q&amp;A</span></button>
   <button class="dock-btn dock-add" id="fabBtn">＋<span class="dock-label">追加</span></button>
 </div>
 
@@ -679,6 +680,53 @@ mark.hl { border-radius:2px; padding:0 1px; }
 <div id="imgPreviewOverlay" class="img-preview-overlay">
   <img id="imgPreviewImg" class="img-preview-img">
   <button id="imgPreviewClose" class="img-preview-close">✕</button>
+</div>
+
+<!-- AI Q&A -->
+<div class="sheet" id="qaSheet" style="z-index:36;">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <button id="qaCancelBtn">キャンセル</button>
+    <h2 id="qaSheetTitle">AI Q&amp;A を保存</h2>
+    <button class="save" id="qaSaveBtn">保存</button>
+  </div>
+  <div class="sheet-body">
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:6px;">AIに聞いた「質問」と「回答」を貼り付けて残します。AIの言ったことと、自分が採用したこと（自分の判断）は別の欄です。</div>
+
+    <label class="field-label">タイトル（空なら質問の1行目）</label>
+    <input type="text" id="qaTitle" placeholder="例：Reactの状態管理の設計" maxlength="100" autocapitalize="sentences" autocorrect="on" spellcheck="true" style="width:100%;box-sizing:border-box;">
+
+    <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;">質問 <button type="button" data-qapaste="qaQuestion" style="font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--accent);">📋 貼り付け</button></label>
+    <textarea id="qaQuestion" rows="4" placeholder="AIに聞いたこと" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:inherit;font-family:inherit;"></textarea>
+
+    <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;">回答 <button type="button" data-qapaste="qaAnswer" style="font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--accent);">📋 貼り付け</button></label>
+    <textarea id="qaAnswer" rows="8" placeholder="AIの回答" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:inherit;font-family:inherit;"></textarea>
+
+    <label class="field-label">自分の判断（任意・AIの回答とは別に残す）</label>
+    <textarea id="qaJudgment" rows="3" placeholder="例：今回はZustandを採用する。理由：規模が小さいため" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:inherit;font-family:inherit;"></textarea>
+
+    <label class="field-label">タグ</label>
+    <div class="tag-input-row">
+      <input type="text" id="qaTagInput" placeholder="タグを入力" maxlength="30" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <button type="button" id="qaTagAddBtn">追加</button>
+    </div>
+    <div class="tag-chips" id="qaTagChips"></div>
+    <div class="tag-suggestions" id="qaTagSuggest"></div>
+    <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">「AI Q&amp;A」タグは自動で付きます</div>
+
+    <label class="field-label">ソース</label>
+    <select id="qaSource" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:inherit;">
+      <option value="chatgpt">ChatGPT</option><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="perplexity">Perplexity</option><option value="cursor">Cursor</option><option value="manual">手入力</option><option value="other">その他</option>
+    </select>
+
+    <label class="field-label">ソースURL（任意）</label>
+    <input type="url" id="qaUrl" placeholder="https://..." autocapitalize="none" autocorrect="off" spellcheck="false" style="width:100%;box-sizing:border-box;">
+
+    <div id="qaDanger" class="danger-zone" style="display:none;">
+      <button type="button" id="qaDeleteBtn" class="danger-btn">🗑 削除する</button>
+    </div>
+    <div style="height:24px;"></div>
+  </div>
 </div>
 
 <!-- 設定 / AI連携 -->
@@ -1433,7 +1481,7 @@ async function openClusterItem(id) {
   const view = document.getElementById('clusterView');
   clusterReturn = { key: clusterOpenKey, y: view.scrollTop, listY: clusterListY };   // メモを閉じたら、この画面に戻る
   closeClusters(); await openEdit(id);
-  if (!document.getElementById('editSheet').classList.contains('open')) returnToCluster();   // 開けなかったときも戻る
+  if (!document.getElementById('editSheet').classList.contains('open') && !document.getElementById('qaSheet').classList.contains('open')) returnToCluster();   // 開けなかったときも戻る
 }
 function returnToCluster() {
   const r = clusterReturn; clusterReturn = null; if (!r) return;
@@ -2112,7 +2160,7 @@ function tableWire() {
     const t = e.target;
     if (t.dataset.tsort) { const k = t.dataset.tsort; if (tbl.sort === k) tbl.dir = -tbl.dir; else { tbl.sort = k; tbl.dir = k === 'title' || k === 'tag' ? 1 : -1; } tblDrawList(); }
     else if (t.dataset.tall) { const rows = tblRows(), all = rows.every(i => tbl.sel.has(i.id)); rows.forEach(i => { if (all) tbl.sel.delete(i.id); else tbl.sel.add(i.id); }); tblDrawList(); }
-    else if (t.dataset.topen) { tblReturn = true; closeTable(); openEdit(t.dataset.topen).then(() => { if (!document.getElementById('editSheet').classList.contains('open')) returnToTable(); }); }
+    else if (t.dataset.topen) { tblReturn = true; closeTable(); openEdit(t.dataset.topen).then(() => { if (!document.getElementById('editSheet').classList.contains('open') && !document.getElementById('qaSheet').classList.contains('open')) returnToTable(); }); }
     else if (t.dataset.tload) { const x = slicesLoad().find(y => y.id === t.dataset.tload); if (x) { tbl.tag = x.cond.tag || ''; tbl.days = x.cond.days || 0; tbl.q = x.cond.q || ''; tbl.cur = x.id; tbl.name = x.name; const pool = new Set(tblPool().map(i => i.id)); tbl.sel = new Set(x.ids.filter(id => pool.has(id))); tblDraw(); } }
     else if (t.dataset.tdel) { if (confirm('この保存済みスライスを消しますか？（メモは消えません）')) { slicesSave(slicesLoad().filter(y => y.id !== t.dataset.tdel)); if (tbl.cur === t.dataset.tdel) tbl.cur = ''; tblDraw(); } }
     else if (t.id === 'tblSave') tblSaveSlice(false);
@@ -2132,6 +2180,129 @@ function fmtTable() {
   for (let i = 0; i < r; i++) { h += '<tr>'; for (let j = 0; j < c; j++) h += (i === 0 ? '<th' : '<td') + ' style="border:1px solid #c7c7cc;padding:4px 8px;min-width:48px' + (i === 0 ? ';background:rgba(120,120,128,.15)' : '') + '"><br></' + (i === 0 ? 'th' : 'td') + '>'; h += '</tr>'; }
   h += '</tbody></table><div><br></div>';
   document.execCommand('insertHTML', false, h);
+}
+
+/* ── AI Q&A（質問・回答・自分の判断を、タグ付きで残す）──
+   保存形:  item.type='ai_qa' ／ item.qa={question,answer,judgment,sourceType,sourceUrl}
+   body は表示・検索・他アプリ向けに、qa から組み立て直した HTML（正本は qa）。
+   タグ「AI Q&A」は自動付与。保護（暗号化）は Phase 1 では対象外。 */
+const QA_TAG = 'AI Q&A';
+const QA_SOURCES = [['chatgpt', 'ChatGPT'], ['claude', 'Claude'], ['gemini', 'Gemini'], ['perplexity', 'Perplexity'], ['cursor', 'Cursor'], ['manual', '手入力'], ['other', 'その他']];
+const qaSourceLabel = k => { const s = QA_SOURCES.find(x => x[0] === k); return s ? s[1] : 'その他'; };
+let qaEditingId = null, qaTags = [], qaInit = '';
+const qaById = id => document.getElementById(id);
+const qaHtml = s => escapeHtml(s).replace(/\n/g, '<br>');
+function qaValues() {
+  return { question: qaById('qaQuestion').value.trim(), answer: qaById('qaAnswer').value.trim(), judgment: qaById('qaJudgment').value.trim(), sourceType: qaById('qaSource').value, sourceUrl: qaById('qaUrl').value.trim() };
+}
+function qaSnapshot() { return JSON.stringify([qaById('qaTitle').value.trim(), qaValues(), qaTags, qaById('qaTagInput').value.trim()]); }
+function qaComposeBody(v) {
+  let h = '<b>【質問】</b><br>' + qaHtml(v.question) + '<br><br><b>【回答】</b><br>' + qaHtml(v.answer);
+  if (v.judgment) h += '<br><br><b>【自分の判断】</b><br>' + qaHtml(v.judgment);
+  return h + '<br><br>出典: ' + escapeHtml(qaSourceLabel(v.sourceType));
+}
+function qaRenderTags() {
+  qaById('qaTagChips').innerHTML = qaTags.map(t => `<span class="chip">#${escapeHtml(t)} <button type="button" class="chip-del" data-qadel="${escapeHtml(t)}">✕</button></span>`).join('');
+  const q = qaById('qaTagInput').value.trim().toLowerCase();
+  const all = getAllTagsSorted().filter(t => t !== QA_TAG && !qaTags.includes(t));
+  const sug = q ? all.filter(t => t.toLowerCase().includes(q)) : all.slice(0, 10);
+  qaById('qaTagSuggest').innerHTML = sug.map(t => `<span class="chip suggestion" data-qasug="${escapeHtml(t)}">#${escapeHtml(t)}</span>`).join('');
+}
+function qaCommitTag() {
+  const inp = qaById('qaTagInput'), v = inp.value.trim().replace(/^#/, '');
+  inp.value = '';
+  if (v && v !== QA_TAG && !qaTags.includes(v)) qaTags.push(v);
+  qaRenderTags();
+}
+function openQA(id) {
+  const ex = id ? allItems.find(i => i.id === id) : null;
+  if (id && !ex) return;
+  const q = (ex && ex.qa) || {};
+  let lastSrc = 'chatgpt'; try { lastSrc = localStorage.getItem('qr_qa_src') || 'chatgpt'; } catch (_) {}
+  qaEditingId = ex ? ex.id : null;
+  qaTags = ex ? (ex.tags || []).filter(t => t !== QA_TAG) : [];
+  qaById('qaSheetTitle').textContent = ex ? 'AI Q&A を編集' : 'AI Q&A を保存';
+  qaById('qaTitle').value = ex ? (ex.title || '') : '';
+  qaById('qaQuestion').value = q.question || '';
+  qaById('qaAnswer').value = q.answer || '';
+  qaById('qaJudgment').value = q.judgment || '';
+  qaById('qaSource').value = q.sourceType || lastSrc;
+  qaById('qaUrl').value = q.sourceUrl || (ex && ex.url) || '';
+  qaById('qaTagInput').value = '';
+  qaById('qaDanger').style.display = ex ? '' : 'none';
+  qaRenderTags();
+  qaInit = qaSnapshot();
+  qaById('qaSheet').classList.add('open');
+  const body = qaById('qaSheet').querySelector('.sheet-body'); if (body) body.scrollTop = 0;
+}
+function closeQA(force) {
+  if (!force && qaSnapshot() !== qaInit && !confirm('入力した内容は保存されていません。閉じますか？')) return;
+  qaById('qaSheet').classList.remove('open');
+  if (clusterReturn) returnToCluster();   // まとまり画面・表から開いたときは、そこへ戻る
+  if (tblReturn) returnToTable();
+}
+async function saveQA() {
+  qaCommitTag();
+  const v = qaValues();
+  if (!v.question) { showToast('質問を入れてください'); return; }
+  if (!v.answer) { showToast('回答を入れてください'); return; }
+  if (v.sourceUrl && !/^https?:\/\//i.test(v.sourceUrl)) { showToast('URLは https:// から始めてください'); return; }
+  const ex = qaEditingId ? allItems.find(i => i.id === qaEditingId) : null;
+  const now = Date.now();
+  const title = (qaById('qaTitle').value.trim() || v.question.split('\n')[0]).slice(0, 60);
+  const item = Object.assign({}, ex || {}, {
+    id: ex ? ex.id : crypto.randomUUID(),
+    type: 'ai_qa',
+    title,
+    tags: [...new Set([QA_TAG, ...qaTags])],
+    url: v.sourceUrl,
+    sensitive: false,
+    body: qaComposeBody(v),
+    fields: [{ key: 'ソース', value: qaSourceLabel(v.sourceType) }],
+    encBody: null, encFields: null,
+    qa: v,
+    createdAt: ex ? ex.createdAt : now,
+    updatedAt: now
+  });
+  await dbPut(item);
+  try { localStorage.setItem('qr_qa_src', v.sourceType); } catch (_) {}
+  window.QuickRefBridge?.onItemSaved(item);
+  await reload();
+  try { syncEcosystemTags(); } catch (_) {}
+  closeQA(true);
+  showToast(ex ? 'Q&Aを更新しました' : 'Q&Aを保存しました');
+  void syncCloudNow(false);
+}
+async function deleteQA() {
+  if (!qaEditingId || !confirm('このQ&Aを削除しますか？')) return;
+  await dbDelete(qaEditingId);
+  await reload();
+  closeQA(true);
+  showToast('削除しました');
+}
+async function qaPaste(id) {
+  try {
+    const raw = await navigator.clipboard.readText();
+    if (!raw || !raw.trim()) { showToast('クリップボードが空です'); return; }
+    const txt = cleanText(raw.replace(/\r\n?/g, '\n')), el = qaById(id);
+    el.value = el.value.trim() ? el.value.replace(/\s+$/, '') + '\n\n' + txt : txt;
+    showToast('貼り付けました');
+  } catch (_) { showToast('貼り付けできませんでした。入力欄を長押しして貼り付けてください'); }
+}
+function qaWire() {
+  qaById('dockQA').addEventListener('click', () => { haptic(); openQA(); });
+  qaById('qaCancelBtn').addEventListener('click', () => closeQA(false));
+  qaById('qaSaveBtn').addEventListener('click', () => { void saveQA(); });
+  qaById('qaDeleteBtn').addEventListener('click', () => { void deleteQA(); });
+  qaById('qaTagAddBtn').addEventListener('click', qaCommitTag);
+  qaById('qaTagInput').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); qaCommitTag(); } });
+  qaById('qaTagInput').addEventListener('input', qaRenderTags);
+  qaById('qaSheet').addEventListener('click', e => {
+    const x = e.target.closest('[data-qadel],[data-qasug],[data-qapaste]'); if (!x) return;
+    if (x.dataset.qadel) { qaTags = qaTags.filter(t => t !== x.dataset.qadel); qaRenderTags(); }
+    else if (x.dataset.qasug) { if (!qaTags.includes(x.dataset.qasug)) qaTags.push(x.dataset.qasug); qaById('qaTagInput').value = ''; qaRenderTags(); }
+    else if (x.dataset.qapaste) void qaPaste(x.dataset.qapaste);
+  });
 }
 
 async function reload() {
@@ -2230,7 +2401,7 @@ function renderAll() {
     .map(item => {
       const cached = decryptedCache.get(item.id);
       const body = cached ? cached.body : (item.body || '');
-      const snippet = body.replace(/<[^>]+>/g, '').slice(0, 80);
+      const snippet = (item.type === 'ai_qa' && item.qa && !item.sensitive) ? '💬 ' + String(item.qa.question || '').slice(0, 80) : body.replace(/<[^>]+>/g, '').slice(0, 80);
       const tagsHtml = (item.tags || [])
         .map(t => `<span class="chip">#${escapeHtml(t)}</span>`)
         .join('');
@@ -2242,7 +2413,7 @@ function renderAll() {
           <div class="chips">${tagsHtml}</div>
           <div class="card-meta">
             <span>${item.url ? '🔗 URLあり' : ''}</span>
-            <span>${item.sensitive ? '🔒 保護' : ''}</span>
+            <span>${item.sensitive ? '🔒 保護' : ''}${item.type === 'ai_qa' ? '🤖 ' + escapeHtml(qaSourceLabel(item.qa && item.qa.sourceType)) : ''}</span>
           </div>
         </div>`;
     })
@@ -2306,6 +2477,7 @@ function openNew() {
 async function openEdit(id) {
   const item = allItems.find(i => i.id === id);
   if (!item) return;
+  if (item.type === 'ai_qa' && item.qa && !item.sensitive) { openQA(id); return; }
 
   let plainBody = '';
   let plainFields = [];
@@ -4813,6 +4985,7 @@ function wireEvents() {
   document.getElementById('keepImportInput').addEventListener('change', e => { const fs = e.target.files; importKeepFiles(fs).finally(() => { e.target.value = ''; }); });
   document.getElementById('tableClose').addEventListener('click', closeTable);
   tableWire();
+  qaWire();
   edPasteInit();
   document.getElementById('pushMenuBtn').addEventListener('click', () => { location.href = './settings.html'; });
   document.getElementById('clusterClose').addEventListener('click', clusterBack);
