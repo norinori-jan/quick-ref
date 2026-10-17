@@ -730,6 +730,11 @@ mark.hl { border-radius:2px; padding:0 1px; }
     <label class="field-label">ソースURL（任意）</label>
     <input type="url" id="qaUrl" placeholder="https://..." autocapitalize="none" autocorrect="off" spellcheck="false" style="width:100%;box-sizing:border-box;">
 
+    <div id="qaFmRow" style="display:none;margin-top:16px;">
+      <button type="button" id="qaFmBtn" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--accent);font-size:15px;font-weight:700;">⬡ flow-mind へ送る</button>
+      <div id="qaFmNote" style="font-size:11px;color:var(--text-secondary);line-height:1.5;margin-top:4px;"></div>
+    </div>
+
     <div id="qaDanger" class="danger-zone" style="display:none;">
       <button type="button" id="qaDeleteBtn" class="danger-btn">🗑 削除する</button>
     </div>
@@ -2241,6 +2246,7 @@ function openQA(id) {
   qaById('qaUrl').value = q.sourceUrl || (ex && ex.url) || '';
   qaById('qaTagInput').value = '';
   qaById('qaDanger').style.display = ex ? '' : 'none';
+  qaFmDraw(ex);
   qaRenderTags();
   qaInit = qaSnapshot();
   qaById('qaSheet').classList.add('open');
@@ -2277,7 +2283,6 @@ async function saveQA() {
   });
   await dbPut(item);
   try { localStorage.setItem('qr_qa_src', v.sourceType); } catch (_) {}
-  window.QuickRefBridge?.onItemSaved(item);
   await reload();
   try { syncEcosystemTags(); } catch (_) {}
   closeQA(true);
@@ -2307,6 +2312,7 @@ function qaWire() {
   qaById('qaDeleteBtn').addEventListener('click', () => { void deleteQA(); });
   qaById('qaTagAddBtn').addEventListener('click', qaCommitTag);
   qaById('qaAiBtn').addEventListener('click', () => { void qaAiOrganize(); });
+  qaById('qaFmBtn').addEventListener('click', () => { void qaSendFlowMind(); });
   qaById('qaTagInput').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); qaCommitTag(); } });
   qaById('qaTagInput').addEventListener('input', qaRenderTags);
   qaById('qaSheet').addEventListener('click', e => {
@@ -2432,6 +2438,40 @@ async function qaAiOrganize() {
   btn.disabled = false; btn.textContent = '✨ AI整理をやり直す';
   if (err) { showToast('整理できませんでした：' + err.slice(0, 80)); return; }
   qaAiCand = cand; qaAiDraw();
+}
+
+/* ── AI Q&A Phase 4：flow-mind へ送る（選んだQ&Aだけ。題名・要約・タグのみ。回答の全文は送らない）──
+   経路は「まとまり要約」と同じ：item.ai.flowMind={sentAt,refs} の印を付けて、クラウド同期で届ける。印が無いQ&Aは送られない。 */
+function qaFmDraw(ex) {
+  const row = qaById('qaFmRow'), btn = qaById('qaFmBtn'), note = qaById('qaFmNote'); if (!row) return;
+  if (!ex) { row.style.display = 'none'; return; }
+  row.style.display = '';
+  const at = ex.ai && ex.ai.flowMind && ex.ai.flowMind.sentAt;
+  btn.disabled = !!at;
+  btn.textContent = at ? '✓ flow-mind へ送信済み' : '⬡ flow-mind へ送る';
+  note.textContent = at ? new Date(at).toLocaleString('ja-JP') + ' に送りました' : '保存したQ&Aの題名・要約・タグだけを、flow-mind の Inbox に送ります（回答の全文は送りません）。';
+}
+async function qaSendFlowMind() {
+  const ex = qaEditingId ? allItems.find(i => i.id === qaEditingId) : null, CI = window.ClusterItems;
+  if (!ex || !ex.qa) return;
+  if (ex.ai && ex.ai.flowMind && ex.ai.flowMind.sentAt) { showToast('すでに送信済みです'); return; }
+  if (qaSnapshot() !== qaInit) { showToast('変更が保存されていません。先に「保存」してください'); return; }
+  if (!CI || !CI.redact || !CI.redactTitle) { showToast('秘密除外の部品が読み込めないため、送りませんでした'); return; }
+  if (!cloudSyncUrl() || !getCloudSyncConfig().token) { showToast('クラウド同期が未設定です（設定→クラウド同期）。flow-mind へはこの同期で届きます'); return; }
+  if (!confirm('このQ&Aの題名・要約・タグを flow-mind へ送ります（Inbox に入ります。回答の全文は送りません）。よろしいですか？')) return;
+  const q = ex.qa, now = Date.now();
+  const qa = {
+    id: ex.id,
+    title: CI.redactTitle(ex.title || '(無題)').slice(0, 60),
+    summary: CI.redact(q.summary || String(q.answer || '').slice(0, 160)).text.slice(0, 300),
+    tags: (ex.tags || []).filter(x => x !== QA_TAG).slice(0, 8),
+    source: qaSourceLabel(q.sourceType)
+  };
+  await dbPut(Object.assign({}, ex, { updatedAt: now, ai: Object.assign({}, ex.ai, { kind: 'qa', qa, flowMind: { sentAt: now, refs: [] } }) }));
+  await reload();
+  qaFmDraw(allItems.find(i => i.id === ex.id));
+  const synced = await syncCloudNow(false);
+  showToast(synced ? 'flow-mind へ送りました（flow-mind を開くと Inbox に入ります）' : '印は付けましたが、同期に失敗しました。あとで「今すぐ同期」を押してください');
 }
 
 async function reload() {
