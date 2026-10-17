@@ -706,6 +706,13 @@ mark.hl { border-radius:2px; padding:0 1px; }
     <label class="field-label">自分の判断（任意・AIの回答とは別に残す）</label>
     <textarea id="qaJudgment" rows="3" placeholder="例：今回はZustandを採用する。理由：規模が小さいため" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:inherit;font-family:inherit;"></textarea>
 
+    <button type="button" id="qaAiBtn" style="width:100%;margin:14px 0 4px;padding:12px;border-radius:12px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:15px;font-weight:700;">✨ AI整理（題名・要約・タグの候補）</button>
+    <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">押すと、質問と回答をAIに送ります（秘密らしい行は除きます。「自分の判断」は送りません）。結果は候補で、使うものを押すまで保存されません。</div>
+    <div id="qaAiBox" style="display:none;"></div>
+
+    <label class="field-label">要約（任意）</label>
+    <textarea id="qaSummary" rows="3" placeholder="後で見返すための短い要約（AIの候補を使うか、自分で書く）" style="width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:inherit;font-family:inherit;"></textarea>
+
     <label class="field-label">タグ</label>
     <div class="tag-input-row">
       <input type="text" id="qaTagInput" placeholder="タグを入力" maxlength="30" autocapitalize="none" autocorrect="off" spellcheck="false">
@@ -2195,11 +2202,11 @@ let qaEditingId = null, qaTags = [], qaInit = '';
 const qaById = id => document.getElementById(id);
 const qaHtml = s => escapeHtml(s).replace(/\n/g, '<br>');
 function qaValues() {
-  return { question: qaById('qaQuestion').value.trim(), answer: qaById('qaAnswer').value.trim(), judgment: qaById('qaJudgment').value.trim(), sourceType: qaById('qaSource').value, sourceUrl: qaById('qaUrl').value.trim() };
+  return { question: qaById('qaQuestion').value.trim(), answer: qaById('qaAnswer').value.trim(), judgment: qaById('qaJudgment').value.trim(), summary: qaById('qaSummary').value.trim(), sourceType: qaById('qaSource').value, sourceUrl: qaById('qaUrl').value.trim() };
 }
 function qaSnapshot() { return JSON.stringify([qaById('qaTitle').value.trim(), qaValues(), qaTags, qaById('qaTagInput').value.trim()]); }
 function qaComposeBody(v) {
-  let h = '<b>【質問】</b><br>' + qaHtml(v.question) + '<br><br><b>【回答】</b><br>' + qaHtml(v.answer);
+  let h = (v.summary ? '<b>【要約】</b><br>' + qaHtml(v.summary) + '<br><br>' : '') + '<b>【質問】</b><br>' + qaHtml(v.question) + '<br><br><b>【回答】</b><br>' + qaHtml(v.answer);
   if (v.judgment) h += '<br><br><b>【自分の判断】</b><br>' + qaHtml(v.judgment);
   return h + '<br><br>出典: ' + escapeHtml(qaSourceLabel(v.sourceType));
 }
@@ -2228,6 +2235,8 @@ function openQA(id) {
   qaById('qaQuestion').value = q.question || '';
   qaById('qaAnswer').value = q.answer || '';
   qaById('qaJudgment').value = q.judgment || '';
+  qaById('qaSummary').value = q.summary || '';
+  qaAiClear();
   qaById('qaSource').value = q.sourceType || lastSrc;
   qaById('qaUrl').value = q.sourceUrl || (ex && ex.url) || '';
   qaById('qaTagInput').value = '';
@@ -2297,13 +2306,15 @@ function qaWire() {
   qaById('qaSaveBtn').addEventListener('click', () => { void saveQA(); });
   qaById('qaDeleteBtn').addEventListener('click', () => { void deleteQA(); });
   qaById('qaTagAddBtn').addEventListener('click', qaCommitTag);
+  qaById('qaAiBtn').addEventListener('click', () => { void qaAiOrganize(); });
   qaById('qaTagInput').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); qaCommitTag(); } });
   qaById('qaTagInput').addEventListener('input', qaRenderTags);
   qaById('qaSheet').addEventListener('click', e => {
-    const x = e.target.closest('[data-qadel],[data-qasug],[data-qapaste]'); if (!x) return;
+    const x = e.target.closest('[data-qadel],[data-qasug],[data-qapaste],[data-qaai]'); if (!x) return;
     if (x.dataset.qadel) { qaTags = qaTags.filter(t => t !== x.dataset.qadel); qaRenderTags(); }
     else if (x.dataset.qasug) { if (!qaTags.includes(x.dataset.qasug)) qaTags.push(x.dataset.qasug); qaById('qaTagInput').value = ''; qaRenderTags(); }
     else if (x.dataset.qapaste) void qaPaste(x.dataset.qapaste);
+    else if (x.dataset.qaai) qaAiAdopt(x.dataset.qaai, x.dataset.v);
   });
 }
 
@@ -2346,6 +2357,82 @@ document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-qscope]'); if (!b) return;
   searchScope = b.dataset.qscope; haptic(); renderAll();
 });
+
+/* ── AI Q&A Phase 3：AI整理（題名・要約・タグの候補。自動では確定しない） ── */
+let qaAiCand = null, qaAiRun = 0;
+function qaAiClear() {
+  qaAiCand = null; qaAiRun++;
+  const box = qaById('qaAiBox'); if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+  const btn = qaById('qaAiBtn'); if (btn) { btn.disabled = false; btn.textContent = '✨ AI整理（題名・要約・タグの候補）'; }
+}
+// AIの返事（JSONのはず）を安全な形に直す。壊れていたら null
+function qaAiParse(raw) {
+  let s = String(raw || '').replace(/```[a-z]*/gi, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a < 0 || b <= a) return null;
+  let o; try { o = JSON.parse(s.slice(a, b + 1)); } catch (_) { return null; }
+  if (!o || typeof o !== 'object') return null;
+  const str = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
+  const tags = [...new Set((Array.isArray(o.tags) ? o.tags : []).map(x => String(x == null ? '' : x).replace(/^#/, '').replace(/\s+/g, '').slice(0, 20)).filter(x => x && x !== QA_TAG && x !== QA_TAG.replace(/\s+/g, '')))].slice(0, 6);
+  const r = { title: str(o.title, 40), summary: str(o.summary, 300), tags };
+  return (r.title || r.summary || r.tags.length) ? r : null;
+}
+function qaAiDraw() {
+  const box = qaById('qaAiBox'), c = qaAiCand; if (!box || !c) return;
+  const row = 'margin:8px 0;padding:8px 10px;border:1px dashed var(--border);border-radius:10px;';
+  const lab = 'font-size:12px;color:var(--text-secondary);';
+  const btn = 'margin-top:4px;font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--accent);';
+  let h = '<div style="font-size:12px;color:#ff9500;margin-top:8px;"><b>✦ AIの候補</b>（まだ保存されていません。使うものだけ押してください）</div>';
+  if (c.title) h += `<div style="${row}"><div style="${lab}">題名</div><div style="font-size:15px;">${escapeHtml(c.title)}</div><button type="button" style="${btn}" data-qaai="title">✓ 題名に使う</button></div>`;
+  if (c.summary) h += `<div style="${row}"><div style="${lab}">要約</div><div style="font-size:14px;line-height:1.6;">${escapeHtml(c.summary)}</div><button type="button" style="${btn}" data-qaai="summary">✓ 要約に使う</button></div>`;
+  const left = c.tags.filter(x => !qaTags.includes(x));
+  h += `<div style="${row}"><div style="${lab}">タグ（押すと追加）</div>` +
+    (left.length ? left.map(x => `<span class="chip suggestion" data-qaai="tag" data-v="${escapeHtml(x)}">＋#${escapeHtml(x)}</span>`).join('') + `<div><button type="button" style="${btn}" data-qaai="tags">✓ すべて追加</button></div>`
+      : '<span style="font-size:13px;color:var(--text-secondary);">' + (c.tags.length ? 'すべて追加済みです' : '候補がありません') + '</span>') + '</div>';
+  box.innerHTML = h; box.style.display = 'block';
+}
+function qaAiAdopt(kind, v) {
+  const c = qaAiCand; if (!c) return;
+  if (kind === 'title' || kind === 'summary') {
+    const el = qaById(kind === 'title' ? 'qaTitle' : 'qaSummary'), val = c[kind];
+    if (el.value.trim() && el.value.trim() !== val && !confirm('いま入っている' + (kind === 'title' ? '題名' : '要約') + 'を、AIの候補に置き換えますか？')) return;
+    el.value = val;
+  } else if (kind === 'tag') {
+    if (v && !qaTags.includes(v)) qaTags.push(v);
+  } else if (kind === 'tags') {
+    c.tags.forEach(x => { if (!qaTags.includes(x)) qaTags.push(x); });
+  }
+  qaRenderTags(); qaAiDraw();
+}
+async function qaAiOrganize() {
+  const btn = qaById('qaAiBtn'); if (btn.disabled) return;
+  const v = qaValues();
+  if (!v.question || !v.answer) { showToast('質問と回答を入れてから押してください'); return; }
+  const CI = window.ClusterItems;
+  if (!CI || !CI.redact) { showToast('秘密除外の部品が読み込めないため、送れません'); return; }
+  const sec = CI.redact(v.question + '\n' + v.answer).removed;
+  if (!confirm('質問と回答をAIに送って、題名・要約・タグの候補を作ります。（自分の判断は送りません）' + (sec ? '\n秘密らしい行が' + sec + '行あります。その行は除いて送ります。' : '') + '\nよろしいですか？')) return;
+  const cnt = {};
+  allItems.filter(i => !i.sensitive).forEach(i => (i.tags || []).forEach(x => { if (x !== QA_TAG) cnt[x] = (cnt[x] || 0) + 1; }));
+  const known = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 30);
+  const prompt = '以下は、AIに聞いた「質問」と、その「回答」です。後で探しやすいように整理してください。\n' +
+    '必ずJSONだけを返してください（前置き・説明・コードブロックは不要）:\n' +
+    '{"title":"題名（25字以内）","summary":"要約（2〜3文・150字以内）","tags":["タグ1","タグ2","タグ3"]}\n' +
+    'ルール:\n- 要約と題名は、回答に書かれていることだけで作る。書かれていないことは足さない\n- tags は2〜5個。短い語で。下の既存タグに合うものがあれば、そのまま使う\n' +
+    '既存タグ: ' + (known.join(', ') || '（なし）') + '\n\n【質問】\n' + v.question.slice(0, 1500) + '\n\n【回答】\n' + v.answer.slice(0, 6000);
+  const run = ++qaAiRun;
+  btn.disabled = true; btn.textContent = '✨ 整理中…（最大90秒）';
+  let cand = null, err = '';
+  try {
+    const out = await callAI(prompt, { redact: true, maxTokens: 700 });
+    cand = qaAiParse(out);
+    if (!cand) err = 'AIの返事を読み取れませんでした。もう一度お試しください';
+  } catch (e) { err = (e && e.message) || String(e); }
+  if (run !== qaAiRun) return;   // 待っている間に画面を閉じた・開き直したときは反映しない
+  btn.disabled = false; btn.textContent = '✨ AI整理をやり直す';
+  if (err) { showToast('整理できませんでした：' + err.slice(0, 80)); return; }
+  qaAiCand = cand; qaAiDraw();
+}
 
 async function reload() {
   allItems = await dbGetAll();
