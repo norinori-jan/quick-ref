@@ -464,6 +464,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
     <button class="search-clear" id="searchClear">✕</button>
   </div>
 
+  <div class="tag-filter-row" id="searchScopeRow" style="display:none;margin-top:8px;"></div>
   <div class="tag-filter-row" id="tagFilterRow"></div>
 </header>
 <!-- 共有テキストバナー -->
@@ -1412,12 +1413,12 @@ function buildSearchText(item) {
 }
 
 function searchItems(items, query) {
-  if (!query.trim()) return items;
+  if (!query.trim()) return (searchScope === 'q' || searchScope === 'a' || searchScope === 'j') ? items.filter(i => i.type === 'ai_qa' && i.qa) : items;
   const q = query.trim().toLowerCase();
   const qBi = bigrams(q);
 
   return items.filter(item => {
-    const text = buildSearchText(item);
+    const text = scopeSearchText(item);
     if (text.includes(q)) return true;
 
     if (q.length >= 2) {
@@ -1464,6 +1465,7 @@ let allItems = [];
 let attachmentMeta = [];
 let filterTag = null;
 let searchQuery = '';
+let searchScope = 'all';   // all | q(質問) | a(回答) | j(判断) | tag
 let linkFilterActive = false;
 const themeTag = new URLSearchParams(location.search).get('tag') || '';
 let voiceRec = null;
@@ -2305,6 +2307,46 @@ function qaWire() {
   });
 }
 
+/* ── AI Q&A Phase 2：検索範囲の切り替え（すべて／質問／回答／判断／タグ） ── */
+const SEARCH_SCOPES = [['all', 'すべて'], ['q', '質問'], ['a', '回答'], ['j', '判断'], ['tag', 'タグ']];
+const SCOPE_PLACEHOLDER = { all: 'タイトル・メモ・タグで検索', q: 'Q&Aの「質問」から検索', a: 'Q&Aの「回答」から検索', j: 'Q&Aの「自分の判断」から検索', tag: 'タグ名で検索' };
+function scopeSearchText(item) {
+  if (searchScope === 'all') return buildSearchText(item);
+  if (searchScope === 'tag') return (item.tags || []).join(' ').toLowerCase();
+  const qa = item.type === 'ai_qa' && item.qa ? item.qa : null;
+  if (!qa) return '';
+  return String(searchScope === 'q' ? qa.question : searchScope === 'a' ? qa.answer : qa.judgment || '').toLowerCase();
+}
+// カードの抜粋：検索語が回答や判断にあるときは、その周辺を出す（どこに当たったか分かるように）
+function qaSnippet(item) {
+  const qa = item.qa, s = searchQuery.trim().toLowerCase();
+  const F = { q: ['💬', qa.question], a: ['🤖', qa.answer], j: ['🧭', qa.judgment] };
+  const order = (searchScope in F) ? [searchScope] : ['q', 'a', 'j'];
+  if (s && searchScope !== 'tag') {
+    for (const k of order) {
+      const txt = String(F[k][1] || ''), i = txt.toLowerCase().indexOf(s);
+      if (i >= 0) return F[k][0] + ' ' + txt.slice(Math.max(0, i - 20), i + 60).replace(/\s+/g, ' ');
+    }
+  }
+  const f = F[(searchScope in F) ? searchScope : 'q'];
+  return f[0] + ' ' + String(f[1] || '').replace(/\s+/g, ' ').slice(0, 80);
+}
+function renderSearchScope() {
+  const row = document.getElementById('searchScopeRow'); if (!row) return;
+  const has = allItems.some(i => i.type === 'ai_qa' && i.qa);
+  if (!has) { searchScope = 'all'; row.style.display = 'none'; row.innerHTML = ''; }
+  else {
+    row.style.display = '';
+    row.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);align-self:center;">検索範囲</span>' +
+      SEARCH_SCOPES.map(s => `<button type="button" class="filter-chip${searchScope === s[0] ? ' active' : ''}" data-qscope="${s[0]}">${s[1]}</button>`).join('');
+  }
+  if (!themeTag) { const inp = document.getElementById('searchInput'); if (inp) inp.placeholder = SCOPE_PLACEHOLDER[searchScope] || SCOPE_PLACEHOLDER.all; }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-qscope]'); if (!b) return;
+  searchScope = b.dataset.qscope; haptic(); renderAll();
+});
+
 async function reload() {
   allItems = await dbGetAll();
   attachmentMeta = await dbGetAllAttachmentMeta();
@@ -2371,6 +2413,7 @@ function renderTagFilter() {
 }
 
 function renderAll() {
+  renderSearchScope();
   const list = document.getElementById('cardList');
   const empty = document.getElementById('emptyState');
 
@@ -2401,7 +2444,7 @@ function renderAll() {
     .map(item => {
       const cached = decryptedCache.get(item.id);
       const body = cached ? cached.body : (item.body || '');
-      const snippet = (item.type === 'ai_qa' && item.qa && !item.sensitive) ? '💬 ' + String(item.qa.question || '').slice(0, 80) : body.replace(/<[^>]+>/g, '').slice(0, 80);
+      const snippet = (item.type === 'ai_qa' && item.qa && !item.sensitive) ? qaSnippet(item) : body.replace(/<[^>]+>/g, '').slice(0, 80);
       const tagsHtml = (item.tags || [])
         .map(t => `<span class="chip">#${escapeHtml(t)}</span>`)
         .join('');
