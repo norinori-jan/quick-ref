@@ -367,6 +367,7 @@ header {
   margin-bottom: 6px;
 }
 
+.qv-btn { flex:1; padding:11px 8px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--accent); font-size:14px; font-weight:700; }
 .card-snippet {
   font-size: 14px;
   color: var(--text-secondary);
@@ -460,7 +461,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
 
   <div class="search-row">
     <span class="search-icon">🔍</span>
-    <input type="search" id="searchInput" placeholder="タイトル・メモ・タグで検索">
+    <input type="search" id="searchInput" placeholder="キーワード（空白で、すべて含むものに絞り込み）">
     <button class="search-clear" id="searchClear">✕</button>
   </div>
 
@@ -681,6 +682,17 @@ mark.hl { border-radius:2px; padding:0 1px; }
 <div id="imgPreviewOverlay" class="img-preview-overlay">
   <img id="imgPreviewImg" class="img-preview-img">
   <button id="imgPreviewClose" class="img-preview-close">✕</button>
+</div>
+
+<!-- AI Q&A 辞書カード（読む画面） -->
+<div class="sheet" id="qaViewSheet" style="z-index:36;">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <button id="qvCloseBtn">閉じる</button>
+    <h2>Q&amp;A</h2>
+    <button class="save" id="qvEditBtn">編集</button>
+  </div>
+  <div class="sheet-body" id="qvBody"></div>
 </div>
 
 <!-- AI Q&A -->
@@ -1424,35 +1436,53 @@ function buildSearchText(item) {
   ].join(' ').toLowerCase();
 }
 
+function searchTokens(query) {
+  return String(query || '').trim().toLowerCase().split(/[\s　]+/).filter(Boolean);
+}
+// 検索：空白で区切った語は、すべて含むものだけ（AND）。各語は部分一致、なければ2文字ずつの曖昧一致（50%以上）。
+// 並び：題名・タグに当たったものを先に（タグの完全一致が最上位）。同点は更新が新しい順。
 function searchItems(items, query) {
-  if (!query.trim()) return (searchScope === 'q' || searchScope === 'a' || searchScope === 'j') ? items.filter(i => i.type === 'ai_qa' && i.qa) : items;
-  const q = query.trim().toLowerCase();
-  const qBi = bigrams(q);
-
-  return items.filter(item => {
+  const toks = searchTokens(query);
+  if (!toks.length) return (searchScope === 'q' || searchScope === 'a' || searchScope === 'j') ? items.filter(i => i.type === 'ai_qa' && i.qa) : items;
+  const scored = [];
+  for (const item of items) {
     const text = scopeSearchText(item);
-    if (text.includes(q)) return true;
-
-    if (q.length >= 2) {
-      const tBi = bigrams(text);
-      let m = 0;
-      for (const b of qBi) if (tBi.has(b)) m++;
-      return m / qBi.size >= 0.5;
+    const title = (item.title || '').toLowerCase();
+    const tags = (item.tags || []).map(x => String(x).toLowerCase());
+    const qa = item.type === 'ai_qa' && item.qa ? item.qa : null;
+    let score = 0, ok = true;
+    for (const q of toks) {
+      let s = 0;
+      if (text.includes(q)) {
+        s = 1;
+        if (searchScope === 'all' || searchScope === 'tag') {
+          if (tags.includes(q)) s += 100;
+          else if (tags.some(x => x.includes(q))) s += 30;
+          if (title === q) s += 80; else if (title.includes(q)) s += 50;
+          if (qa) {
+            if (String(qa.summary || '').toLowerCase().includes(q)) s += 15;
+            if (String(qa.question || '').toLowerCase().includes(q)) s += 10;
+          }
+        }
+      } else if (q.length >= 2) {
+        const qBi = bigrams(q), tBi = bigrams(text);
+        let m = 0;
+        for (const b of qBi) if (tBi.has(b)) m++;
+        if (m / qBi.size >= 0.5) s = 0.5;
+      }
+      if (!s) { ok = false; break; }
+      score += s;
     }
-    return false;
-  }).sort((a, b) => {
-    const aT = (a.title || '').toLowerCase().includes(q) ? 1 : 0;
-    const bT = (b.title || '').toLowerCase().includes(q) ? 1 : 0;
-    if (bT !== aT) return bT - aT;
-    return (b.updatedAt || 0) - (a.updatedAt || 0);
-  });
+    if (ok) scored.push({ item, score });
+  }
+  return scored.sort((a, b) => (b.score - a.score) || ((b.item.updatedAt || 0) - (a.item.updatedAt || 0))).map(x => x.item);
 }
 
 function highlightText(text, query) {
-  if (!query.trim()) return escapeHtml(text);
-  const q = escapeHtml(query.trim());
+  const toks = searchTokens(query).map(x => escapeHtml(x)).sort((a, b) => b.length - a.length);
+  if (!toks.length) return escapeHtml(text);
   const escaped = escapeHtml(text);
-  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  const re = new RegExp(toks.map(q => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gi');
   return escaped.replace(re, m => `<mark>${m}</mark>`);
 }
 
@@ -2306,6 +2336,7 @@ async function qaPaste(id) {
   } catch (_) { showToast('貼り付けできませんでした。入力欄を長押しして貼り付けてください'); }
 }
 function qaWire() {
+  qaViewWire();
   qaById('dockQA').addEventListener('click', () => { haptic(); openQA(); });
   qaById('qaCancelBtn').addEventListener('click', () => closeQA(false));
   qaById('qaSaveBtn').addEventListener('click', () => { void saveQA(); });
@@ -2326,7 +2357,7 @@ function qaWire() {
 
 /* ── AI Q&A Phase 2：検索範囲の切り替え（すべて／質問／回答／判断／タグ） ── */
 const SEARCH_SCOPES = [['all', 'すべて'], ['q', '質問'], ['a', '回答'], ['j', '判断'], ['tag', 'タグ']];
-const SCOPE_PLACEHOLDER = { all: 'タイトル・メモ・タグで検索', q: 'Q&Aの「質問」から検索', a: 'Q&Aの「回答」から検索', j: 'Q&Aの「自分の判断」から検索', tag: 'タグ名で検索' };
+const SCOPE_PLACEHOLDER = { all: 'キーワード（空白で、すべて含むものに絞り込み）', q: 'Q&Aの「質問」から検索', a: 'Q&Aの「回答」から検索', j: 'Q&Aの「自分の判断」から検索', tag: 'タグ名で検索' };
 function scopeSearchText(item) {
   if (searchScope === 'all') return buildSearchText(item);
   if (searchScope === 'tag') return (item.tags || []).join(' ').toLowerCase();
@@ -2345,6 +2376,7 @@ function qaSnippet(item) {
       if (i >= 0) return F[k][0] + ' ' + txt.slice(Math.max(0, i - 20), i + 60).replace(/\s+/g, ' ');
     }
   }
+  if (!(searchScope in F) && qa.summary) return '📝 ' + String(qa.summary).replace(/\s+/g, ' ').slice(0, 90);
   const f = F[(searchScope in F) ? searchScope : 'q'];
   return f[0] + ' ' + String(f[1] || '').replace(/\s+/g, ' ').slice(0, 80);
 }
@@ -2389,6 +2421,7 @@ function qaAiDraw() {
   const lab = 'font-size:12px;color:var(--text-secondary);';
   const btn = 'margin-top:4px;font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--accent);';
   let h = '<div style="font-size:12px;color:#ff9500;margin-top:8px;"><b>✦ AIの候補</b>（まだ保存されていません。使うものだけ押してください）</div>';
+  h += '<button type="button" data-qaai="all" style="width:100%;margin:8px 0 0;padding:11px;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:15px;font-weight:700;">✓ すべて採用（題名・要約・タグ）</button>';
   if (c.title) h += `<div style="${row}"><div style="${lab}">題名</div><div style="font-size:15px;">${escapeHtml(c.title)}</div><button type="button" style="${btn}" data-qaai="title">✓ 題名に使う</button></div>`;
   if (c.summary) h += `<div style="${row}"><div style="${lab}">要約</div><div style="font-size:14px;line-height:1.6;">${escapeHtml(c.summary)}</div><button type="button" style="${btn}" data-qaai="summary">✓ 要約に使う</button></div>`;
   const left = c.tags.filter(x => !qaTags.includes(x));
@@ -2406,6 +2439,13 @@ function qaAiAdopt(kind, v) {
   } else if (kind === 'tag') {
     if (v && !qaTags.includes(v)) qaTags.push(v);
   } else if (kind === 'tags') {
+    c.tags.forEach(x => { if (!qaTags.includes(x)) qaTags.push(x); });
+  } else if (kind === 'all') {
+    const ti = qaById('qaTitle'), su = qaById('qaSummary');
+    const over = (c.title && ti.value.trim() && ti.value.trim() !== c.title) || (c.summary && su.value.trim() && su.value.trim() !== c.summary);
+    if (over && !confirm('入力済みの題名・要約を、AIの候補に置き換えますか？')) return;
+    if (c.title) ti.value = c.title;
+    if (c.summary) su.value = c.summary;
     c.tags.forEach(x => { if (!qaTags.includes(x)) qaTags.push(x); });
   }
   qaRenderTags(); qaAiDraw();
@@ -2472,6 +2512,67 @@ async function qaSendFlowMind() {
   qaFmDraw(allItems.find(i => i.id === ex.id));
   const synced = await syncCloudNow(false);
   showToast(synced ? 'flow-mind へ送りました（flow-mind を開くと Inbox に入ります）' : '印は付けましたが、同期に失敗しました。あとで「今すぐ同期」を押してください');
+}
+
+/* ── AI Q&A 辞書カード（読む画面）。タップで開く。編集は右上。 ── */
+let qaViewId = null;
+const qvEsc = s => escapeHtml(String(s || '')).replace(/\n/g, '<br>');
+function qaViewText(it, mode) {
+  const q = it.qa || {};
+  if (mode === 'answer') return String(q.answer || '');
+  return '以前、AIとこんなやり取りをしました。これを踏まえて、続きを質問します。\n\n【以前の質問】\n' + String(q.question || '') +
+    '\n\n【以前の回答' + (q.summary ? '（要約）' : '') + '】\n' + String(q.summary || q.answer || '').slice(0, 1800) +
+    (q.judgment ? '\n\n【自分の判断】\n' + q.judgment : '') + '\n\n【今回の質問】\n';
+}
+function openQAView(id) {
+  const it = allItems.find(i => i.id === id);
+  if (!it || !it.qa) { void openEdit(id); return; }
+  qaViewId = id;
+  const q = it.qa, tags = (it.tags || []).filter(x => x !== QA_TAG);
+  const box = 'margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:12px;';
+  const lab = 'font-size:12px;color:var(--text-secondary);margin-bottom:4px;';
+  const date = new Date(it.updatedAt || it.createdAt || Date.now()).toLocaleDateString('ja-JP');
+  const sent = it.ai && it.ai.flowMind && it.ai.flowMind.sentAt;
+  const mine = new Set(tags);
+  const rel = allItems.filter(o => o.id !== it.id && o.type === 'ai_qa' && o.qa && !o.sensitive)
+    .map(o => ({ o, n: (o.tags || []).filter(x => x !== QA_TAG && mine.has(x)).length })).filter(x => x.n > 0)
+    .sort((a, b) => (b.n - a.n) || ((b.o.updatedAt || 0) - (a.o.updatedAt || 0))).slice(0, 5);
+  let h = `<div style="font-size:20px;font-weight:800;line-height:1.4;margin-top:4px;">${qvEsc(it.title || '(無題)')}</div>` +
+    `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">🤖 ${escapeHtml(qaSourceLabel(q.sourceType))} · ${date}${sent ? ' · ⬡ flow-mind へ送信済み' : ''}</div>`;
+  if (q.summary) h += `<div style="${box}"><div style="${lab}">一言（要約）</div><div style="font-size:16px;line-height:1.7;">${qvEsc(q.summary)}</div></div>`;
+  if (q.judgment) h += `<div style="${box}border-color:var(--accent);"><div style="${lab}">自分の判断</div><div style="font-size:16px;line-height:1.7;">${qvEsc(q.judgment)}</div></div>`;
+  if (tags.length) h += '<div style="margin:8px 0;">' + tags.map(x => `<span class="chip suggestion" data-qvtag="${escapeHtml(x)}">#${escapeHtml(x)}</span>`).join('') + '</div>';
+  h += `<div style="${box}"><div style="${lab}">質問</div><div style="font-size:15px;line-height:1.7;">${qvEsc(q.question)}</div></div>`;
+  h += `<details ${q.summary ? '' : 'open'} style="${box}"><summary style="font-size:14px;font-weight:700;cursor:pointer;">AIの回答${q.summary ? '（タップで開く）' : ''}</summary><div style="font-size:15px;line-height:1.7;margin-top:8px;">${qvEsc(q.answer)}</div></details>`;
+  if (q.sourceUrl && /^https?:\/\//i.test(q.sourceUrl)) h += `<div style="font-size:13px;margin:8px 0;"><a href="${escapeHtml(q.sourceUrl)}" target="_blank" rel="noopener noreferrer">🔗 元の会話を開く</a></div>`;
+  h += '<div style="display:flex;gap:8px;margin:12px 0;"><button type="button" data-qvcopy="answer" class="qv-btn">📋 回答をコピー</button><button type="button" data-qvcopy="ask" class="qv-btn">📋 再質問用にコピー</button></div>' +
+    '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">「再質問用」は、この質問・回答・自分の判断を材料にして、AIに続きを聞くための文をコピーします。</div>';
+  if (rel.length) h += `<div style="${box}"><div style="${lab}">関連するQ&amp;A（同じタグ）</div>` + rel.map(x => `<div data-qvopen="${escapeHtml(x.o.id)}" style="padding:8px 2px;border-bottom:1px solid var(--border);cursor:pointer;font-size:15px;">${qvEsc(x.o.title || '(無題)')}</div>`).join('') + '</div>';
+  h += '<div style="height:24px;"></div>';
+  qaById('qvBody').innerHTML = h;
+  qaById('qaViewSheet').classList.add('open');
+  qaById('qvBody').scrollTop = 0;
+}
+function closeQAView() { qaById('qaViewSheet').classList.remove('open'); qaViewId = null; }
+async function qaViewCopy(mode) {
+  const it = allItems.find(i => i.id === qaViewId); if (!it) return;
+  const txt = qaViewText(it, mode);
+  try { await navigator.clipboard.writeText(txt); showToast(mode === 'answer' ? '回答をコピーしました' : '再質問用の文をコピーしました。AIに貼って、続きを書いてください'); }
+  catch (_) { showToast('コピーできませんでした'); }
+}
+function qaViewWire() {
+  qaById('qvCloseBtn').addEventListener('click', closeQAView);
+  qaById('qvEditBtn').addEventListener('click', () => { const id = qaViewId; closeQAView(); if (id) openQA(id); });
+  qaById('qaViewSheet').addEventListener('click', e => {
+    const x = e.target.closest('[data-qvtag],[data-qvcopy],[data-qvopen]'); if (!x) return;
+    if (x.dataset.qvcopy) void qaViewCopy(x.dataset.qvcopy);
+    else if (x.dataset.qvopen) openQAView(x.dataset.qvopen);
+    else if (x.dataset.qvtag) {
+      closeQAView(); searchScope = 'tag'; searchQuery = x.dataset.qvtag;
+      const inp = qaById('searchInput'); if (inp) inp.value = searchQuery;
+      renderAll();
+    }
+  });
 }
 
 async function reload() {
@@ -2583,14 +2684,14 @@ function renderAll() {
           <div class="chips">${tagsHtml}</div>
           <div class="card-meta">
             <span>${item.url ? '🔗 URLあり' : ''}</span>
-            <span>${item.sensitive ? '🔒 保護' : ''}${item.type === 'ai_qa' ? '🤖 ' + escapeHtml(qaSourceLabel(item.qa && item.qa.sourceType)) : ''}</span>
+            <span>${item.sensitive ? '🔒 保護' : ''}${item.type === 'ai_qa' ? '🤖 ' + escapeHtml(qaSourceLabel(item.qa && item.qa.sourceType)) + ' · ' + new Date(item.updatedAt || item.createdAt || Date.now()).toLocaleDateString('ja-JP') : ''}</span>
           </div>
         </div>`;
     })
     .join('');
 
   list.querySelectorAll('.card').forEach(el => {
-    el.addEventListener('click', () => openEdit(el.dataset.id));
+    el.addEventListener('click', () => { const it = allItems.find(i => i.id === el.dataset.id); if (it && it.type === 'ai_qa' && it.qa && !it.sensitive) openQAView(it.id); else openEdit(el.dataset.id); });
   });
 }
 
