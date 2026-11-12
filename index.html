@@ -4045,7 +4045,9 @@ async function syncCloudNow(showResult = true) {
 async function pullCloudSync(showResult = false, noPush = false) {
   const config = getCloudSyncConfig();
   const url = cloudSyncUrl();
-  if (!url || !config.token || cloudSyncBusy) return false;
+  // quickref-syncwhy: 同期が始まらない理由を表示する
+  if (!url || !config.token) { lastPullOk = false; setSyncWarn(!url ? '同期先（URL）が未設定です。⚙️で設定してください' : '同期トークンが未設定です。⚙️で設定してください', 'err'); if (showResult) updateCloudSyncStatus('受信失敗: ' + window.__syncWarn); return false; }
+  if (cloudSyncBusy) { lastPullOk = false; setSyncWarn('前の同期がまだ終わっていません。アプリを開き直してからもう一度押してください', 'net'); if (showResult) updateCloudSyncStatus('待機: ' + window.__syncWarn); return false; }
 
   cloudSyncBusy = true;
   let pushAfter = false, ok = false;
