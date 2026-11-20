@@ -452,6 +452,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
       <span id="countLabel">0件</span>
       <button class="review-btn" id="reviewBtn">📋<span class="review-badge" id="reviewBadge"></span></button>
       <button class="icon-btn" id="syncWarnBtn" style="display:none;color:#fff;background:#d92d20;border-radius:10px;font-weight:800" title="同期の問題">⚠️</button>
+      <button class="icon-btn" id="pwAddBtn" title="パスワードを追加">🔑</button>
       <button class="icon-btn" id="lockToggleBtn">🔓</button>
       <button class="icon-btn" id="uiPrefBtn" title="文字の設定" style="font-weight:800;font-size:15px">Aa</button>
       <button class="icon-btn" id="settingsBtn">⚙️</button>
@@ -585,6 +586,17 @@ mark.hl { border-radius:2px; padding:0 1px; }
       </div>
       <label class="switch">
         <input type="checkbox" id="sensitiveToggle">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row" style="margin-top:8px;">
+      <div class="toggle-row-text">
+        <span class="toggle-row-title">🔑 パスワードとして保存</span>
+        <span class="toggle-row-desc">タイトルとURLも暗号化します（一覧ではロック中は「ロック中」と表示）。AIには送りません</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="pwToggle">
         <span class="switch-track"></span>
       </label>
     </div>
@@ -1083,6 +1095,7 @@ mark.hl { border-radius:2px; padding:0 1px; }
 
     <input type="password" id="pinInput1" class="pin-input" placeholder="パスコード">
     <input type="password" id="pinInput2" class="pin-input" placeholder="確認用">
+    <div id="pinStrength" class="pin-desc" style="min-height:1.2em"></div>
 
     <div id="pinError" class="pin-error" style="display:none;"></div>
 
@@ -1233,6 +1246,7 @@ function openPinModal(mode) {
   if (in1) in1.value = '';
   if (in2) in2.value = '';
   if (err) { err.textContent = ''; err.style.display = 'none'; }
+  { const ps = document.getElementById('pinStrength'); if (ps) ps.textContent = ''; }
   document.getElementById('pinOverlay').classList.add('open');
   document.getElementById('pinModal').classList.add('open');
   if (in1) in1.focus();
@@ -1289,7 +1303,7 @@ async function deriveKeyFromPin(pin, saltB64, iterations) {
 async function setupPin(pin) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const saltB64 = bytesToBase64(salt);
-  const iterations = CryptoCore.DEFAULT_ITERATIONS; // 新規は20万回（crypto-vaultに合わせる）
+  const iterations = 600000; // 新規は60万回（既存の端末の設定は変えない）
   const key = await deriveKeyFromPin(pin, saltB64, iterations);
   sessionKey = key; sessionPin = pin; foreignKeys.clear();
   setPinMeta({ salt: saltB64, iterations });
@@ -1301,6 +1315,14 @@ async function tryUnlockWithPin(pin) {
   try {
     const key = await deriveKeyFromPin(pin, meta.salt, meta.iterations);
     sessionKey = key; sessionPin = pin; foreignKeys.clear();
+    const probes = allItems.filter(i => i.sensitive && i.encFields).slice(0, 5);
+    if (probes.length) {
+      let good = false;
+      for (const p of probes) { try { await decryptOneField(p.encFields); good = true; break; } catch (_) {} }
+      if (!good) { sessionKey = null; sessionPin = null; foreignKeys.clear(); return false; }
+    }
+    /* PW-TYPE v3 */
+    if (pin.length < 8 || (meta.iterations || 0) < 600000) setTimeout(() => { try { showToast('⚠ パスコードが短い、または古い設定です。🔑→パスコードを変更で、強くできます'); } catch (_) {} }, 900);
     return true;
   } catch (_) {
     return false;
@@ -1328,6 +1350,362 @@ function updateLockButton() {
 /* ─────────────────────────────
    暗号化された項目の復号
 ───────────────────────────── */
+/* PW-TYPE v1 */
+const PW_TITLE = '🔑 パスワード';
+let draftPw = false;
+function isPwKey(k) { return /パスワード|password|passwd|暗証|合言葉|秘密|PIN\b/i.test(String(k || '')); }
+function pwStrength(p) {
+  const L = p.length; let cls = 0;
+  if (/[a-z]/.test(p)) cls++; if (/[A-Z]/.test(p)) cls++; if (/[0-9]/.test(p)) cls++; if (/[^A-Za-z0-9]/.test(p)) cls++;
+  if (!L) return '';
+  if (L < 8) return '弱い：8文字以上にしてください';
+  if (L >= 12 && cls >= 3) return '強い';
+  if (L >= 12) return '良い：文字の種類を増やすとさらに強くなります';
+  return '普通：12文字以上がおすすめです';
+}
+function pwGenerate(len) {
+  len = len || 20;
+  const sets = ['abcdefghijkmnopqrstuvwxyz', 'ABCDEFGHJKLMNPQRSTUVWXYZ', '23456789', '!#$%&*+-=?@_'];
+  const all = sets.join('');
+  function rnd(n) { const lim = Math.floor(4294967296 / n) * n; const a = new Uint32Array(1); do { crypto.getRandomValues(a); } while (a[0] >= lim); return a[0] % n; }
+  for (;;) {
+    let s = ''; for (let i = 0; i < len; i++) s += all[rnd(all.length)];
+    if (sets.every(x => [...x].some(c => s.includes(c)))) return s;
+  }
+}
+let pwClipTimer = null;
+async function pwCopy(text) {
+  try { await navigator.clipboard.writeText(text); } catch (_) { showToast('コピーできませんでした'); return; }
+  showToast('コピーしました（30秒後に消します）');
+  clearTimeout(pwClipTimer);
+  pwClipTimer = setTimeout(() => { try { navigator.clipboard.writeText(''); } catch (_) {} }, 30000);
+}
+// 自動ロック：3分さわらない／画面を離れて1分たつと、鍵を消す
+(function () {
+  let last = Date.now(), hiddenAt = 0;
+  const IDLE = 3 * 60 * 1000, AWAY = 60 * 1000;
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, () => { last = Date.now(); }, { passive: true, capture: true }));
+  function autoLock() {
+    if (!sessionKey) return;
+    const open = document.getElementById('editSheet').classList.contains('open');
+    if (open && (draftSensitive || draftPw)) { draftFields = []; draftPw = false; draftSensitive = false; try { document.getElementById('fBody').innerHTML = ''; document.getElementById('fTitle').value = ''; document.getElementById('inputUrl').value = ''; closeSheet(); } catch (_) {} }
+    try { pwClose(); } catch (_) {}
+    lockSession();
+    showToast('自動でロックしました');
+  }
+  setInterval(() => { if (sessionKey && Date.now() - last > IDLE) autoLock(); }, 5000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') hiddenAt = Date.now();
+    else { if (sessionKey && hiddenAt && Date.now() - hiddenAt > AWAY) autoLock(); hiddenAt = 0; last = Date.now(); }
+  });
+})();
+
+/* PW-TYPE v2 */
+// ── 読み込み（削除の印も持つ）
+let tombItems = [];
+async function pwLoadAll() {
+  const raw = await dbGetAll();
+  allItems = raw.filter(i => !i.deleted);
+  tombItems = raw.filter(i => i.deleted);
+}
+
+// ── 画面部品
+const PWB = 'display:block;width:100%;padding:13px;margin:8px 0;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;text-align:left;';
+const PWI = 'display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px;';
+function pwUi() {
+  let ov = document.getElementById('pwMenu');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'pwMenu';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:center;';
+  ov.innerHTML = '<div id="pwMenuBox" style="width:100%;max-width:520px;max-height:90dvh;overflow:auto;background:var(--card-bg);color:var(--text);border-radius:18px 18px 0 0;padding:16px;"></div>';
+  ov.addEventListener('click', e => { if (e.target === ov) pwClose(); });
+  document.body.appendChild(ov);
+  return ov;
+}
+function pwClose() {
+  const ov = document.getElementById('pwMenu');
+  if (ov) ov.style.display = 'none';
+  const b = document.getElementById('pwMenuBox');
+  if (b) b.innerHTML = '';
+}
+function pwShow(html) {
+  const ov = pwUi();
+  document.getElementById('pwMenuBox').innerHTML = html;
+  ov.style.display = 'flex';
+  return document.getElementById('pwMenuBox');
+}
+function pwNote(t) { return '<div style="font-size:12px;color:var(--text-secondary);margin:6px 0;line-height:1.5">' + t + '</div>'; }
+async function pwNeedUnlock() {
+  if (sessionKey) return true;
+  pwClose();
+  return await ensureUnlocked();
+}
+
+// ── メニュー
+function pwMenu() {
+  const box = pwShow(
+    '<h3 style="margin:0 0 4px">🔑 パスワード</h3>' +
+    pwNote('パスワードは暗号化して保存します。AIには送りません。') +
+    '<button type="button" style="' + PWB + '" data-a="add">＋ 新しいパスワードを追加</button>' +
+    '<button type="button" style="' + PWB + '" data-a="import">📥 CSVから取り込む</button>' +
+    '<button type="button" style="' + PWB + '" data-a="audit">🔍 点検（使い回し・弱い・古い）</button>' +
+    '<button type="button" style="' + PWB + '" data-a="sync">🔄 同期の点検</button>' +
+    '<button type="button" style="' + PWB + '" data-a="change">🔐 パスコードを変更</button>' +
+    '<button type="button" style="' + PWB + 'text-align:center;" data-a="close">閉じる</button>');
+  box.querySelectorAll('button[data-a]').forEach(b => { b.onclick = () => pwAction(b.dataset.a); });
+}
+async function pwAction(a) {
+  if (a === 'close') { pwClose(); return; }
+  if (a === 'add') {
+    pwClose();
+    if (window.__pwNew) await window.__pwNew();
+    return;
+  }
+  if (a === 'sync') { await pwSyncCheck(); return; }
+  if (a === 'change') { pwChangeUi(); return; }
+  if (!(await pwNeedUnlock())) return;
+  if (a === 'import') pwImportUi();
+  else if (a === 'audit') pwAudit();
+}
+
+// ── 点検
+function pwAudit() {
+  const items = allItems.filter(i => i.type === 'password');
+  const rows = [], failed = [];
+  items.forEach(i => {
+    const c = decryptedCache.get(i.id);
+    if (!c) { failed.push(i); return; }
+    const f = (c.fields || []).find(x => isPwKey(x.key) && x.value);
+    rows.push({ id: i.id, title: c.title || '(無題)', pass: f ? f.value : '', age: Date.now() - (i.updatedAt || 0) });
+  });
+  const groups = new Map();
+  rows.forEach(r => { if (r.pass) { if (!groups.has(r.pass)) groups.set(r.pass, []); groups.get(r.pass).push(r); } });
+  const reuse = [...groups.values()].filter(g => g.length > 1);
+  const weak = rows.filter(r => r.pass && (r.pass.length < 10 || [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter(re => re.test(r.pass)).length < 2));
+  const old = rows.filter(r => r.age > 365 * 86400000);
+  const empty = rows.filter(r => !r.pass);
+  function list(arr) {
+    return arr.slice(0, 30).map(r => '<button type="button" style="' + PWB + 'padding:9px 12px;margin:4px 0;" data-open="' + r.id + '">' + escapeHtml(r.title) + '</button>').join('');
+  }
+  let h = '<h3 style="margin:0 0 4px">🔍 点検</h3>' + pwNote('パスワード ' + items.length + '件を調べました。値は画面に出しません。');
+  h += '<div style="margin:10px 0"><b>使い回し</b>：' + reuse.reduce((s, g) => s + g.length, 0) + '件</div>';
+  reuse.forEach(g => { h += list(g) + '<div style="height:6px"></div>'; });
+  h += '<div style="margin:10px 0"><b>弱い（10文字未満、または文字の種類が少ない）</b>：' + weak.length + '件</div>' + list(weak);
+  h += '<div style="margin:10px 0"><b>1年以上、更新していない</b>：' + old.length + '件</div>' + list(old);
+  if (empty.length) h += '<div style="margin:10px 0"><b>パスワード欄が空</b>：' + empty.length + '件</div>' + list(empty);
+  if (failed.length) h += '<div style="margin:10px 0;color:#d92d20"><b>開けなかった</b>：' + failed.length + '件（別のパスコードで作られた可能性）</div>';
+  h += '<button type="button" style="' + PWB + 'text-align:center;" data-a="menu">戻る</button>';
+  const box = pwShow(h);
+  box.querySelectorAll('button[data-open]').forEach(b => { b.onclick = () => { pwClose(); openEdit(b.dataset.open); }; });
+  box.querySelector('button[data-a="menu"]').onclick = pwMenu;
+}
+
+// ── 同期の点検
+async function pwSyncCheck() {
+  const cfg = getCloudSyncConfig(), url = cloudSyncUrl();
+  if (!url || !cfg.token) {
+    const b = pwShow('<h3 style="margin:0 0 4px">🔄 同期の点検</h3>' + pwNote('同期が未設定です（⚙️で、エンドポイントとトークンを入れてください）。') + '<button type="button" style="' + PWB + 'text-align:center;" data-a="menu">戻る</button>');
+    b.querySelector('button[data-a="menu"]').onclick = pwMenu;
+    return;
+  }
+  pwShow('<h3 style="margin:0 0 4px">🔄 同期の点検</h3>' + pwNote('クラウドの中身を読んでいます…'));
+  let msg = '';
+  try {
+    const r = await fetchT(url, { headers: { Authorization: 'Bearer ' + cfg.token } }, 30000);
+    let rem = [];
+    if (r.status === 404) rem = [];
+    else if (!r.ok) throw new Error('受信できませんでした（' + r.status + '）');
+    else { const j = await r.json(); rem = Array.isArray(j.data) ? j.data : ((j.data && j.data.items) || []); }
+    const lp = allItems.filter(i => i.type === 'password');
+    const rp = rem.filter(i => i.type === 'password' && !i.deleted);
+    const rmap = new Map(rem.map(i => [i.id, i]));
+    let same = 0, localNewer = 0, cloudNewer = 0, onlyLocal = 0;
+    lp.forEach(i => {
+      const x = rmap.get(i.id);
+      if (!x) onlyLocal++;
+      else if ((x.updatedAt || 0) === (i.updatedAt || 0)) same++;
+      else if ((x.updatedAt || 0) > (i.updatedAt || 0)) cloudNewer++;
+      else localNewer++;
+    });
+    const localIds = new Set(allItems.map(i => i.id));
+    const onlyCloud = rp.filter(x => !localIds.has(x.id) && !tombItems.some(t => t.id === x.id)).length;
+    const leaks = rp.filter(x => x.title !== PW_TITLE || x.url || x.body || (x.fields && x.fields.length) || !x.encBody || !x.encFields).length;
+    const tombs = rem.filter(i => i.deleted).length;
+    msg = '<div>この端末のパスワード：<b>' + lp.length + '件</b>／クラウド：<b>' + rp.length + '件</b></div>' +
+      '<div style="margin-top:8px">一致 ' + same + '件／この端末だけ ' + onlyLocal + '件（未送信）／クラウドの方が新しい ' + cloudNewer + '件／この端末の方が新しい ' + localNewer + '件／クラウドだけ ' + onlyCloud + '件（未受信）</div>' +
+      '<div style="margin-top:8px">' + (leaks === 0 ? '✅ クラウドにあるパスワードは、暗号文だけです（題名・URL・本文に平文はありません）' : '⚠ クラウドに、平文が混じっているパスワードが ' + leaks + '件あります') + '</div>' +
+      '<div style="margin-top:8px;color:var(--text-secondary)">削除の印：' + tombs + '件</div>' +
+      ((onlyLocal + cloudNewer + localNewer + onlyCloud) ? '<div style="margin-top:8px">差があります。「いま同期する」を押すと、新しい方に合わせます。</div>' : '<div style="margin-top:8px">差はありません。</div>');
+  } catch (e) {
+    msg = '<div style="color:#d92d20">点検できませんでした：' + escapeHtml((e && e.message) || String(e)) + '</div>';
+  }
+  const box = pwShow('<h3 style="margin:0 0 4px">🔄 同期の点検</h3>' + msg +
+    '<button type="button" style="' + PWB + '" data-a="now">いま同期する</button>' +
+    '<button type="button" style="' + PWB + 'text-align:center;" data-a="menu">戻る</button>');
+  box.querySelector('button[data-a="now"]').onclick = async () => { pwShow('<div>同期しています…</div>'); try { await syncAllNow(); } catch (_) {} await pwSyncCheck(); };
+  box.querySelector('button[data-a="menu"]').onclick = pwMenu;
+}
+
+// ── パスコードの変更
+function pwChangeUi() {
+  const box = pwShow('<h3 style="margin:0 0 4px">🔐 パスコードを変更</h3>' +
+    pwNote('保護メモとパスワードを、すべて新しいパスコードで暗号化し直します。他の端末では、同期のあと、新しいパスコードで解除してください。') +
+    '<input type="password" id="pcOld" placeholder="いまのパスコード" autocomplete="off" style="' + PWI + '">' +
+    '<input type="password" id="pcNew" placeholder="新しいパスコード（8文字以上）" autocomplete="off" style="' + PWI + '">' +
+    '<input type="password" id="pcNew2" placeholder="新しいパスコード（確認）" autocomplete="off" style="' + PWI + '">' +
+    '<div id="pcInfo" style="min-height:1.4em;font-size:13px;color:var(--text-secondary)"></div>' +
+    '<button type="button" style="' + PWB + 'text-align:center;font-weight:700;" data-a="run">変更する</button>' +
+    '<button type="button" style="' + PWB + 'text-align:center;" data-a="menu">戻る</button>');
+  const info = box.querySelector('#pcInfo');
+  box.querySelector('#pcNew').addEventListener('input', e => { info.style.color = 'var(--text-secondary)'; info.textContent = pwStrength(e.target.value); });
+  box.querySelector('button[data-a="menu"]').onclick = pwMenu;
+  box.querySelector('button[data-a="run"]').onclick = async () => {
+    const o = box.querySelector('#pcOld').value, n = box.querySelector('#pcNew').value, n2 = box.querySelector('#pcNew2').value;
+    function err(t) { info.style.color = '#d92d20'; info.textContent = t; }
+    if (!o) return err('いまのパスコードを入れてください');
+    if (n.length < 8) return err('新しいパスコードは8文字以上にしてください');
+    if (n !== n2) return err('確認用と一致しません');
+    if (n === o) return err('いまのパスコードと同じです');
+    info.style.color = 'var(--text-secondary)'; info.textContent = '暗号化し直しています…（数秒かかります）';
+    box.querySelector('button[data-a="run"]').disabled = true;
+    const r = await pwChangeRun(o, n);
+    if (r.ok) {
+      pwShow('<h3 style="margin:0 0 4px">🔐 変更しました</h3><div>' + r.n + '件を、新しいパスコードで暗号化し直しました。' + (r.skipped ? '<br>' + r.skipped + '件は、別のパスコードで作られているため、そのままにしました。' : '') + '</div>' + pwNote('他の端末では、同期のあと、新しいパスコードで解除してください。') + '<button type="button" style="' + PWB + 'text-align:center;" data-a="close">閉じる</button>');
+      document.querySelector('#pwMenuBox button[data-a="close"]').onclick = pwClose;
+    } else {
+      box.querySelector('button[data-a="run"]').disabled = false;
+      err(r.msg);
+    }
+  };
+}
+async function pwChangeRun(oldPin, newPin) {
+  const oldMeta = getPinMeta();
+  if (!oldMeta) return { ok: false, msg: 'パスコードが設定されていません' };
+  if (!(await tryUnlockWithPin(oldPin))) return { ok: false, msg: 'いまのパスコードが違います' };
+  const oldKey = sessionKey;
+  const targets = allItems.filter(i => i.sensitive && i.encBody && i.encFields);
+  const plains = []; let skipped = 0;
+  for (const it of targets) {
+    try { plains.push({ it, body: await decryptOneField(it.encBody), fields: await decryptOneField(it.encFields) }); }
+    catch (_) { skipped++; }
+  }
+  const salt = bytesToBase64(crypto.getRandomValues(new Uint8Array(16)));
+  const iterations = 600000;
+  const newMeta = { salt, iterations };
+  let newKey;
+  try { newKey = await deriveKeyFromPin(newPin, salt, iterations); }
+  catch (e) { return { ok: false, msg: '新しい鍵を作れませんでした' }; }
+  const written = [];
+  const now = Date.now();
+  try {
+    sessionKey = newKey; setPinMeta(newMeta);
+    for (const p of plains) {
+      const upd = Object.assign({}, p.it, { encBody: await encryptField(p.body), encFields: await encryptField(p.fields), updatedAt: now });
+      // 書く前に、新しい鍵で読み戻せるか確かめる
+      if ((await decryptOneField(upd.encBody)) !== p.body || (await decryptOneField(upd.encFields)) !== p.fields) throw new Error('読み戻しが一致しません');
+      await dbPut(upd); written.push(p.it);
+    }
+  } catch (e) {
+    // 元に戻す
+    sessionKey = oldKey; sessionPin = oldPin; setPinMeta(oldMeta); foreignKeys.clear();
+    for (const o of written) { try { await dbPut(o); } catch (_) {} }
+    await reload();
+    return { ok: false, msg: '変更できませんでした（元に戻しました）：' + ((e && e.message) || e) };
+  }
+  sessionKey = newKey; sessionPin = newPin; foreignKeys.clear();
+  decryptedCache.clear();
+  await reload();
+  await refreshDecryptedCache();
+  updateLockButton();
+  renderAll();
+  void syncCloudNow(false);
+  return { ok: true, n: plains.length, skipped };
+}
+
+// ── CSV の取り込み
+function pwParseCsv(t) {
+  t = String(t || '').replace(/^﻿/, '');
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"' && cur === '') q = true;   // 欄の先頭の引用符だけを開始とみなす（途中の引用符は、そのまま文字として扱う）
+    else if (c === ',') { row.push(cur); cur = ''; }
+    else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if (c !== '\r') cur += c;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim() !== ''));
+}
+function pwCsvToEntries(text) {
+  const rows = pwParseCsv(text);
+  if (rows.length < 2) return { error: '行がありません' };
+  const hdr = rows[0].map(h => String(h).trim().toLowerCase());
+  function col(names) { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return -1; }
+  const cT = col(['name', 'title', 'タイトル', '名前', 'login_name']);
+  const cU = col(['url', 'login_uri', 'website', 'web site', 'サイト']);
+  const cN = col(['username', 'login_username', 'user', 'id', 'ユーザ名', 'ユーザー名', 'ログイン']);
+  const cP = col(['password', 'login_password', 'パスワード']);
+  const cM = col(['note', 'notes', 'extra', 'メモ', 'ノート']);
+  if (cP < 0 || (cT < 0 && cU < 0)) return { error: '列の名前が分かりません（見出し行に、name/url/username/password のような名前が要ります）' };
+  const out = []; let bad = 0;
+  rows.slice(1, 3001).forEach(r => {
+    const g = i => (i >= 0 && r[i] != null ? String(r[i]).trim() : '');
+    let title = g(cT), url = g(cU);
+    if (!title && url) { try { title = new URL(/^https?:/i.test(url) ? url : 'https://' + url).hostname; } catch (_) { title = url; } }
+    const pass = g(cP);
+    if (!title || !pass) { bad++; return; }
+    out.push({ title: title.slice(0, 100), url, user: g(cN), pass, note: g(cM) });
+  });
+  return { entries: out, bad, over: rows.length - 1 > 3000 };
+}
+function pwImportUi() {
+  const box = pwShow('<h3 style="margin:0 0 4px">📥 CSVから取り込む</h3>' +
+    pwNote('ブラウザやほかの管理アプリから書き出した CSV を選びます（Chrome・Edge・Safari・1Password などの形式）。CSV の中身は暗号化されていません。<b>取り込んだら、すぐ CSV ファイルを削除してください。</b>') +
+    '<input type="file" id="pwCsvFile" accept=".csv,text/csv,text/plain" style="' + PWI + '">' +
+    '<div id="pwCsvInfo" style="min-height:1.4em;font-size:13px;line-height:1.6"></div>' +
+    '<button type="button" style="' + PWB + 'text-align:center;" data-a="menu">戻る</button>');
+  const info = box.querySelector('#pwCsvInfo');
+  box.querySelector('button[data-a="menu"]').onclick = pwMenu;
+  box.querySelector('#pwCsvFile').onchange = async e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    info.style.color = ''; info.textContent = '読んでいます…';
+    let res;
+    try { res = pwCsvToEntries(await f.text()); } catch (er) { res = { error: '読めませんでした' }; }
+    e.target.value = '';
+    if (res.error) { info.style.color = '#d92d20'; info.textContent = res.error; return; }
+    // すでにある（題名とIDが同じ）ものは飛ばす
+    const have = new Set();
+    for (const [id, c] of decryptedCache) {
+      const it = allItems.find(x => x.id === id);
+      if (!it || it.type !== 'password' || !c) continue;
+      const u = (c.fields || []).find(x => x.key === 'ID');
+      have.add((c.title || '') + '\u0001' + (u ? u.value : ''));
+    }
+    const fresh = res.entries.filter(x => !have.has(x.title + '\u0001' + x.user));
+    const dup = res.entries.length - fresh.length;
+    info.textContent = fresh.length + '件を暗号化して保存しています…';
+    const now = Date.now(); let saved = 0;
+    for (const x of fresh) {
+      try {
+        const fields = [{ key: '__title', value: x.title }, { key: '__url', value: x.url || '' }];
+        if (x.user) fields.push({ key: 'ID', value: x.user });
+        fields.push({ key: 'パスワード', value: x.pass });
+        const enc = await encryptToItemFields(x.note ? escapeHtml(x.note).replace(/\n/g, '<br>') : '', fields);
+        const item = { id: crypto.randomUUID(), type: 'password', title: PW_TITLE, tags: [], url: '', sensitive: true, body: '', fields: [], encBody: enc.encBody, encFields: enc.encFields, createdAt: now, updatedAt: now };
+        await dbPut(item); await decryptItemContent(item); saved++;
+      } catch (_) { res.bad++; }
+    }
+    await reload();
+    void syncCloudNow(false);
+    info.style.color = '';
+    info.innerHTML = '✅ <b>' + saved + '件</b>を取り込みました。<br>すでにあって飛ばした：' + dup + '件／読めなかった行：' + res.bad + '件' + (res.over ? '<br>3000行を超えた分は取り込んでいません。' : '') +
+      '<br><b>CSV ファイルは、いま削除してください。</b>（ゴミ箱も空にしてください）';
+  };
+}
+
 // メモ側に入っている salt / iterations が、この端末の設定と違うときは、同じパスコードからそのsaltで鍵を作り直して使う
 async function keyForEnc(enc) {
   const meta = getPinMeta() || {};
@@ -1354,9 +1732,15 @@ async function decryptItemContent(item) {
   try {
     const body = await decryptOneField(item.encBody);
     const fieldsJson = await decryptOneField(item.encFields);
-    const fields = JSON.parse(fieldsJson);
+    const all = JSON.parse(fieldsJson);
+    let ptitle = null, purl = null;
+    const fields = all.filter(f => {
+      if (f && f.key === '__title') { ptitle = f.value; return false; }
+      if (f && f.key === '__url') { purl = f.value; return false; }
+      return true;
+    });
 
-    const out = { body, fields };
+    const out = { body, fields, title: ptitle, url: purl };
     decryptedCache.set(item.id, out);
     return out;
   } catch (_) {
@@ -1428,11 +1812,11 @@ function buildSearchText(item) {
     .map(f => `${f.key} ${f.value}`)
     .join(' ');
   return [
-    item.title || '',
+    (cached && cached.title) || item.title || '',
     body,
     (item.tags || []).join(' '),
     fieldsText,
-    item.url || ''
+    (cached && cached.url) || item.url || ''
   ].join(' ').toLowerCase();
 }
 
@@ -1447,7 +1831,7 @@ function searchItems(items, query) {
   const scored = [];
   for (const item of items) {
     const text = scopeSearchText(item);
-    const title = (item.title || '').toLowerCase();
+    const _pc = decryptedCache.get(item.id); const title = ((_pc && _pc.title) || item.title || '').toLowerCase();
     const tags = (item.tags || []).map(x => String(x).toLowerCase());
     const qa = item.type === 'ai_qa' && item.qa ? item.qa : null;
     let score = 0, ok = true;
@@ -2576,7 +2960,7 @@ function qaViewWire() {
 }
 
 async function reload() {
-  allItems = await dbGetAll();
+  await pwLoadAll();
   attachmentMeta = await dbGetAllAttachmentMeta();
   renderTagFilter();
   renderAll();
@@ -2672,19 +3056,19 @@ function renderAll() {
     .map(item => {
       const cached = decryptedCache.get(item.id);
       const body = cached ? cached.body : (item.body || '');
-      const snippet = (item.type === 'ai_qa' && item.qa && !item.sensitive) ? qaSnippet(item) : body.replace(/<[^>]+>/g, '').slice(0, 80);
+      const snippet = item.type === 'password' ? '' : (item.type === 'ai_qa' && item.qa && !item.sensitive) ? qaSnippet(item) : body.replace(/<[^>]+>/g, '').slice(0, 80);
       const tagsHtml = (item.tags || [])
         .map(t => `<span class="chip">#${escapeHtml(t)}</span>`)
         .join('');
 
       return `
         <div class="card" data-id="${item.id}">
-          <div class="card-title">${highlightText(item.title || '(無題)', searchQuery)}</div>
+          <div class="card-title">${highlightText(item.type === 'password' ? ((cached && cached.title) || '🔑 (ロック中)') : (item.title || '(無題)'), searchQuery)}</div>
           <div class="card-snippet">${highlightText(snippet, searchQuery)}</div>
           <div class="chips">${tagsHtml}</div>
           <div class="card-meta">
             <span>${item.url ? '🔗 URLあり' : ''}</span>
-            <span>${item.sensitive ? '🔒 保護' : ''}${item.type === 'ai_qa' ? '🤖 ' + escapeHtml(qaSourceLabel(item.qa && item.qa.sourceType)) + ' · ' + new Date(item.updatedAt || item.createdAt || Date.now()).toLocaleDateString('ja-JP') : ''}</span>
+            <span>${item.type === 'password' ? '🔑 パスワード' : (item.sensitive ? '🔒 保護' : '')}${item.type === 'ai_qa' ? '🤖 ' + escapeHtml(qaSourceLabel(item.qa && item.qa.sourceType)) + ' · ' + new Date(item.updatedAt || item.createdAt || Date.now()).toLocaleDateString('ja-JP') : ''}</span>
           </div>
         </div>`;
     })
@@ -2718,11 +3102,13 @@ function openNew() {
   draftTags = [];
   draftFields = [];
   draftSensitive = false;
+  draftPw = false;
   draftImages = [];
   draftAudios = [];
   draftVideos = [];
   pendingDeleteAttIds = [];
   revokeAllObjURLs();
+  { const t = document.getElementById('pwToggle'); if (t) t.checked = false; const s = document.getElementById('sensitiveToggle'); if (s) s.disabled = false; }
 
   document.getElementById('sheetTitle').textContent = '新規追加';
   document.getElementById('fTitle').value = '';
@@ -2752,13 +3138,19 @@ async function openEdit(id) {
 
   let plainBody = '';
   let plainFields = [];
+  let plainTitle = item.title || '';
+  let plainUrl = item.url || '';
 
   if (item.sensitive) {
-    const ok = await ensureUnlocked();
-    if (!ok) return;
+    if (!sessionKey) {
+      const ok = await ensureUnlocked();
+      if (!ok) return;
+    }
 
     const cached = decryptedCache.get(item.id) || (await decryptItemContent(item));
+    if (!cached && item.type === 'password') { showToast('復号できませんでした（別のパスコードで作られた可能性があります）'); return; }
     if (cached) {
+      if (item.type === 'password') { plainTitle = cached.title || ''; plainUrl = cached.url || ''; }
       plainBody = cached.body || '';
       plainFields = cached.fields || [];
     }
@@ -2771,6 +3163,7 @@ async function openEdit(id) {
   draftTags = [...(item.tags || [])];
   draftFields = [...plainFields];
   draftSensitive = !!item.sensitive;
+  draftPw = item.type === 'password';
 
   revokeAllObjURLs();
   draftImages = [];
@@ -2780,11 +3173,12 @@ async function openEdit(id) {
   stopRecordingIfActive();
 
   document.getElementById('sheetTitle').textContent = '編集';
-  document.getElementById('fTitle').value = item.title || '';
+  document.getElementById('fTitle').value = plainTitle;
   document.getElementById('fBody').innerHTML = plainBody;
   document.getElementById('tagInput').value = '';
-  document.getElementById('inputUrl').value = item.url || '';
+  document.getElementById('inputUrl').value = plainUrl;
   document.getElementById('sensitiveToggle').checked = draftSensitive;
+  { const t = document.getElementById('pwToggle'); if (t) t.checked = draftPw; document.getElementById('sensitiveToggle').disabled = draftPw; }
   document.getElementById('dangerZone').style.display = '';
 
   renderTagChips();
@@ -2911,7 +3305,8 @@ function renderFieldRows() {
         <input type="text" class="field-key" placeholder="項目名" value="${escapeHtml(f.key)}">
         ${isFlowField(f)
           ? `<textarea class="field-value" rows="5" style="width:100%;flex:1 1 100%;font-family:monospace;" placeholder="1行に1ステップ、上から順に書くだけ&#10;（分岐やループは「A -> B」と矢印で書く）">${escapeHtml(f.value)}</textarea><div class="flow-preview" style="width:100%;overflow-x:auto;padding:8px 0;"></div>`
-          : `<input type="text" class="field-value" placeholder="値" value="${escapeHtml(f.value)}">`}
+          : `<input type="${draftPw && isPwKey(f.key) ? 'password' : 'text'}" class="field-value" placeholder="値" autocomplete="off" value="${escapeHtml(f.value)}">`}
+        ${draftPw && isPwKey(f.key) ? '<button type="button" class="pw-show" title="表示">👁</button><button type="button" class="pw-copy" title="コピー">📋</button><button type="button" class="pw-gen" title="自動生成">🎲</button>' : ''}
         <button class="field-del">✕</button>
       </div>
     `)
@@ -2930,6 +3325,16 @@ function renderFieldRows() {
       if (isFlowField(draftFields[i])) updateFlowPreview(row, e.target.value);
     });
     if (isFlowField(draftFields[i])) updateFlowPreview(row, draftFields[i].value);
+    const pws = row.querySelector('.pw-show');
+    if (pws) {
+      const inp = row.querySelector('.field-value');
+      pws.addEventListener('click', () => { inp.type = 'text'; setTimeout(() => { inp.type = 'password'; }, 10000); });
+      row.querySelector('.pw-copy').addEventListener('click', () => pwCopy(draftFields[i].value || ''));
+      row.querySelector('.pw-gen').addEventListener('click', () => {
+        if (draftFields[i].value && !confirm('いまの値を、新しく作った値で置き換えますか？')) return;
+        draftFields[i].value = pwGenerate(20); renderFieldRows(); showToast('20文字を作りました（👁で確認）');
+      });
+    }
     row.querySelector('.field-del').addEventListener('click', () => {
       draftFields.splice(i, 1);
       renderFieldRows();
@@ -3267,20 +3672,29 @@ async function saveItem() {
 
   let item = {
     id: editingId || crypto.randomUUID(),
-    title,
+    title: draftPw ? PW_TITLE : title,
     tags: [...draftTags],
-    url,
-    sensitive: draftSensitive,
+    url: draftPw ? '' : url,
+    sensitive: draftPw ? true : draftSensitive,
+    ...(draftPw ? { type: 'password' } : {}),
     createdAt: editingId ? allItems.find(i => i.id === editingId).createdAt : now,
     updatedAt: now
   };
 
-  if (draftSensitive) {
+  if (draftSensitive || draftPw) {
     if (!sessionKey) {
       const ok = await ensureUnlocked();
       if (!ok) return;
     }
-    const enc = await encryptToItemFields(body, fields);
+    let saveFields = fields;
+    if (draftPw) {
+      saveFields = [{ key: '__title', value: title }, { key: '__url', value: url }, ...fields];
+      const mine = fields.filter(f => isPwKey(f.key) && f.value).map(f => f.value);
+      let dup = false;
+      for (const [id, c] of decryptedCache) { if (id === item.id || !c || !c.fields) continue; if (c.fields.some(f => isPwKey(f.key) && f.value && mine.includes(f.value))) dup = true; }
+      if (dup) showToast('⚠ 同じパスワードを、ほかでも使っています');
+    }
+    const enc = await encryptToItemFields(body, saveFields);
     item.encBody = enc.encBody;
     item.encFields = enc.encFields;
     item.body = '';
@@ -3293,7 +3707,8 @@ async function saveItem() {
   }
 
   await dbPut(item);
-  window.QuickRefBridge?.onItemSaved(item);
+  if (item.sensitive && sessionKey) { try { await decryptItemContent(item); } catch (_) {} }
+  if (!item.sensitive) window.QuickRefBridge?.onItemSaved(item);   // 保護メモは他アプリへ渡さない
 
   for (const attId of pendingDeleteAttIds) {
     await dbDeleteAttachment(attId);
@@ -3305,6 +3720,7 @@ async function saveItem() {
   await saveAudioAttachments(item.id);
   await saveVideoAttachments(item.id);
 
+  if (draftPw) { draftFields = []; draftPw = false; }
   await reload();
   closeSheet();
   showToast('保存しました');
@@ -3318,12 +3734,17 @@ async function deleteItem() {
   if (!editingId) return;
   if (!confirm('この項目を削除しますか？')) return;
 
-  await dbDelete(editingId);
+  {
+    const _it = allItems.find(i => i.id === editingId), _now = Date.now();
+    if (_it) await dbPut({ id: _it.id, deleted: true, sensitive: false, title: '(削除済み)', tags: [], url: '', body: '', fields: [], encBody: null, encFields: null, createdAt: _it.createdAt || _now, updatedAt: _now });
+    else await dbDelete(editingId);
+  }
   await dbDeleteAttachmentsByItemId(editingId);
 
   await reload();
   closeSheet();
   showToast('削除しました');
+  void syncCloudNow(false);
 }
 
 /* ─────────────────────────────
@@ -4014,7 +4435,7 @@ async function syncCloudNow(showResult = true) {
 
   cloudSyncBusy = true;
   try {
-    const body = JSON.stringify({ data: { items: allItems } });
+    const body = JSON.stringify({ data: { items: [...allItems, ...tombItems] } });
     syncStats.kb = Math.max(1, Math.round(body.length / 1024));
     const response = await withRetry(async () => {
       const r = await fetchT(url, {
@@ -4064,7 +4485,7 @@ async function pullCloudSync(showResult = false, noPush = false) {
       const remoteItems = Array.isArray(remote.data) ? remote.data : remote.data?.items;
       if (!Array.isArray(remoteItems)) throw new Error('クラウドの形式が想定と違います');
 
-      const localItems = allItems;
+      const localItems = [...allItems, ...tombItems];
       const merged = new Map(localItems.map(item => [item.id, item]));
       let recv = 0;
       for (const remoteItem of remoteItems) {
@@ -4825,6 +5246,26 @@ function wireEvents() {
     draftSensitive = e.target.checked;
   });
 
+  function setPwMode(on) {
+    draftPw = on;
+    const st = document.getElementById('sensitiveToggle');
+    if (on) {
+      draftSensitive = true; st.checked = true; st.disabled = true;
+      if (!draftFields.length) draftFields = [{ key: 'ID', value: '' }, { key: 'パスワード', value: '' }];
+      document.getElementById('secFields').open = true;
+    } else { st.disabled = false; }
+    renderFieldRows();
+  }
+  document.getElementById('pwToggle').addEventListener('change', e => setPwMode(e.target.checked));
+  window.__pwNew = async () => {
+    if (!sessionKey) { const ok = await ensureUnlocked(); if (!ok) return; }
+    openNew();
+    document.getElementById('pwToggle').checked = true;
+    setPwMode(true);
+    document.getElementById('sheetTitle').textContent = '🔑 パスワードを追加';
+  };
+  document.getElementById('pwAddBtn').addEventListener('click', pwMenu);
+
   /* 画像添付 */
   document.getElementById('imgPickBtn').addEventListener('click', () => {
     haptic();
@@ -5094,6 +5535,11 @@ function wireEvents() {
     else await ensureUnlocked();
   });
 
+  document.getElementById('pinInput1').addEventListener('input', e => {
+    const el = document.getElementById('pinStrength');
+    if (el) el.textContent = pinMode === 'setup' ? pwStrength(e.target.value) : '';
+  });
+
   document.getElementById('pinCancelBtn').addEventListener('click', () =>
     closePinModal(false)
   );
@@ -5113,8 +5559,8 @@ function wireEvents() {
     }
 
     if (pinMode === 'setup') {
-      if (v1.length < 4) {
-        document.getElementById('pinError').textContent = '4文字以上で入力してください';
+      if (v1.length < 8) {
+        document.getElementById('pinError').textContent = '8文字以上で入力してください（12文字以上がおすすめです）';
         document.getElementById('pinError').style.display = 'block';
         return;
       }
@@ -5516,7 +5962,7 @@ async function pullAttachments() {
 async function init() {
   try {
     await openDB();
-    allItems = await dbGetAll();
+    await pwLoadAll();
     attachmentMeta = await dbGetAllAttachmentMeta();
 
     updateLockButton();
